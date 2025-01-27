@@ -1,0 +1,2 @@
+# ตั้งค่าทุกไฟล์ในโปรเจกต์ให้ใช้ LF เป็น End-of-Line
+* text=auto eol=lf
