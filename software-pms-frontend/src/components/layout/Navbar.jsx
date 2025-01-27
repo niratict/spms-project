@@ -6,6 +6,7 @@ import {
   Bars3Icon,
   XMarkIcon,
   UserCircleIcon,
+  ArrowRightOnRectangleIcon,
 } from "@heroicons/react/24/outline";
 
 function classNames(...classes) {
@@ -136,7 +137,7 @@ export default function EnhancedNavbar() {
                               "flex items-center w-full px-4 py-2 text-sm transition duration-300 ease-in-out hover:bg-blue-100"
                             )}
                           >
-                            <LogoutIcon className="h-5 w-5 mr-2 text-blue-500" />
+                            <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2 text-blue-500" />
                             Sign out
                           </button>
                         )}

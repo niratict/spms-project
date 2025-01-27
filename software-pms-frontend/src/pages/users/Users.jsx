@@ -10,7 +10,7 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate, Navigate } from "react-router-dom";
 
-const API_BASE_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const API_BASE_URL = import.meta.env.VITE_API_URL;
 const USERS_PER_PAGE = 9;
 
 // Role color mapping
