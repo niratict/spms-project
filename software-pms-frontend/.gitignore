@@ -40,7 +40,3 @@ coverage/
 
 # Storybook
 storybook-static/
-
-# Tailwind CSS
-tailwind.config.js
-postcss.config.js
