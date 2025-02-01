@@ -152,47 +152,79 @@ const ProjectDetail = () => {
         </div>
 
         <div className="p-6">
-          <p className="text-gray-600 mb-6">{project.description}</p>
+          {/* Description ส่วนบน */}
+          <div className="mb-8">
+            <h2 className="text-lg font-semibold text-gray-700 mb-3">
+              Description
+            </h2>
+            <p className="text-gray-600">{project.description}</p>
+          </div>
 
-          <div className="grid md:grid-cols-2 gap-4 mb-6">
-            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
-              <Calendar className="w-6 h-6 text-blue-500" />
-              <div>
-                <div className="text-sm text-gray-600">Start Date</div>
-                <div className="font-semibold">
-                  {new Date(project.start_date).toLocaleDateString()}
+          {/* รูปภาพและข้อมูล Project */}
+          <div className="grid md:grid-cols-2 gap-8 mb-8">
+            {/* คอลัมน์ซ้าย - รูปภาพ */}
+            <div>
+              {project.photo ? (
+                <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shadow-sm">
+                  <img
+                    src={`${API_BASE_URL}/api/uploads/projects/${project.photo}`}
+                    alt={project.name}
+                    className="w-full h-full object-contain"
+                    onError={(e) => {
+                      e.target.onerror = null;
+                      e.target.src = "/placeholder-image.png";
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="aspect-video w-full rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
+                  <p className="text-gray-400">No image available</p>
+                </div>
+              )}
+            </div>
+
+            {/* คอลัมน์ขวา - ข้อมูล Project */}
+            <div className="grid grid-cols-1 gap-4 content-start">
+              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                <Calendar className="w-6 h-6 text-blue-500" />
+                <div>
+                  <div className="text-sm text-gray-600">Start Date</div>
+                  <div className="font-semibold">
+                    {new Date(project.start_date).toLocaleDateString()}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
-              <Calendar className="w-6 h-6 text-blue-500" />
-              <div>
-                <div className="text-sm text-gray-600">End Date</div>
-                <div className="font-semibold">
-                  {new Date(project.end_date).toLocaleDateString()}
+              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                <Calendar className="w-6 h-6 text-blue-500" />
+                <div>
+                  <div className="text-sm text-gray-600">End Date</div>
+                  <div className="font-semibold">
+                    {new Date(project.end_date).toLocaleDateString()}
+                  </div>
                 </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
-              <Activity className="w-6 h-6 text-green-500" />
-              <div>
-                <div className="text-sm text-gray-600">Status</div>
-                <div className="font-semibold">{project.status}</div>
+              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                <Activity className="w-6 h-6 text-green-500" />
+                <div>
+                  <div className="text-sm text-gray-600">Status</div>
+                  <div className="font-semibold">{project.status}</div>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
-              <Users className="w-6 h-6 text-purple-500" />
-              <div>
-                <div className="text-sm text-gray-600">Created By</div>
-                <div className="font-semibold">{project.created_by}</div>
+              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+                <Users className="w-6 h-6 text-purple-500" />
+                <div>
+                  <div className="text-sm text-gray-600">Created By</div>
+                  <div className="font-semibold">{project.created_by}</div>
+                </div>
               </div>
             </div>
           </div>
 
+          {/* ส่วน Sprints */}
           {project.sprints && project.sprints.length > 0 && (
             <div>
               <h2 className="text-xl font-semibold mb-4">Sprints</h2>
-              <div className="space-y-4">
+              <div className="grid gap-4">
                 {project.sprints.map((sprint) => (
                   <div
                     key={sprint.sprint_id}

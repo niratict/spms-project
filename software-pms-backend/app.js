@@ -12,6 +12,7 @@ const app = express();
 app.use(cors()); // Enable CORS for all routes
 app.use(express.json()); // Parse JSON bodies
 app.use(morgan("dev")); // HTTP request logger
+app.use("/api/uploads", express.static("uploads"));
 
 // Import Routes
 const authRoutes = require("./routes/authRoutes");

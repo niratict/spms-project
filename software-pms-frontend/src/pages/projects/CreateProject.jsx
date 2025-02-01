@@ -2,7 +2,15 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
-import { ArrowLeft, Plus, Calendar, FileText } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Calendar,
+  FileText,
+  Upload,
+  X,
+  Image,
+} from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -11,12 +19,14 @@ const CreateProject = () => {
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+  const [previewImage, setPreviewImage] = useState(null);
 
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     start_date: "",
     end_date: "",
+    photo: null,
   });
 
   const handleChange = (e) => {
@@ -27,17 +37,57 @@ const CreateProject = () => {
     }));
   };
 
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size must be less than 5MB");
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        setError("Only image files are allowed");
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        photo: file,
+      }));
+      setPreviewImage(URL.createObjectURL(file));
+      setError(null);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({
+      ...prev,
+      photo: null,
+    }));
+    setPreviewImage(null);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
+      const submitData = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (formData[key] !== null) {
+          submitData.append(key, formData[key]);
+        }
+      });
+
       const response = await axios.post(
         `${API_BASE_URL}/api/projects`,
-        formData,
+        submitData,
         {
-          headers: { Authorization: `Bearer ${user.token}` },
+          headers: {
+            Authorization: `Bearer ${user.token}`,
+            "Content-Type": "multipart/form-data",
+          },
         }
       );
 
@@ -89,6 +139,53 @@ const CreateProject = () => {
           )}
 
           <div className="space-y-4">
+            {/* Image Upload Section */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 font-medium text-gray-700">
+                <Image className="w-5 h-5 text-blue-500" />
+                Project Image
+              </label>
+              <div className="flex items-center justify-center w-full">
+                <div className="w-full">
+                  {previewImage ? (
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
+                      <img
+                        src={previewImage}
+                        alt="Preview"
+                        className="w-full h-full object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-12 h-12 text-gray-400 mb-3" />
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Click to upload</span>{" "}
+                          or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          PNG, JPG, GIF up to 5MB
+                        </p>
+                      </div>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label
                 htmlFor="name"

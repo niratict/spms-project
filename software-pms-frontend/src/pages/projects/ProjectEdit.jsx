@@ -9,6 +9,9 @@ import {
   FileText,
   CheckCircle,
   Activity,
+  Image,
+  Upload,
+  X,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -53,12 +56,15 @@ const ProjectEdit = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [previewImage, setPreviewImage] = useState(null);
+  const [currentImage, setCurrentImage] = useState(null); // เพิ่ม state เก็บรูปปัจจุบัน
   const [formData, setFormData] = useState({
     name: "",
     description: "",
     start_date: "",
     end_date: "",
     status: "",
+    photo: null,
   });
 
   useEffect(() => {
@@ -75,7 +81,16 @@ const ProjectEdit = () => {
           start_date: projectData.start_date.split("T")[0],
           end_date: projectData.end_date.split("T")[0],
           status: projectData.status,
+          photo: null, // เริ่มต้นเป็น null เพราะยังไม่มีการอัพโหลดรูปใหม่
         });
+
+        // เก็บข้อมูลรูปภาพปัจจุบัน
+        if (projectData.photo) {
+          setCurrentImage(projectData.photo);
+          setPreviewImage(
+            `${API_BASE_URL}/api/uploads/projects/${projectData.photo}`
+          );
+        }
       } catch (err) {
         setError(err.response?.data?.message || "Failed to fetch project");
       } finally {
@@ -85,20 +100,68 @@ const ProjectEdit = () => {
 
     if (user && id) fetchProject();
   }, [id, user]);
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
+
+  const handleImageChange = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        setError("Image size must be less than 5MB");
+        return;
+      }
+
+      if (!file.type.startsWith("image/")) {
+        setError("Only image files are allowed");
+        return;
+      }
+
+      setFormData((prev) => ({
+        ...prev,
+        photo: file,
+      }));
+      // สร้าง URL สำหรับ preview รูปใหม่
+      const newPreviewUrl = URL.createObjectURL(file);
+      setPreviewImage(newPreviewUrl);
+      setError(null);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setFormData((prev) => ({
+      ...prev,
+      photo: null, // ส่ง null เพื่อบอกว่าต้องการลบรูป
+    }));
+    setPreviewImage(null);
+    setCurrentImage(null);
+
+    // ล้าง input file
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+      fileInput.value = "";
+    }
+  };
 
   const handleSubmit = async () => {
     try {
-      await axios.put(`${API_BASE_URL}/api/projects/${id}`, formData, {
-        headers: { Authorization: `Bearer ${user.token}` },
+      const submitData = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (formData[key] !== null) {
+          submitData.append(key, formData[key]);
+        }
+      });
+
+      await axios.put(`${API_BASE_URL}/api/projects/${id}`, submitData, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "Content-Type": "multipart/form-data",
+        },
       });
       navigate(`/projects/${id}`);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to update project");
     }
-  };
-
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   if (loading)
@@ -150,6 +213,53 @@ const ProjectEdit = () => {
 
         <form className="p-6 space-y-6">
           <div className="space-y-4">
+            {/* Image Upload Section */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 font-medium text-gray-700">
+                <Image className="w-5 h-5 text-blue-500" />
+                Project Image
+              </label>
+              <div className="flex items-center justify-center w-full">
+                <div className="w-full">
+                  {previewImage ? (
+                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
+                      <img
+                        src={previewImage}
+                        alt="Project"
+                        className="w-full h-full object-contain"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleRemoveImage}
+                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                        <Upload className="w-12 h-12 text-gray-400 mb-3" />
+                        <p className="mb-2 text-sm text-gray-500">
+                          <span className="font-semibold">Click to upload</span>{" "}
+                          or drag and drop
+                        </p>
+                        <p className="text-xs text-gray-500">
+                          PNG, JPG, GIF up to 5MB
+                        </p>
+                      </div>
+                      <input
+                        type="file"
+                        className="hidden"
+                        accept="image/*"
+                        onChange={handleImageChange}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+            </div>
+
             <div className="space-y-2">
               <label
                 htmlFor="name"

@@ -1,15 +1,24 @@
-// projectRoutes.js
 const express = require("express");
 const router = express.Router();
 const projectController = require("../controllers/projectController");
 const { auth } = require("../middleware/auth");
 
-router.use(auth); // Now correctly using the auth middleware
+router.use(auth);
 
-router.post("/", projectController.createProject);
+// อัพเดท route ให้รองรับการอัพโหลดรูปภาพ
+router.post(
+  "/",
+  projectController.upload.single("photo"),
+  projectController.createProject
+);
+router.put(
+  "/:id",
+  projectController.upload.single("photo"),
+  projectController.updateProject
+);
+
 router.get("/", projectController.getAllProjects);
 router.get("/:id", projectController.getProjectById);
-router.put("/:id", projectController.updateProject);
 router.delete("/:id", projectController.deleteProject);
 router.get("/:id/stats", projectController.getProjectStats);
 
