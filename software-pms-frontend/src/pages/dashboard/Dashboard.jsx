@@ -21,7 +21,10 @@ const StatCard = ({
   icon: Icon,
   color = "blue",
 }) => (
-  <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+  <div
+    className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden"
+    data-cy={`stat-card-${title.toLowerCase().replace(/\s+/g, "-")}`}
+  >
     <div className="p-4 flex items-center justify-between">
       <div>
         <div className="flex items-center space-x-2">
@@ -29,8 +32,20 @@ const StatCard = ({
           <h3 className="text-sm font-medium text-gray-600">{title}</h3>
         </div>
         <div className="mt-2">
-          <p className="text-2xl font-bold text-gray-900">{value}</p>
-          <p className="text-xs text-gray-500 mt-1">{description}</p>
+          <p
+            className="text-2xl font-bold text-gray-900"
+            data-cy={`stat-value-${title.toLowerCase().replace(/\s+/g, "-")}`}
+          >
+            {value}
+          </p>
+          <p
+            className="text-xs text-gray-500 mt-1"
+            data-cy={`stat-description-${title
+              .toLowerCase()
+              .replace(/\s+/g, "-")}`}
+          >
+            {description}
+          </p>
         </div>
       </div>
     </div>
@@ -83,7 +98,10 @@ const Dashboard = () => {
 
   if (loading)
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div
+        className="flex justify-center items-center h-screen"
+        data-cy="dashboard-loading"
+      >
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
       </div>
     );
@@ -93,6 +111,7 @@ const Dashboard = () => {
       <div
         className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded"
         role="alert"
+        data-cy="dashboard-error"
       >
         {error}
       </div>
@@ -104,7 +123,7 @@ const Dashboard = () => {
       title: "Active Projects",
       value: stats.activeProjects,
       description: `${(
-        (stats.activeProjects / stats.totalProjects) *
+        (stats.activeProjects / Math.max(stats.totalProjects, 1)) *
         100
       ).toFixed(1)}% of total projects`,
       icon: Activity,
@@ -120,7 +139,9 @@ const Dashboard = () => {
     {
       title: "Test Files",
       value: stats.totalFiles,
-      description: "Total test files",
+      description: `${stats.passedFiles || 0} passed, ${
+        stats.failedFiles || 0
+      } failed`,
       icon: FileText,
       color: "indigo",
     },
@@ -134,27 +155,44 @@ const Dashboard = () => {
   ];
 
   return (
-    <div className="bg-gray-50 min-h-screen p-8">
+    <div className="bg-gray-50 min-h-screen p-8" data-cy="dashboard-container">
       <div className="container mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">
+          <h1
+            className="text-3xl font-bold text-gray-800 mb-2"
+            data-cy="dashboard-title"
+          >
             Dashboard Overview
           </h1>
-          <p className="text-gray-600">Welcome back, {user?.name || "User"}</p>
+          <p className="text-gray-600" data-cy="dashboard-welcome">
+            Welcome back, {user?.firstName || user?.name || "User"}
+          </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div
+          className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8"
+          data-cy="stats-grid"
+        >
           {statsCards.map((card, idx) => (
             <StatCard key={idx} {...card} />
           ))}
         </div>
 
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-          <h2 className="text-xl font-semibold mb-4 text-gray-800">
+        <div
+          className="bg-white rounded-xl border border-gray-200 shadow-sm p-6"
+          data-cy="activity-chart-container"
+        >
+          <h2
+            className="text-xl font-semibold mb-4 text-gray-800"
+            data-cy="activity-chart-title"
+          >
             Project Activity
           </h2>
           <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={dashboardData.activityData}>
+            <LineChart
+              data={dashboardData.activityData}
+              data-cy="project-activity-chart"
+            >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis dataKey="month" />
               <YAxis />

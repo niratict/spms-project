@@ -4,15 +4,12 @@ import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import {
   Calendar,
-  Activity,
   Users,
   FileText,
   ArrowLeft,
   Edit,
   Trash2,
-  CheckCircle,
-  XCircle,
-  BarChart,
+  AlertCircle,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -65,178 +62,171 @@ const SprintDetail = () => {
     });
   };
 
-  if (loading)
+  if (loading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-t-2 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
       </div>
     );
+  }
 
-  if (error)
+  if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen bg-red-50">
-        <div className="text-center bg-white p-8 rounded-xl shadow-lg">
-          <XCircle className="mx-auto w-16 h-16 text-red-500 mb-4" />
-          <p className="text-red-600 text-lg">{error}</p>
+      <div className="flex justify-center items-center min-h-screen p-4">
+        <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
+          <div className="text-center">
+            <AlertCircle className="mx-auto w-12 h-12 text-red-500 mb-4" />
+            <p className="text-red-600 font-medium">{error}</p>
+          </div>
         </div>
       </div>
     );
+  }
 
-  if (!sprint)
+  if (!sprint) {
     return (
       <div className="flex justify-center items-center min-h-screen">
-        <p className="text-gray-600">Sprint not found</p>
+        <p className="text-gray-600 font-medium">Sprint not found</p>
       </div>
     );
-
-  const passRate = sprint.total_tests
-    ? ((sprint.passed_tests / sprint.total_tests) * 100).toFixed(1)
-    : 0;
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-100 to-gray-200 p-6">
-      <div className="container mx-auto max-w-6xl">
-        {/* Header Section */}
-        <div className="flex justify-between items-center mb-8">
-          <button
-            onClick={handleBackToSprints}
-            className="flex items-center gap-2 text-gray-600 hover:text-gray-900 bg-white rounded-lg px-4 py-2 shadow-md hover:shadow-lg transition-all"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            <span className="font-medium">Back to Sprints</span>
-          </button>
-          <div className="flex space-x-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
+      <div className="container mx-auto max-w-5xl">
+        {/* Navigation Bar */}
+        <div className="bg-white rounded-xl shadow-sm mb-6 p-4">
+          <div className="flex justify-between items-center">
             <button
-              onClick={() => navigate(`/sprints/${id}/edit`)}
-              className="p-3 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors shadow-md hover:shadow-lg flex items-center justify-center"
+              onClick={handleBackToSprints}
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
-              <Edit className="w-6 h-6" />
-              <span className="ml-2 hidden md:inline">Edit</span>
+              <ArrowLeft className="w-5 h-5" />
+              <span className="font-medium">Back to Sprints</span>
             </button>
-            <button
-              onClick={() => setShowDeleteModal(true)}
-              className="p-3 bg-red-100 text-red-600 rounded-lg hover:bg-red-200 transition-colors shadow-md hover:shadow-lg flex items-center justify-center"
-            >
-              <Trash2 className="w-6 h-6" />
-              <span className="ml-2 hidden md:inline">Delete</span>
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={() => navigate(`/sprints/${id}/edit`)}
+                className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2"
+              >
+                <Edit className="w-4 h-4" />
+                <span>Edit</span>
+              </button>
+              <button
+                onClick={() => setShowDeleteModal(true)}
+                className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                <span>Delete</span>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Sprint Overview */}
-        <div className="grid md:grid-cols-3 gap-6">
-          {/* Left Column: Sprint Details */}
-          <div className="md:col-span-2 bg-white rounded-xl shadow-lg p-6 space-y-6">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+        {/* Main Content */}
+        <div className="bg-white rounded-xl shadow-lg mb-6">
+          <div className="p-6">
+            {/* Header */}
+            <div className="mb-8">
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">
                 {sprint.name}
               </h1>
-              <p className="text-gray-600 text-lg">
-                Project: {sprint.project_name}
-              </p>
+              <div className="flex items-center gap-2 text-gray-600">
+                <FileText className="w-5 h-5" />
+                <span className="text-lg">Project: {sprint.project_name}</span>
+              </div>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-6">
-              <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-lg">
-                <Calendar className="w-12 h-12 text-blue-500" />
-                <div>
-                  <div className="text-sm text-gray-500">Start Date</div>
-                  <div className="font-semibold text-xl">
-                    {new Date(sprint.start_date).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
+            {/* Sprint Information Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <Calendar className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Start Date</p>
+                    <p className="font-semibold text-gray-900">
+                      {new Date(sprint.start_date).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-lg">
-                <Calendar className="w-12 h-12 text-blue-500" />
-                <div>
-                  <div className="text-sm text-gray-500">End Date</div>
-                  <div className="font-semibold text-xl">
-                    {new Date(sprint.end_date).toLocaleDateString("en-US", {
-                      month: "long",
-                      day: "numeric",
-                      year: "numeric",
-                    })}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-lg">
-                <Users className="w-12 h-12 text-green-500" />
-                <div>
-                  <div className="text-sm text-gray-500">Created By</div>
-                  <div className="font-semibold text-xl">
-                    {sprint.created_by}
-                  </div>
-                </div>
-              </div>
-              <div className="flex items-center gap-4 bg-gray-50 p-4 rounded-lg">
-                <FileText className="w-12 h-12 text-purple-500" />
-                <div>
-                  <div className="text-sm text-gray-500">Total Tests</div>
-                  <div className="font-semibold text-xl">
-                    {sprint.total_tests}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
 
-          {/* Right Column: Test Statistics */}
-          <div className="space-y-6">
-            <div className="bg-green-50 rounded-xl p-8 text-center shadow-lg hover:shadow-xl transition-shadow">
-              <CheckCircle className="mx-auto w-20 h-20 text-green-600 mb-4" />
-              <div className="text-5xl font-bold text-green-700 mb-2">
-                {sprint.passed_tests}
+              <div className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-blue-100 rounded-lg">
+                    <Calendar className="w-6 h-6 text-blue-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">End Date</p>
+                    <p className="font-semibold text-gray-900">
+                      {new Date(sprint.end_date).toLocaleDateString("en-US", {
+                        month: "long",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="text-2xl text-green-600">Passed Tests</div>
-            </div>
-            <div className="bg-red-50 rounded-xl p-8 text-center shadow-lg hover:shadow-xl transition-shadow">
-              <XCircle className="mx-auto w-20 h-20 text-red-600 mb-4" />
-              <div className="text-5xl font-bold text-red-700 mb-2">
-                {sprint.failed_tests}
+
+              <div className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
+                <div className="flex items-center gap-4">
+                  <div className="p-3 bg-green-100 rounded-lg">
+                    <Users className="w-6 h-6 text-green-600" />
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Created By</p>
+                    <p className="font-semibold text-gray-900">
+                      {sprint.created_by}
+                    </p>
+                  </div>
+                </div>
               </div>
-              <div className="text-2xl text-red-600">Failed Tests</div>
-            </div>
-            <div className="bg-blue-50 rounded-xl p-8 text-center shadow-lg hover:shadow-xl transition-shadow">
-              <BarChart className="mx-auto w-20 h-20 text-blue-600 mb-4" />
-              <div className="text-5xl font-bold text-blue-700 mb-2">
-                {passRate}%
-              </div>
-              <div className="text-2xl text-blue-600">Pass Rate</div>
             </div>
           </div>
         </div>
 
-        {/* Delete Confirmation Modal */}
+        {/* Delete Modal */}
         {showDeleteModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-xl p-8 max-w-md w-full shadow-2xl">
-              <h2 className="text-2xl font-bold mb-4 text-gray-800 flex items-center">
-                <Trash2 className="mr-3 text-red-500" />
-                Delete Sprint
-              </h2>
-              <p className="text-gray-600 mb-6 text-lg">
-                Are you absolutely sure you want to delete this sprint? This
-                action cannot be undone and will permanently remove all
-                associated test data.
-              </p>
-              <div className="flex justify-end space-x-4">
-                <button
-                  onClick={() => setShowDeleteModal(false)}
-                  className="px-6 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleDelete}
-                  className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center"
-                >
-                  <Trash2 className="mr-2" />
-                  Delete Sprint
-                </button>
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <div className="mb-6">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 bg-red-100 rounded-lg">
+                      <Trash2 className="w-6 h-6 text-red-600" />
+                    </div>
+                    <h2 className="text-xl font-semibold text-gray-900">
+                      Delete Sprint
+                    </h2>
+                  </div>
+                  <p className="text-gray-600">
+                    Are you sure you want to delete this sprint? This action
+                    cannot be undone and all associated data will be permanently
+                    removed.
+                  </p>
+                </div>
+                <div className="flex justify-end gap-3">
+                  <button
+                    onClick={() => setShowDeleteModal(false)}
+                    className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleDelete}
+                    className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                    Delete Sprint
+                  </button>
+                </div>
               </div>
             </div>
           </div>

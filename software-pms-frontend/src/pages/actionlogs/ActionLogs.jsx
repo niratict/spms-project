@@ -133,19 +133,28 @@ const ActionLogs = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="min-h-screen bg-gray-50 p-8" data-cy="action-logs-page">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
         <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-extrabold text-gray-900">Action Logs</h1>
+          <h1
+            className="text-3xl font-extrabold text-gray-900"
+            data-cy="action-logs-title"
+          >
+            Action Logs
+          </h1>
         </div>
 
         {/* Filters */}
-        <div className="bg-white shadow-md rounded-lg p-6 border border-gray-200">
+        <div
+          className="bg-white shadow-md rounded-lg p-6 border border-gray-200"
+          data-cy="filters-section"
+        >
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             {/* Action Type Filter */}
             <div className="relative">
               <select
+                data-cy="action-type-filter"
                 name="action_type"
                 value={filters.action_type}
                 onChange={handleFilterChange}
@@ -153,7 +162,11 @@ const ActionLogs = () => {
               >
                 <option value="">All Action Types</option>
                 {actionTypes.map((type) => (
-                  <option key={type} value={type}>
+                  <option
+                    key={type}
+                    value={type}
+                    data-cy={`action-type-option-${type}`}
+                  >
                     {type}
                   </option>
                 ))}
@@ -163,6 +176,7 @@ const ActionLogs = () => {
             {/* Target Table Filter */}
             <div className="relative">
               <select
+                data-cy="target-table-filter"
                 name="target_table"
                 value={filters.target_table}
                 onChange={handleFilterChange}
@@ -170,16 +184,21 @@ const ActionLogs = () => {
               >
                 <option value="">All Target Tables</option>
                 {targetTables.map((table) => (
-                  <option key={table} value={table}>
+                  <option
+                    key={table}
+                    value={table}
+                    data-cy={`target-table-option-${table}`}
+                  >
                     {table}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Start Date Filter */}
+            {/* Date Filters */}
             <div className="relative">
               <input
+                data-cy="start-date-filter"
                 type="date"
                 name="start_date"
                 value={filters.start_date}
@@ -188,9 +207,9 @@ const ActionLogs = () => {
               />
             </div>
 
-            {/* End Date Filter */}
             <div className="relative">
               <input
+                data-cy="end-date-filter"
                 type="date"
                 name="end_date"
                 value={filters.end_date}
@@ -201,9 +220,13 @@ const ActionLogs = () => {
           </div>
 
           {/* Clear Filters */}
-          {(filters.action_type || filters.target_table || filters.start_date || filters.end_date) && (
+          {(filters.action_type ||
+            filters.target_table ||
+            filters.start_date ||
+            filters.end_date) && (
             <div className="mt-4 flex justify-end">
               <button
+                data-cy="clear-filters-button"
                 onClick={clearFilters}
                 className="flex items-center text-sm text-red-600 hover:text-red-800 transition duration-200"
               >
@@ -214,44 +237,71 @@ const ActionLogs = () => {
         </div>
 
         {/* Logs Table */}
-        <div className="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200">
+        <div
+          className="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200"
+          data-cy="logs-table"
+        >
           <table className="w-full">
             <thead className="bg-gray-100 border-b">
               <tr>
-                {["Date", "User", "Action", "Target", "Details"].map((header) => (
-                  <th 
-                    key={header} 
-                    className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                  >
-                    {header}
-                  </th>
-                ))}
+                {["Date", "User", "Action", "Target", "Details"].map(
+                  (header) => (
+                    <th
+                      key={header}
+                      data-cy={`column-header-${header.toLowerCase()}`}
+                      className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                    >
+                      {header}
+                    </th>
+                  )
+                )}
               </tr>
             </thead>
             <tbody>
               {logs.map((log) => (
-                <tr 
-                  key={log.log_id} 
+                <tr
+                  key={log.log_id}
+                  data-cy={`log-row-${log.log_id}`}
                   className="hover:bg-gray-50 transition-colors duration-100 border-b last:border-b-0"
                 >
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-600"
+                    data-cy="log-date"
+                  >
                     {new Date(log.action_date).toLocaleString()}
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap"
+                    data-cy="log-user"
+                  >
                     <div className="text-sm font-medium text-gray-900">
                       {log.user_name}
                     </div>
                     <div className="text-sm text-gray-500">{log.user_role}</div>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap"
+                    data-cy="log-action"
+                  >
                     <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
                       {log.action_type}
                     </span>
                   </td>
-                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                  <td
+                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                    data-cy="log-target"
+                  >
                     {log.target_table} #{log.target_id}
+                    {log.target_name && (
+                      <div className="text-sm font-medium text-gray-900">
+                        {log.target_name}
+                      </div>
+                    )}
                   </td>
-                  <td className="px-6 py-4 text-sm text-gray-500">
+                  <td
+                    className="px-6 py-4 text-sm text-gray-500"
+                    data-cy="log-details"
+                  >
                     {log.details
                       ? typeof log.details === "object"
                         ? Object.entries(log.details)
@@ -277,21 +327,28 @@ const ActionLogs = () => {
 
           {/* Empty state */}
           {logs.length === 0 && (
-            <div className="text-center py-10 text-gray-500 bg-gray-50">
+            <div
+              className="text-center py-10 text-gray-500 bg-gray-50"
+              data-cy="empty-state"
+            >
               No action logs found
             </div>
           )}
         </div>
 
         {/* Pagination */}
-        <div className="flex justify-between items-center mt-4">
-          <div className="text-sm text-gray-700">
+        <div
+          className="flex justify-between items-center mt-4"
+          data-cy="pagination"
+        >
+          <div className="text-sm text-gray-700" data-cy="pagination-info">
             Showing {(currentPage - 1) * filters.limit + 1} to{" "}
             {Math.min(currentPage * filters.limit, totalLogs)} of {totalLogs}{" "}
             entries
           </div>
           <div className="flex space-x-2">
             <button
+              data-cy="previous-page"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={currentPage === 1}
               className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -299,6 +356,7 @@ const ActionLogs = () => {
               Previous
             </button>
             <button
+              data-cy="next-page"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={currentPage === totalPages}
               className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"

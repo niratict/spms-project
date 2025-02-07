@@ -13,59 +13,54 @@ const getAllActionLogs = async (req, res) => {
       offset = 0,
     } = req.query;
 
-    // สร้าง query พื้นฐาน
     let query = `
       SELECT 
         al.*,
-        u.name as user_name,
-        u.email as user_email,
-        u.role as user_role
+        u.name AS user_name,
+        u.email AS user_email,
+        u.role AS user_role,
+        COALESCE(p.name, s.name, f.filename, us.name) AS target_name
       FROM action_logs al
       LEFT JOIN users u ON al.user_id = u.user_id
+      LEFT JOIN projects p ON al.target_table = 'projects' AND al.target_id = p.project_id
+      LEFT JOIN sprints s ON al.target_table = 'sprints' AND al.target_id = s.sprint_id
+      LEFT JOIN test_files f ON al.target_table = 'test_files' AND al.target_id = f.file_id
+      LEFT JOIN users us ON al.target_table = 'users' AND al.target_id = us.user_id
       WHERE 1=1
     `;
 
     const queryParams = [];
 
-    // เพิ่มเงื่อนไขการค้นหา
     if (user_id) {
       query += " AND al.user_id = ?";
       queryParams.push(user_id);
     }
-
     if (action_type) {
       query += " AND al.action_type = ?";
       queryParams.push(action_type);
     }
-
     if (target_table) {
       query += " AND al.target_table = ?";
       queryParams.push(target_table);
     }
-
     if (start_date) {
       query += " AND al.action_date >= ?";
       queryParams.push(start_date);
     }
-
     if (end_date) {
       query += " AND al.action_date <= ?";
       queryParams.push(end_date);
     }
-
-    // ถ้าไม่ใช่ Admin ให้ดูได้เฉพาะ logs ของตัวเอง
     if (req.user.role !== "Admin") {
       query += " AND al.user_id = ?";
       queryParams.push(req.user.user_id);
     }
 
-    // นับจำนวนทั้งหมดก่อนทำ pagination
     const [totalRows] = await db.query(
       `SELECT COUNT(*) as total FROM (${query}) as filtered_logs`,
       queryParams
     );
 
-    // เพิ่ม ORDER BY และ LIMIT
     query += " ORDER BY al.action_date DESC LIMIT ? OFFSET ?";
     queryParams.push(parseInt(limit), parseInt(offset));
 
@@ -89,11 +84,16 @@ const getActionLogById = async (req, res) => {
       `
       SELECT 
         al.*,
-        u.name as user_name,
-        u.email as user_email,
-        u.role as user_role
+        u.name AS user_name,
+        u.email AS user_email,
+        u.role AS user_role,
+        COALESCE(p.name, s.name, f.filename, us.name) AS target_name
       FROM action_logs al
       LEFT JOIN users u ON al.user_id = u.user_id
+      LEFT JOIN projects p ON al.target_table = 'projects' AND al.target_id = p.project_id
+      LEFT JOIN sprints s ON al.target_table = 'sprints' AND al.target_id = s.sprint_id
+      LEFT JOIN test_files f ON al.target_table = 'test_files' AND al.target_id = f.file_id
+      LEFT JOIN users us ON al.target_table = 'users' AND al.target_id = us.user_id
       WHERE al.log_id = ?
     `,
       [req.params.id]
@@ -103,7 +103,6 @@ const getActionLogById = async (req, res) => {
       return res.status(404).json({ message: "Action log not found" });
     }
 
-    // ถ้าไม่ใช่ Admin และไม่ใช่เจ้าของ log ห้ามดู
     if (req.user.role !== "Admin" && log[0].user_id !== req.user.user_id) {
       return res.status(403).json({ message: "Permission denied" });
     }

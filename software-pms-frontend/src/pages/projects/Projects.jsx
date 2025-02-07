@@ -115,7 +115,7 @@ const Projects = () => {
           >
             <div className="p-6">
               <div className="flex justify-between items-start mb-4">
-                <h2 className="text-2xl font-bold text-gray-800">
+                <h2 className="text-2xl font-bold text-gray-800 line-clamp-1">
                   {project.name}
                 </h2>
                 <ProjectStatusBadge status={project.status} />
@@ -124,17 +124,6 @@ const Projects = () => {
               <p className="text-gray-600 mb-4 line-clamp-1">
                 {project.description}
               </p>
-
-              <div className="grid grid-cols-2 gap-2 mb-4 text-sm">
-                <div className="flex items-center text-green-600">
-                  <CheckCircle className="w-4 h-4 mr-2" />
-                  Passed Tests: {project.passed_tests}
-                </div>
-                <div className="flex items-center text-red-600">
-                  <XCircle className="w-4 h-4 mr-2" />
-                  Failed Tests: {project.failed_tests}
-                </div>
-              </div>
 
               <div className="flex justify-between space-x-2">
                 <button

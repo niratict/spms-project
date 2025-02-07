@@ -10,5 +10,7 @@ router.use(auth);
 router.get("/stats", mainDashboardController.getDashboardStats);
 // Endpoint for project activity chart data
 router.get("/project-activity", mainDashboardController.getProjectActivity);
+// New endpoint for test file activity
+router.get("/test-file-activity", mainDashboardController.getTestFileActivity);
 
 module.exports = router;

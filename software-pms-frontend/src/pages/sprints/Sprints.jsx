@@ -136,7 +136,9 @@ const Sprints = () => {
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">
                   {project.name}
                 </h3>
-                <p className="text-sm text-gray-600 line-clamp-1">{project.description}</p>
+                <p className="text-sm text-gray-600 line-clamp-1">
+                  {project.description}
+                </p>
               </div>
             ))}
           </div>
@@ -199,31 +201,6 @@ const Sprints = () => {
                               {new Date(sprint.start_date).toLocaleDateString()}{" "}
                               - {new Date(sprint.end_date).toLocaleDateString()}
                             </span>
-                          </div>
-                        </div>
-
-                        <div className="grid grid-cols-2 gap-4 mb-4">
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-5 h-5 text-blue-500" />
-                            <div>
-                              <div className="font-bold text-gray-800">
-                                {totalTests}
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                Total Tests
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <BarChart2 className="w-5 h-5 text-green-500" />
-                            <div>
-                              <div className="font-bold text-gray-800">
-                                {passRate}%
-                              </div>
-                              <div className="text-xs text-gray-500">
-                                Pass Rate
-                              </div>
-                            </div>
                           </div>
                         </div>
 

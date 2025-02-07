@@ -1,4 +1,3 @@
-// src/pages/auth/Login.jsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -32,20 +31,33 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div
+      className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8"
+      data-cy="login-container"
+    >
       <div className="max-w-md w-full space-y-8">
         <div>
-          <h2 className="mt-6 text-center text-3xl font-extrabold text-gray-900">
+          <h2
+            className="mt-6 text-center text-3xl font-extrabold text-gray-900"
+            data-cy="login-title"
+          >
             Project Management System
           </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
+          <p
+            className="mt-2 text-center text-sm text-gray-600"
+            data-cy="login-subtitle"
+          >
             Sign in to your account
           </p>
         </div>
 
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form
+          className="mt-8 space-y-6"
+          onSubmit={handleSubmit}
+          data-cy="login-form"
+        >
           {error && (
-            <div className="rounded-md bg-red-50 p-4">
+            <div className="rounded-md bg-red-50 p-4" data-cy="login-error">
               <div className="text-sm text-red-700">{error}</div>
             </div>
           )}
@@ -64,6 +76,7 @@ export default function Login() {
                 placeholder="Email address"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                data-cy="login-email"
               />
             </div>
             <div>
@@ -79,6 +92,7 @@ export default function Login() {
                 placeholder="Password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                data-cy="login-password"
               />
             </div>
           </div>
@@ -87,6 +101,7 @@ export default function Login() {
             <button
               type="submit"
               className="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              data-cy="login-submit"
             >
               Sign in
             </button>
