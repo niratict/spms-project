@@ -27,6 +27,7 @@ import {
   XCircle,
   PieChart as PieChartIcon, // Add this line
 } from "lucide-react";
+import SprintStackedChart from "./SprintStackedChart";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 
@@ -65,6 +66,14 @@ const dashboardApi = {
   getSprintResults: (projectId, token) =>
     axios.get(
       `${API_BASE_URL}/api/dashboard/projects/${projectId}/sprint-results`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    ),
+
+  getSprintStackedChartData: (projectId, token) =>
+    axios.get(
+      `${API_BASE_URL}/api/dashboard/projects/${projectId}/sprint-stacked-chart`,
       {
         headers: { Authorization: `Bearer ${token}` },
       }
@@ -160,6 +169,7 @@ export default function TestDashboard() {
   const [filteredTests, setFilteredTests] = useState([]);
   const [pieData, setPieData] = useState([]);
   const [barChartData, setBarChartData] = useState([]);
+  const [sprintStackedData, setSprintStackedData] = useState([]);
   const [isLoading, setIsLoading] = useState({
     projects: true,
     dashboardStats: true,
@@ -189,32 +199,39 @@ export default function TestDashboard() {
   }, [user]);
 
   // Fetch Sprints
+  // แก้ไข useEffect ที่ทำงานเมื่อ selectedProject เปลี่ยน
   useEffect(() => {
-    const fetchSprints = async () => {
+    const fetchSprintData = async () => {
       if (selectedProject !== "all" && user) {
         setIsLoading((prev) => ({ ...prev, sprints: true }));
         try {
-          console.log("Fetching sprints for project:", selectedProject);
-          const [sprintsResponse, sprintResultsResponse] = await Promise.all([
+          const [
+            sprintsResponse,
+            sprintResultsResponse,
+            sprintStackedResponse,
+          ] = await Promise.all([
             dashboardApi.getSprints(selectedProject, user.token),
             dashboardApi.getSprintResults(selectedProject, user.token),
+            dashboardApi.getSprintStackedChartData(selectedProject, user.token),
           ]);
 
-          console.log("Sprints response:", sprintsResponse.data);
           setSprints(sprintsResponse.data);
           setSprintResults(sprintResultsResponse.data);
+          setSprintStackedData(sprintStackedResponse.data);
         } catch (error) {
           console.error(
             "Error details:",
             error.response?.data || error.message
           );
-          setError(error.response?.data?.message || "Failed to load sprints");
+          setError(
+            error.response?.data?.message || "Failed to load sprint data"
+          );
         } finally {
           setIsLoading((prev) => ({ ...prev, sprints: false }));
         }
       }
     };
-    fetchSprints();
+    fetchSprintData();
   }, [selectedProject, user]);
 
   // Fetch Dashboard Stats
@@ -528,163 +545,188 @@ export default function TestDashboard() {
         {testResults && (
           <div className="space-y-4 sm:space-y-6">
             {/* Statistics Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-              {/* Summary Statistics */}
-              <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                <div className="p-4 sm:p-6">
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center">
-                    <ActivityIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-blue-500" />
-                    Summary Statistics
-                  </h2>
-                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                    {[
-                      {
-                        label: "Total Tests",
-                        value: totalTests,
-                        color: "blue",
-                        Icon: CheckCircle,
-                      },
-                      {
-                        label: "Passed",
-                        value: `${passedTests} (${passedPercent.toFixed(1)}%)`,
-                        color: "green",
-                        Icon: CheckCircle,
-                      },
-                      {
-                        label: "Failed",
-                        value: `${failedTests} (${failedPercent.toFixed(1)}%)`,
-                        color: "red",
-                        Icon: XCircle,
-                      },
-                      {
-                        label: "Duration",
-                        value: `${(testDuration / 1000).toFixed(2)}s`,
-                        color: "purple",
-                        Icon: Clock,
-                      },
-                    ].map(({ label, value, color, Icon }) => (
-                      <div
-                        key={label}
-                        className={`p-3 sm:p-4 bg-${color}-50 rounded-lg flex items-center space-x-2 sm:space-x-3 shadow-sm hover:shadow-md transition-all duration-300`}
-                      >
-                        <Icon
-                          className={`h-5 w-5 sm:h-6 sm:w-6 text-${color}-500`}
-                        />
-                        <div>
-                          <p
-                            className={`text-xs uppercase tracking-wider text-${color}-600 mb-1`}
-                          >
-                            {label}
-                          </p>
-                          <p
-                            className={`text-base sm:text-xl font-bold text-${color}-700`}
-                          >
-                            {value}
-                          </p>
+            {/* Conditional rendering based on sprint selection */}
+            {selectedSprint !== "all" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                {/* Summary Statistics */}
+                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                  <div className="p-4 sm:p-6">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                      <ActivityIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-blue-500" />
+                      Summary Statistics
+                    </h2>
+                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                      {[
+                        {
+                          label: "Total Tests",
+                          value: totalTests,
+                          color: "blue",
+                          Icon: CheckCircle,
+                        },
+                        {
+                          label: "Passed",
+                          value: `${passedTests} (${passedPercent.toFixed(
+                            1
+                          )}%)`,
+                          color: "green",
+                          Icon: CheckCircle,
+                        },
+                        {
+                          label: "Failed",
+                          value: `${failedTests} (${failedPercent.toFixed(
+                            1
+                          )}%)`,
+                          color: "red",
+                          Icon: XCircle,
+                        },
+                        {
+                          label: "Duration",
+                          value: `${(testDuration / 1000).toFixed(2)}s`,
+                          color: "purple",
+                          Icon: Clock,
+                        },
+                      ].map(({ label, value, color, Icon }) => (
+                        <div
+                          key={label}
+                          className={`p-3 sm:p-4 bg-${color}-50 rounded-lg flex items-center space-x-2 sm:space-x-3 shadow-sm hover:shadow-md transition-all duration-300`}
+                        >
+                          <Icon
+                            className={`h-5 w-5 sm:h-6 sm:w-6 text-${color}-500`}
+                          />
+                          <div>
+                            <p
+                              className={`text-xs uppercase tracking-wider text-${color}-600 mb-1`}
+                            >
+                              {label}
+                            </p>
+                            <p
+                              className={`text-base sm:text-xl font-bold text-${color}-700`}
+                            >
+                              {value}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      ))}
+                    </div>
                   </div>
                 </div>
-              </div>
 
-              {/* Results Distribution Pie Chart */}
-              <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                <div className="p-4 sm:p-6">
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center">
-                    <PieChartIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-green-500" />
-                    Results Distribution
-                  </h2>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <PieChart>
-                      <Pie
-                        data={pieData}
-                        dataKey="value"
-                        nameKey="name"
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={90}
-                        paddingAngle={1}
-                        label={({ name, percent }) =>
-                          `${name} ${(percent * 100).toFixed(0)}%`
-                        }
-                      >
-                        <Cell fill="#4ADE80" />
-                        <Cell fill="#F87171" />
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "rgba(255,255,255,0.9)",
-                          borderRadius: "12px",
-                          padding: "10px",
-                        }}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
+                {/* Results Distribution Pie Chart */}
+                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                  <div className="p-4 sm:p-6">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                      <PieChartIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-green-500" />
+                      Results Distribution
+                    </h2>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <PieChart>
+                        <Pie
+                          data={pieData}
+                          dataKey="value"
+                          nameKey="name"
+                          cx="50%"
+                          cy="50%"
+                          innerRadius={60}
+                          outerRadius={90}
+                          paddingAngle={1}
+                          label={({ name, percent }) =>
+                            `${name} ${(percent * 100).toFixed(0)}%`
+                          }
+                        >
+                          <Cell fill="#4ADE80" />
+                          <Cell fill="#F87171" />
+                        </Pie>
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(255,255,255,0.9)",
+                            borderRadius: "12px",
+                            padding: "10px",
+                          }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  </div>
                 </div>
-              </div>
 
-              {/* Test Results Overview Bar Chart */}
-              <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                <div className="p-4 sm:p-6">
-                  <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center">
-                    <BarChart2 className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-indigo-500" />
-                    Test Results Overview
-                  </h2>
-                  <ResponsiveContainer width="100%" height={250}>
-                    <BarChart data={barChartData}>
-                      <CartesianGrid
-                        strokeDasharray="3 3"
-                        className="stroke-gray-200"
-                      />
-                      <XAxis
-                        dataKey="name"
-                        className="text-xs sm:text-sm"
-                        tick={{ fill: "rgb(55, 65, 81)" }}
-                      />
-                      <YAxis
-                        className="text-xs sm:text-sm"
-                        tick={{ fill: "rgb(55, 65, 81)" }}
-                      />
-                      <Tooltip
-                        contentStyle={{
-                          backgroundColor: "rgba(255,255,255,0.9)",
-                          borderRadius: "12px",
-                          padding: "10px",
-                        }}
-                      />
-                      <Bar
-                        dataKey="value"
-                        fill="#6366F1"
-                        radius={[8, 8, 0, 0]}
-                        barSize={40}
-                      >
-                        {barChartData.map((entry, index) => {
-                          const color =
-                            entry.name === "Passed"
-                              ? "#4ADE80"
-                              : entry.name === "Failed"
-                              ? "#F87171"
-                              : entry.name === "Total Tests"
-                              ? "#3B82F6"
-                              : "#8B5CF6";
+                {/* Test Results Overview Bar Chart */}
+                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                  <div className="p-4 sm:p-6">
+                    <h2 className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center">
+                      <BarChart2 className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-indigo-500" />
+                      Test Results Overview
+                    </h2>
+                    <ResponsiveContainer width="100%" height={250}>
+                      <BarChart data={barChartData}>
+                        <CartesianGrid
+                          strokeDasharray="3 3"
+                          className="stroke-gray-200"
+                        />
+                        <XAxis
+                          dataKey="name"
+                          className="text-xs sm:text-sm"
+                          tick={{ fill: "rgb(55, 65, 81)" }}
+                        />
+                        <YAxis
+                          className="text-xs sm:text-sm"
+                          tick={{ fill: "rgb(55, 65, 81)" }}
+                        />
+                        <Tooltip
+                          contentStyle={{
+                            backgroundColor: "rgba(255,255,255,0.9)",
+                            borderRadius: "12px",
+                            padding: "10px",
+                          }}
+                        />
+                        <Bar
+                          dataKey="value"
+                          fill="#6366F1"
+                          radius={[8, 8, 0, 0]}
+                          barSize={40}
+                        >
+                          {barChartData.map((entry, index) => {
+                            const color =
+                              entry.name === "Passed"
+                                ? "#4ADE80"
+                                : entry.name === "Failed"
+                                ? "#F87171"
+                                : entry.name === "Total Tests"
+                                ? "#3B82F6"
+                                : "#8B5CF6";
 
-                          return <Cell key={`cell-${index}`} fill={color} />;
-                        })}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                  <div className="mt-2 sm:mt-4 text-center text-xs sm:text-sm text-gray-600">
-                    Breakdown of {totalTests} tests:
-                    {` ${passedTests} passed (${passedPercent.toFixed(1)}%), 
+                            return <Cell key={`cell-${index}`} fill={color} />;
+                          })}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                    <div className="mt-2 sm:mt-4 text-center text-xs sm:text-sm text-gray-600">
+                      Breakdown of {totalTests} tests:
+                      {` ${passedTests} passed (${passedPercent.toFixed(1)}%), 
             ${failedTests} failed, total duration ${(
-                      testDuration / 1000
-                    ).toFixed(2)}s`}
+                        testDuration / 1000
+                      ).toFixed(2)}s`}
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
+            )}
+
+            {/* เพิ่ม SprintStackedChart ตรงนี้ */}
+            {selectedSprint === "all" && sprintResults && (
+              <SprintStackedChart
+                sprintResults={sprintStackedData.map((sprint) => ({
+                  sprint_name: sprint.sprintName,
+                  suites: [
+                    {
+                      tests: Array(sprint.totalTests)
+                        .fill()
+                        .map((_, index) => ({
+                          pass: index < sprint.passedTests,
+                        })),
+                    },
+                  ],
+                }))}
+              />
+            )}
 
             {/* Search and Filter Bar */}
             <div className="bg-white rounded-xl shadow-md p-6">

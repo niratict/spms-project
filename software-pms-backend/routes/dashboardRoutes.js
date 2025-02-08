@@ -28,4 +28,10 @@ router.get(
 // Test Files Routes
 router.get("/test-files/:sprintId", dashboardController.getSprintTestFiles);
 
+// Get Sprint Stacked Chart Data
+router.get(
+  "/projects/:projectId/sprint-stacked-chart",
+  dashboardController.getSprintStackedChartData
+);
+
 module.exports = router;

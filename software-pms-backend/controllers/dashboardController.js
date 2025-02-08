@@ -200,6 +200,98 @@ const dashboardController = {
     }
   },
 
+  getSprintStackedChartData: async (req, res) => {
+    const connection = await db.getConnection();
+    try {
+      // Get all sprints for the project
+      const [sprints] = await connection.execute(
+        `SELECT s.*, 
+         COUNT(tf.file_id) as test_files_count
+         FROM sprints s
+         LEFT JOIN test_files tf ON s.sprint_id = tf.sprint_id
+         WHERE s.project_id = ?
+         GROUP BY s.sprint_id
+         ORDER BY s.start_date`,
+        [req.params.projectId]
+      );
+
+      // For each sprint, get and process test files
+      const sprintData = await Promise.all(
+        sprints.map(async (sprint) => {
+          // Get test files for this sprint
+          const [files] = await connection.execute(
+            `SELECT tf.* 
+             FROM test_files tf
+             WHERE tf.sprint_id = ? AND tf.status != 'Deleted'
+             ORDER BY tf.upload_date DESC`,
+            [sprint.sprint_id]
+          );
+
+          // Process test files
+          let passedTests = 0;
+          let failedTests = 0;
+          let timedOutTests = 0;
+          let erroredTests = 0;
+          let canceledTests = 0;
+          let totalTests = 0;
+
+          // Read and process JSON content for each file
+          await Promise.all(
+            files.map(async (file) => {
+              try {
+                const filePath = path.join(
+                  uploadFolder,
+                  file.original_filename
+                );
+                if (existsSync(filePath)) {
+                  const content = await fs.readFile(filePath, "utf8");
+                  const jsonContent = JSON.parse(content);
+
+                  // Process test results from the JSON
+                  if (jsonContent.results && jsonContent.results[0]?.suites) {
+                    jsonContent.results[0].suites.forEach((suite) => {
+                      suite.tests.forEach((test) => {
+                        totalTests++;
+                        if (test.pass) passedTests++;
+                        else if (test.fail) failedTests++;
+                        else if (test.timedOut) timedOutTests++;
+                        else if (test.err && Object.keys(test.err).length > 0)
+                          erroredTests++;
+                        else if (test.skipped) canceledTests++;
+                      });
+                    });
+                  }
+                }
+              } catch (error) {
+                console.error(
+                  `Error processing file ${file.original_filename}:`,
+                  error
+                );
+              }
+            })
+          );
+
+          return {
+            sprintName: sprint.name,
+            passedTests,
+            failedTests,
+            timedOutTests,
+            erroredTests,
+            canceledTests,
+            totalTests,
+          };
+        })
+      );
+
+      res.json(sprintData);
+    } catch (error) {
+      console.error("Error fetching sprint stacked chart data:", error);
+      res.status(500).json({ error: "Failed to fetch sprint chart data" });
+    } finally {
+      connection.release();
+    }
+  },
+
   // Get Sprint Test Files
   getSprintTestFiles: async (req, res) => {
     const connection = await db.getConnection();
