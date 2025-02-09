@@ -24,7 +24,6 @@ const CreateSprint = () => {
   });
 
   const handleRangeSelect = (range) => {
-    // ถ้า range เป็น null หรือ undefined ให้ reset เป็น initial state
     if (!range) {
       setDateRange({
         from: undefined,
@@ -33,7 +32,6 @@ const CreateSprint = () => {
       return;
     }
 
-    // ถ้ามีค่าจึงค่อย update
     setDateRange({
       from: range.from,
       to: range.to,
@@ -59,7 +57,7 @@ const CreateSprint = () => {
     };
 
     fetchSprintData();
-  }, [projectId]);
+  }, [projectId, user.token]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,10 +71,17 @@ const CreateSprint = () => {
     }
 
     try {
+      // Fix timezone offset by setting time to noon (12:00) in local time
+      const startDate = new Date(dateRange.from);
+      startDate.setHours(12, 0, 0, 0);
+
+      const endDate = new Date(dateRange.to);
+      endDate.setHours(12, 0, 0, 0);
+
       const formData = {
         project_id: projectId,
-        start_date: dateRange.from.toISOString().split("T")[0],
-        end_date: dateRange.to.toISOString().split("T")[0],
+        start_date: startDate.toISOString().split("T")[0],
+        end_date: endDate.toISOString().split("T")[0],
       };
 
       const response = await axios.post(
@@ -101,11 +106,44 @@ const CreateSprint = () => {
     });
   };
 
-  // Disable dates that overlap with existing sprints
-  const disabledDays = existingSprints.map((sprint) => ({
-    from: new Date(sprint.start_date),
-    to: new Date(sprint.end_date),
-  }));
+  // Disable dates that overlap with existing sprints and weekends
+  const disabledDays = [
+    ...existingSprints.map((sprint) => ({
+      from: new Date(sprint.start_date),
+      to: new Date(sprint.end_date),
+    })),
+    // Disable weekends
+    (date) => {
+      const day = date.getDay();
+      return day === 0 || day === 6; // 0 is Sunday, 6 is Saturday
+    },
+  ];
+
+  // Custom CSS classes for DayPicker
+  const dayPickerClassNames = {
+    months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
+    month: "space-y-4",
+    caption: "flex justify-center pt-1 relative items-center",
+    caption_label: "text-sm font-medium",
+    nav: "space-x-1 flex items-center",
+    nav_button: "h-7 w-7 bg-transparent p-0 opacity-50 hover:opacity-100",
+    nav_button_previous: "absolute left-1",
+    nav_button_next: "absolute right-1",
+    table: "w-full border-collapse space-y-1",
+    head_row: "flex",
+    head_cell: "text-muted-foreground rounded-md w-9 font-normal text-[0.8rem]",
+    row: "flex w-full mt-2",
+    cell: "text-center text-sm p-0 relative [&:has([aria-selected])]:bg-accent first:[&:has([aria-selected])]:rounded-l-md last:[&:has([aria-selected])]:rounded-r-md focus-within:relative focus-within:z-20",
+    day: "h-9 w-9 p-0 font-normal aria-selected:opacity-100",
+    day_selected:
+      "bg-blue-600 text-white hover:bg-blue-600 hover:text-white focus:bg-blue-600 focus:text-white",
+    day_today: "bg-accent text-accent-foreground",
+    day_outside: "text-muted-foreground opacity-50",
+    day_disabled: "text-muted-foreground opacity-50 cursor-not-allowed",
+    day_range_middle:
+      "aria-selected:bg-accent aria-selected:text-accent-foreground",
+    day_hidden: "invisible",
+  };
 
   return (
     <div className="bg-gray-50 p-16">
@@ -204,7 +242,6 @@ const CreateSprint = () => {
         </div>
       </div>
 
-      {/* Modal using Tailwind */}
       {showDateRanges && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
@@ -243,13 +280,21 @@ const CreateSprint = () => {
               </div>
             </div>
 
-            <DayPicker
-              mode="range"
-              selected={dateRange}
-              onSelect={handleRangeSelect}
-              disabled={disabledDays}
-              className="border rounded-md p-4"
-            />
+            <div className="flex justify-center">
+              <DayPicker
+                mode="range"
+                selected={dateRange}
+                onSelect={handleRangeSelect}
+                disabled={disabledDays}
+                className="border rounded-md p-4"
+                classNames={dayPickerClassNames}
+                footer={
+                  <p className="text-sm text-gray-500 mt-4 text-center">
+                    Weekends are disabled
+                  </p>
+                }
+              />
+            </div>
           </div>
         </div>
       )}
