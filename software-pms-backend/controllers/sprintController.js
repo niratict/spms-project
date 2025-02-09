@@ -102,10 +102,59 @@ const getNextSprintNumber = async (req, res) => {
   }
 };
 
+const validateSprintDates = (startDate, endDate) => {
+  const start = new Date(startDate);
+  const end = new Date(endDate);
+
+  // Check if dates are weekdays
+  if (
+    start.getDay() === 0 ||
+    start.getDay() === 6 ||
+    end.getDay() === 0 ||
+    end.getDay() === 6
+  ) {
+    throw new Error("Sprint dates must be weekdays");
+  }
+
+  // Check if start date is a Monday
+  if (start.getDay() !== 1) {
+    throw new Error("Sprint must start on Monday");
+  }
+
+  // Check if end date is a Friday
+  if (end.getDay() !== 5) {
+    throw new Error("Sprint must end on Friday");
+  }
+
+  // Calculate business days between dates
+  const businessDays = getBusinessDays(start, end);
+  if (businessDays !== 10) {
+    throw new Error("Sprint must be exactly 10 business days");
+  }
+};
+
+const getBusinessDays = (startDate, endDate) => {
+  let count = 0;
+  const curDate = new Date(startDate);
+  while (curDate <= endDate) {
+    const dayOfWeek = curDate.getDay();
+    if (dayOfWeek !== 0 && dayOfWeek !== 6) count++;
+    curDate.setDate(curDate.getDate() + 1);
+  }
+  return count;
+};
+
 // Create new sprint
 const createSprint = async (req, res) => {
   try {
     const { project_id, start_date, end_date } = req.body;
+
+    // Validate sprint dates
+    try {
+      validateSprintDates(start_date, end_date);
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
 
     // Validate project exists
     const [project] = await db.query(
