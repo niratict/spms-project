@@ -132,9 +132,6 @@ const SprintStackedChart = ({ sprintResults }) => {
               <Legend />
               <Bar dataKey="Passed" stackId="a" fill="#4ADE80" />
               <Bar dataKey="Failed" stackId="a" fill="#F87171" />
-              <Bar dataKey="Timed Out" stackId="a" fill="#94A3B8" />
-              <Bar dataKey="Errored" stackId="a" fill="#FB923C" />
-              <Bar dataKey="Canceled" stackId="a" fill="#FCD34D" />
             </BarChart>
           </ResponsiveContainer>
         </div>
