@@ -30,7 +30,7 @@ app.use("/api/projects", projectRoutes);
 app.use("/api/sprints", sprintRoutes);
 app.use("/api/test-files", testFileRoutes);
 app.use("/api/dashboard", dashboardRoutes);
-app.use("/api/dashboard", mainDashboardRoutes);
+app.use("/api/main-dashboard", mainDashboardRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/action-logs", actionLogRoutes);
 
