@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
+import { format, setHours } from "date-fns";
+import "react-day-picker/dist/style.css";
 import axios from "axios";
 import {
   ArrowLeft,
@@ -11,15 +13,144 @@ import {
   X,
   Image,
 } from "lucide-react";
+import { DayPicker } from "react-day-picker";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+// DateRangePickerModal Component
+const DateRangePickerModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  startDate,
+  endDate,
+}) => {
+  const [range, setRange] = useState({
+    from: startDate ? new Date(startDate) : undefined,
+    to: endDate ? new Date(endDate) : undefined,
+  });
+
+  // Reset range when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setRange({
+        from: startDate ? new Date(startDate) : undefined,
+        to: endDate ? new Date(endDate) : undefined,
+      });
+    }
+  }, [isOpen, startDate, endDate]);
+
+  const handleConfirm = () => {
+    if (range?.from && range?.to) {
+      // Convert to Thailand timezone (UTC+7)
+      const adjustedFrom = setHours(range.from, 7);
+      const adjustedTo = setHours(range.to, 7);
+      onConfirm(adjustedFrom, adjustedTo);
+      onClose();
+    }
+  };
+
+  const handleRangeSelect = (newRange) => {
+    // ถ้าคลิกวันเดียวกับ from ที่เลือกไว้ ให้ล้างค่า range
+    if (
+      newRange?.from &&
+      range?.from &&
+      newRange.from.getTime() === range.from.getTime() &&
+      !newRange.to
+    ) {
+      setRange({ from: undefined, to: undefined });
+      return;
+    }
+
+    // ถ้าคลิกวันเดียวกับ to ที่เลือกไว้ ให้ล้างค่า to
+    if (
+      newRange?.to &&
+      range?.to &&
+      newRange.to.getTime() === range.to.getTime()
+    ) {
+      setRange({ ...range, to: undefined });
+      return;
+    }
+
+    setRange(newRange || { from: undefined, to: undefined });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-xl p-6 max-w-4xl w-full mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Select Date Range
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        <div className="flex justify-center">
+          <DayPicker
+            mode="range"
+            selected={range}
+            onSelect={handleRangeSelect}
+            numberOfMonths={2}
+            disabled={[
+              { dayOfWeek: [0, 6] }, // Disable weekends
+            ]}
+            modifiers={{
+              disabled: { dayOfWeek: [0, 6] },
+            }}
+            styles={{
+              months: { display: "flex", gap: "1rem" },
+              caption: { color: "#3B82F6" },
+              head_cell: { color: "#6B7280" },
+              day_selected: {
+                backgroundColor: "#3B82F6 !important",
+                color: "white !important",
+                fontWeight: "bold",
+              },
+              day_today: {
+                color: "#3B82F6 !important",
+                fontWeight: "bold",
+              },
+              day: { margin: "0.2rem" },
+            }}
+            className="border border-gray-200 rounded-lg p-4"
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 mt-4 pt-4 border-t">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={!range?.from || !range?.to}
+            className="px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Main CreateProject Component
 const CreateProject = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -28,6 +159,14 @@ const CreateProject = () => {
     end_date: "",
     photo: null,
   });
+
+  const displayDateRange = () => {
+    if (!formData.start_date || !formData.end_date) return "";
+    return `${format(new Date(formData.start_date), "MMM dd, yyyy")} - ${format(
+      new Date(formData.end_date),
+      "MMM dd, yyyy"
+    )}`;
+  };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -138,7 +277,7 @@ const CreateProject = () => {
             </div>
           )}
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {/* Image Upload Section */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 font-medium text-gray-700">
@@ -186,6 +325,7 @@ const CreateProject = () => {
               </div>
             </div>
 
+            {/* Project Name */}
             <div className="space-y-2">
               <label
                 htmlFor="name"
@@ -206,6 +346,7 @@ const CreateProject = () => {
               />
             </div>
 
+            {/* Description */}
             <div className="space-y-2">
               <label
                 htmlFor="description"
@@ -224,47 +365,26 @@ const CreateProject = () => {
               />
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label
-                  htmlFor="start_date"
-                  className="flex items-center gap-2 font-medium text-gray-700"
-                >
-                  <Calendar className="w-5 h-5 text-purple-500" />
-                  Start Date
-                </label>
+            {/* Date Range Picker */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 font-medium text-gray-700">
+                <Calendar className="w-5 h-5 text-purple-500" />
+                Project Duration
+              </label>
+              <div className="relative">
                 <input
-                  type="date"
-                  id="start_date"
-                  name="start_date"
-                  required
-                  value={formData.start_date}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="end_date"
-                  className="flex items-center gap-2 font-medium text-gray-700"
-                >
-                  <Calendar className="w-5 h-5 text-red-500" />
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  id="end_date"
-                  name="end_date"
-                  required
-                  value={formData.end_date}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
+                  type="text"
+                  readOnly
+                  value={displayDateRange()}
+                  onClick={() => setShowDatePicker(true)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer"
+                  placeholder="Select project duration"
                 />
               </div>
             </div>
           </div>
 
+          {/* Form Buttons */}
           <div className="flex space-x-4 pt-6">
             <button
               type="submit"
@@ -307,6 +427,21 @@ const CreateProject = () => {
           </div>
         </form>
       </div>
+
+      {/* Date Range Picker Modal */}
+      <DateRangePickerModal
+        isOpen={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        startDate={formData.start_date}
+        endDate={formData.end_date}
+        onConfirm={(start, end) => {
+          setFormData((prev) => ({
+            ...prev,
+            start_date: format(start, "yyyy-MM-dd"),
+            end_date: format(end, "yyyy-MM-dd"),
+          }));
+        }}
+      />
     </div>
   );
 };

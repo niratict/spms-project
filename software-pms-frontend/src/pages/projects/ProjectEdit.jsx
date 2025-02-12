@@ -14,9 +14,131 @@ import {
   X,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
+import { DayPicker } from "react-day-picker";
+import { format, setHours } from "date-fns";
+import "react-day-picker/dist/style.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+// DateRangePickerModal Component
+const DateRangePickerModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  startDate,
+  endDate,
+}) => {
+  const [range, setRange] = useState({
+    from: startDate ? new Date(startDate) : undefined,
+    to: endDate ? new Date(endDate) : undefined,
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      setRange({
+        from: startDate ? new Date(startDate) : undefined,
+        to: endDate ? new Date(endDate) : undefined,
+      });
+    }
+  }, [isOpen, startDate, endDate]);
+
+  const handleConfirm = () => {
+    if (range?.from && range?.to) {
+      onConfirm(range.from, range.to);
+      onClose();
+    }
+  };
+
+  const handleRangeSelect = (newRange) => {
+    if (
+      newRange?.from &&
+      range?.from &&
+      newRange.from.getTime() === range.from.getTime() &&
+      !newRange.to
+    ) {
+      setRange({ from: undefined, to: undefined });
+      return;
+    }
+
+    if (
+      newRange?.to &&
+      range?.to &&
+      newRange.to.getTime() === range.to.getTime()
+    ) {
+      setRange({ ...range, to: undefined });
+      return;
+    }
+
+    setRange(newRange || { from: undefined, to: undefined });
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+      <div className="bg-white rounded-xl shadow-xl p-6 max-w-4xl w-full mx-4">
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-lg font-semibold text-gray-800">
+            Select Date Range
+          </h2>
+          <button
+            onClick={onClose}
+            className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <X className="w-5 h-5 text-gray-500" />
+          </button>
+        </div>
+
+        <div className="flex justify-center">
+          <DayPicker
+            mode="range"
+            selected={range}
+            onSelect={handleRangeSelect}
+            numberOfMonths={2}
+            disabled={[{ dayOfWeek: [0, 6] }]}
+            modifiers={{
+              disabled: { dayOfWeek: [0, 6] },
+            }}
+            styles={{
+              months: { display: "flex", gap: "1rem" },
+              caption: { color: "#3B82F6" },
+              head_cell: { color: "#6B7280" },
+              day_selected: {
+                backgroundColor: "#3B82F6 !important",
+                color: "white !important",
+                fontWeight: "bold",
+              },
+              day_today: {
+                color: "#3B82F6 !important",
+                fontWeight: "bold",
+              },
+              day: { margin: "0.2rem" },
+            }}
+            className="border border-gray-200 rounded-lg p-4"
+          />
+        </div>
+
+        <div className="flex justify-end gap-3 mt-4 pt-4 border-t">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleConfirm}
+            disabled={!range?.from || !range?.to}
+            className="px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+          >
+            Confirm
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// ConfirmModal Component
 const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   if (!isOpen) return null;
 
@@ -56,8 +178,9 @@ const ProjectEdit = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [previewImage, setPreviewImage] = useState(null);
-  const [currentImage, setCurrentImage] = useState(null); // เพิ่ม state เก็บรูปปัจจุบัน
+  const [currentImage, setCurrentImage] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -75,16 +198,20 @@ const ProjectEdit = () => {
         });
         const projectData = response.data;
         setProject(projectData);
+
+        // Adjust the date handling here
+        const startDate = new Date(projectData.start_date);
+        const endDate = new Date(projectData.end_date);
+
         setFormData({
           name: projectData.name,
           description: projectData.description,
-          start_date: projectData.start_date.split("T")[0],
-          end_date: projectData.end_date.split("T")[0],
+          start_date: format(startDate, "yyyy-MM-dd"),
+          end_date: format(endDate, "yyyy-MM-dd"),
           status: projectData.status,
-          photo: null, // เริ่มต้นเป็น null เพราะยังไม่มีการอัพโหลดรูปใหม่
+          photo: null,
         });
 
-        // เก็บข้อมูลรูปภาพปัจจุบัน
         if (projectData.photo) {
           setCurrentImage(projectData.photo);
           setPreviewImage(
@@ -100,6 +227,7 @@ const ProjectEdit = () => {
 
     if (user && id) fetchProject();
   }, [id, user]);
+
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
@@ -121,7 +249,6 @@ const ProjectEdit = () => {
         ...prev,
         photo: file,
       }));
-      // สร้าง URL สำหรับ preview รูปใหม่
       const newPreviewUrl = URL.createObjectURL(file);
       setPreviewImage(newPreviewUrl);
       setError(null);
@@ -131,16 +258,37 @@ const ProjectEdit = () => {
   const handleRemoveImage = () => {
     setFormData((prev) => ({
       ...prev,
-      photo: null, // ส่ง null เพื่อบอกว่าต้องการลบรูป
+      photo: null,
     }));
     setPreviewImage(null);
     setCurrentImage(null);
 
-    // ล้าง input file
     const fileInput = document.querySelector('input[type="file"]');
     if (fileInput) {
       fileInput.value = "";
     }
+  };
+
+  const displayDateRange = () => {
+    if (!formData.start_date || !formData.end_date) return "";
+
+    // Create dates from the form data strings
+    const startDate = new Date(formData.start_date);
+    const endDate = new Date(formData.end_date);
+
+    return `${format(startDate, "MMM dd, yyyy")} - ${format(
+      endDate,
+      "MMM dd, yyyy"
+    )}`;
+  };
+
+  // Update the DateRangePickerModal component's onConfirm handler
+  const handleDateConfirm = (start, end) => {
+    setFormData((prev) => ({
+      ...prev,
+      start_date: format(start, "yyyy-MM-dd"),
+      end_date: format(end, "yyyy-MM-dd"),
+    }));
   };
 
   const handleSubmit = async () => {
@@ -195,6 +343,20 @@ const ProjectEdit = () => {
         message="Are you sure you want to save these changes to the project?"
       />
 
+      <DateRangePickerModal
+        isOpen={showDatePicker}
+        onClose={() => setShowDatePicker(false)}
+        startDate={formData.start_date}
+        endDate={formData.end_date}
+        onConfirm={(start, end) => {
+          setFormData((prev) => ({
+            ...prev,
+            start_date: format(start, "yyyy-MM-dd"),
+            end_date: format(end, "yyyy-MM-dd"),
+          }));
+        }}
+      />
+
       <button
         onClick={() => navigate("/projects")}
         className="group flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
@@ -212,7 +374,27 @@ const ProjectEdit = () => {
         </div>
 
         <form className="p-6 space-y-6">
-          <div className="space-y-4">
+          {error && (
+            <div className="bg-red-50 border border-red-200 p-4 rounded-lg flex items-center gap-3">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-6 w-6 text-red-500"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span className="text-red-800">{error}</span>
+            </div>
+          )}
+
+          <div className="space-y-6">
             {/* Image Upload Section */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 font-medium text-gray-700">
@@ -295,40 +477,20 @@ const ProjectEdit = () => {
               />
             </div>
 
-            <div className="grid md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label
-                  htmlFor="start_date"
-                  className="flex items-center gap-2 font-medium text-gray-700"
-                >
-                  <Calendar className="w-5 h-5 text-purple-500" />
-                  Start Date
-                </label>
+            {/* Date Range Picker */}
+            <div className="space-y-2">
+              <label className="flex items-center gap-2 font-medium text-gray-700">
+                <Calendar className="w-5 h-5 text-purple-500" />
+                Project Duration
+              </label>
+              <div className="relative">
                 <input
-                  type="date"
-                  id="start_date"
-                  name="start_date"
-                  value={formData.start_date}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label
-                  htmlFor="end_date"
-                  className="flex items-center gap-2 font-medium text-gray-700"
-                >
-                  <Calendar className="w-5 h-5 text-red-500" />
-                  End Date
-                </label>
-                <input
-                  type="date"
-                  id="end_date"
-                  name="end_date"
-                  value={formData.end_date}
-                  onChange={handleChange}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
+                  type="text"
+                  readOnly
+                  value={displayDateRange()}
+                  onClick={() => setShowDatePicker(true)}
+                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer"
+                  placeholder="Select project duration"
                 />
               </div>
             </div>
