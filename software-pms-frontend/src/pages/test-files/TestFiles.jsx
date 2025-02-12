@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
@@ -18,6 +18,14 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+// Constants for localStorage keys
+const STORAGE_KEYS = {
+  PROJECT_ID: "selectedProjectId",
+  PROJECT_NAME: "selectedProjectName",
+  SPRINT_ID: "selectedSprintId",
+  SPRINT_NAME: "selectedSprintName",
+};
+
 const TestFiles = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -33,125 +41,37 @@ const TestFiles = () => {
   const [stats, setStats] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
 
-  useEffect(() => {
-    // ตรวจสอบว่ามี projects แล้วและมีการเก็บ project ใน localStorage
-    if (projects.length > 0) {
-      const storedProject = localStorage.getItem("selectedProject");
-      const storedSprint = localStorage.getItem("selectedSprint");
+  // Cleanup function to clear localStorage
+  const clearStoredSelections = () => {
+    Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
+  };
 
-      if (storedProject) {
-        const parsedProject = JSON.parse(storedProject);
-        const matchedProject = projects.find(
-          (p) => p.project_id === parsedProject.project_id
-        );
-
-        if (matchedProject) {
-          setSelectedProject(matchedProject);
-
-          // หากมี sprint ที่เก็บไว้ ให้ค้นหา sprint ที่ตรงกันใน project ปัจจุบัน
-          if (storedSprint && sprints.length > 0) {
-            const parsedSprint = JSON.parse(storedSprint);
-            const matchedSprint = sprints.find(
-              (s) => s.sprint_id === parsedSprint.sprint_id
-            );
-
-            if (matchedSprint) {
-              setSelectedSprint(matchedSprint);
-            }
-          }
-        }
-      }
-    }
-  }, [projects, sprints]);
-
-  useEffect(() => {
-    // เพิ่ม event listener สำหรับการเปลี่ยนเส้นทาง
-    const handleRouteChange = () => {
-      const currentPath = window.location.pathname;
-
-      // ล้าง localStorage เฉพาะเมื่อออกจากหน้า test-files
-      if (!currentPath.includes("/test-files")) {
-        localStorage.removeItem("selectedProject");
-        localStorage.removeItem("selectedSprint");
-      }
-    };
-
-    // เพิ่มและลบ event listener
-    window.addEventListener("popstate", handleRouteChange);
-
-    return () => {
-      window.removeEventListener("popstate", handleRouteChange);
-    };
-  }, []);
-
-  // Fetch projects
-  useEffect(() => {
-    const fetchProjects = async () => {
-      try {
-        const response = await axios.get(`${API_BASE_URL}/api/projects`, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
-        setProjects(response.data);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch projects");
-      }
-    };
-
-    if (user) fetchProjects();
-  }, [user]);
-
-  // Fetch sprints for selected project
-  useEffect(() => {
-    const fetchSprints = async () => {
-      if (!selectedProject) {
-        setSprints([]);
-        return;
-      }
-
-      try {
-        const response = await axios.get(
-          `${API_BASE_URL}/api/sprints?project_id=${selectedProject.project_id}`,
-          {
-            headers: { Authorization: `Bearer ${user.token}` },
-          }
-        );
-        setSprints(response.data);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch sprints");
-      }
-    };
-
-    fetchSprints();
-  }, [selectedProject, user]);
-
-  // Fetch test files for selected sprint
+  // เพิ่ม useEffect สำหรับดึงข้อมูล testFiles
   useEffect(() => {
     const fetchTestFiles = async () => {
       if (!selectedSprint) {
         setTestFiles([]);
+        setLoading(false);
         return;
       }
 
+      setLoading(true);
       try {
-        setLoading(true);
-        const queryParams = new URLSearchParams({
-          sprint_id: selectedSprint.sprint_id,
-          filename: searchTerm,
-        }).toString();
-
-        const [filesResponse, statsResponse] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/test-files?${queryParams}`, {
+        const response = await axios.get(
+          `${API_BASE_URL}/api/test-files?sprint_id=${selectedSprint.sprint_id}`,
+          {
             headers: { Authorization: `Bearer ${user.token}` },
-          }),
-          axios.get(
-            `${API_BASE_URL}/api/test-files/stats?sprint_id=${selectedSprint.sprint_id}`,
-            {
-              headers: { Authorization: `Bearer ${user.token}` },
-            }
-          ),
-        ]);
+          }
+        );
+        setTestFiles(response.data);
 
-        setTestFiles(filesResponse.data);
+        // ถ้าต้องการดึง stats ด้วย
+        const statsResponse = await axios.get(
+          `${API_BASE_URL}/api/test-files/stats?sprint_id=${selectedSprint.sprint_id}`,
+          {
+            headers: { Authorization: `Bearer ${user.token}` },
+          }
+        );
         setStats(statsResponse.data);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to fetch test files");
@@ -160,28 +80,154 @@ const TestFiles = () => {
       }
     };
 
-    if (selectedSprint) {
-      fetchTestFiles();
+    fetchTestFiles();
+  }, [selectedSprint, user]);
+
+  // Clear localStorage when component unmounts or route changes
+  useEffect(() => {
+    // Function to handle route changes
+    const handleRouteChange = () => {
+      const currentPath = location.pathname;
+      // ถ้าไม่ได้อยู่ในหน้าที่เกี่ยวกับ test files ให้เคลียร์ค่า
+      if (!currentPath.includes("/test-files")) {
+        clearStoredSelections();
+      }
+    };
+
+    handleRouteChange();
+
+    // Cleanup when component unmounts
+    return () => {
+      // Clear only when navigating away from test-files routes
+      if (!window.location.pathname.includes("/test-files")) {
+        clearStoredSelections();
+      }
+    };
+  }, []); // Remove location.pathname dependency
+
+  // Modified navigation functions to clear localStorage when leaving test-files
+  const navigateWithCleanup = (path) => {
+    if (!path.includes("/test-files")) {
+      clearStoredSelections();
     }
-  }, [selectedSprint, searchTerm, user]);
+    navigate(path);
+  };
+
+  // Fetch projects and handle project selection from state or localStorage
+  useEffect(() => {
+    const fetchProjects = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/projects`, {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+        setProjects(response.data);
+
+        // ตรวจสอบ state จาก location ก่อน
+        if (location.state?.selectedProjectId) {
+          const project = response.data.find(
+            (p) => p.project_id === location.state.selectedProjectId
+          );
+          if (project) {
+            setSelectedProject(project);
+            localStorage.setItem(STORAGE_KEYS.PROJECT_ID, project.project_id);
+            localStorage.setItem(STORAGE_KEYS.PROJECT_NAME, project.name);
+          }
+        }
+        // ถ้าไม่มี state ให้ดึงจาก localStorage
+        else {
+          const savedProjectId = localStorage.getItem(STORAGE_KEYS.PROJECT_ID);
+          if (savedProjectId) {
+            const project = response.data.find(
+              (p) => p.project_id === parseInt(savedProjectId)
+            );
+            if (project) {
+              setSelectedProject(project);
+            }
+          }
+        }
+
+        // ตรวจสอบ sprint จาก state หรือ localStorage
+        const handleSprintSelection = async (projectId) => {
+          try {
+            const sprintResponse = await axios.get(
+              `${API_BASE_URL}/api/sprints?project_id=${projectId}`,
+              {
+                headers: { Authorization: `Bearer ${user.token}` },
+              }
+            );
+            setSprints(sprintResponse.data);
+
+            if (location.state?.selectedSprintId) {
+              const sprint = sprintResponse.data.find(
+                (s) => s.sprint_id === location.state.selectedSprintId
+              );
+              if (sprint) {
+                setSelectedSprint(sprint);
+                localStorage.setItem(STORAGE_KEYS.SPRINT_ID, sprint.sprint_id);
+                localStorage.setItem(STORAGE_KEYS.SPRINT_NAME, sprint.name);
+              }
+            } else {
+              const savedSprintId = localStorage.getItem(
+                STORAGE_KEYS.SPRINT_ID
+              );
+              if (savedSprintId) {
+                const sprint = sprintResponse.data.find(
+                  (s) => s.sprint_id === parseInt(savedSprintId)
+                );
+                if (sprint) {
+                  setSelectedSprint(sprint);
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Failed to fetch sprint:", err);
+          }
+        };
+
+        const projectId =
+          location.state?.selectedProjectId ||
+          localStorage.getItem(STORAGE_KEYS.PROJECT_ID);
+        if (projectId) {
+          handleSprintSelection(projectId);
+        }
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to fetch projects");
+      }
+    };
+
+    if (user) fetchProjects();
+  }, [
+    user,
+    location.state?.selectedProjectId,
+    location.state?.selectedSprintId,
+  ]);
 
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
     setSelectedSprint(null);
-    localStorage.setItem("selectedProject", JSON.stringify(project));
-    localStorage.removeItem("selectedSprint");
-
-    // Clear location state to prevent interference
-    navigate(".", { replace: true, state: {} });
+    localStorage.setItem(STORAGE_KEYS.PROJECT_ID, project.project_id);
+    localStorage.setItem(STORAGE_KEYS.PROJECT_NAME, project.name);
+    localStorage.removeItem(STORAGE_KEYS.SPRINT_ID);
+    localStorage.removeItem(STORAGE_KEYS.SPRINT_NAME);
+    navigate(".", {
+      replace: true,
+      state: { selectedProjectId: project.project_id },
+    });
   };
 
   const handleSprintSelect = (sprint) => {
     setSelectedSprint(sprint);
-    localStorage.setItem("selectedSprint", JSON.stringify(sprint));
-
-    // Clear location state to prevent interference
-    navigate(".", { replace: true, state: {} });
+    localStorage.setItem(STORAGE_KEYS.SPRINT_ID, sprint.sprint_id);
+    localStorage.setItem(STORAGE_KEYS.SPRINT_NAME, sprint.name);
+    navigate(".", {
+      replace: true,
+      state: {
+        selectedProjectId: selectedProject.project_id,
+        selectedSprintId: sprint.sprint_id,
+      },
+    });
   };
+
   const handleSearch = (e) => {
     setSearchTerm(e.target.value);
   };
@@ -239,7 +285,9 @@ const TestFiles = () => {
                 <h3 className="text-lg font-semibold text-gray-800 mb-2">
                   {project.name}
                 </h3>
-                <p className="text-sm text-gray-600 line-clamp-1">{project.description}</p>
+                <p className="text-sm text-gray-600 line-clamp-1">
+                  {project.description}
+                </p>
               </div>
             ))}
           </div>
