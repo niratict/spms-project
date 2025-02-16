@@ -51,14 +51,47 @@ const ActionLogs = () => {
     }
   }, [user, logout, navigate]);
 
+  // Adjust dates to include full day range
+  const adjustDateRange = (startDate, endDate) => {
+    if (!startDate && !endDate) return { startDate: "", endDate: "" };
+
+    let adjustedStart = startDate;
+    let adjustedEnd = endDate;
+
+    if (startDate) {
+      // Set start date to beginning of day in local timezone
+      adjustedStart = new Date(startDate);
+      adjustedStart.setHours(0, 0, 0, 0);
+      adjustedStart = adjustedStart.toISOString();
+    }
+
+    if (endDate) {
+      // Set end date to end of day in local timezone
+      adjustedEnd = new Date(endDate);
+      adjustedEnd.setHours(23, 59, 59, 999);
+      adjustedEnd = adjustedEnd.toISOString();
+    }
+
+    return { startDate: adjustedStart, endDate: adjustedEnd };
+  };
+
   // Fetch logs with filters
   useEffect(() => {
     const fetchLogs = async () => {
       try {
         setLoading(true);
         const offset = (currentPage - 1) * filters.limit;
+
+        // Adjust dates to include full day range
+        const { startDate, endDate } = adjustDateRange(
+          filters.start_date,
+          filters.end_date
+        );
+
         const queryParams = new URLSearchParams({
           ...filters,
+          start_date: startDate,
+          end_date: endDate,
           offset: offset.toString(),
         });
 
@@ -71,6 +104,9 @@ const ActionLogs = () => {
 
         setLogs(response.data.logs);
         setTotalLogs(response.data.total);
+
+        // Reset error state on successful fetch
+        setError(null);
       } catch (err) {
         if (err.response?.status === 401) {
           logout();
@@ -78,6 +114,8 @@ const ActionLogs = () => {
           return;
         }
         setError(err.response?.data?.message || "Failed to fetch action logs");
+        setLogs([]);
+        setTotalLogs(0);
       } finally {
         setLoading(false);
       }
@@ -92,7 +130,8 @@ const ActionLogs = () => {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1);
+    setCurrentPage(1); // Reset to first page when filters change
+    setError(null); // Clear any existing errors
   };
 
   // Clear all filters
@@ -104,10 +143,16 @@ const ActionLogs = () => {
       end_date: "",
       limit: 10,
     });
+    setCurrentPage(1);
+    setError(null);
   };
 
   // Calculate pagination
   const totalPages = Math.ceil(totalLogs / filters.limit);
+
+  // Validate pagination buttons
+  const canGoToNextPage = currentPage < totalPages && logs.length > 0;
+  const canGoToPreviousPage = currentPage > 1 && logs.length > 0;
 
   // Handle unauthorized access
   if (!user?.token) {
@@ -119,15 +164,6 @@ const ActionLogs = () => {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50">
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
-      </div>
-    );
-  }
-
-  // Error state
-  if (error) {
-    return (
-      <div className="text-center text-red-500 text-lg p-6 bg-gray-50 min-h-screen">
-        Error: {error}
       </div>
     );
   }
@@ -350,7 +386,7 @@ const ActionLogs = () => {
             <button
               data-cy="previous-page"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              disabled={!canGoToPreviousPage}
               className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Previous
@@ -358,7 +394,7 @@ const ActionLogs = () => {
             <button
               data-cy="next-page"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              disabled={!canGoToNextPage}
               className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Next
