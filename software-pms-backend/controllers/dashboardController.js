@@ -273,6 +273,8 @@ const dashboardController = {
 
           return {
             sprintName: sprint.name,
+            startDate: sprint.start_date,
+            endDate: sprint.end_date,
             passedTests,
             failedTests,
             timedOutTests,

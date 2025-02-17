@@ -28,6 +28,7 @@ import {
   PieChart as PieChartIcon, // Add this line
 } from "lucide-react";
 import SprintStackedChart from "./SprintStackedChart";
+import TestResultsList from './TestResultsList';
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 
@@ -715,6 +716,8 @@ export default function TestDashboard() {
               <SprintStackedChart
                 sprintResults={sprintStackedData.map((sprint) => ({
                   sprint_name: sprint.sprintName,
+                  startDate: sprint.startDate,
+                  endDate: sprint.endDate,
                   suites: [
                     {
                       tests: Array(sprint.totalTests)
@@ -803,37 +806,8 @@ export default function TestDashboard() {
                           </div>
                         </div>
 
-                        <div className="space-y-2">
-                          {tests.map((test, i) => (
-                            <div
-                              key={i}
-                              className={`p-3 rounded-md ${
-                                test.pass
-                                  ? "bg-green-100 border-l-4 border-green-500"
-                                  : "bg-red-100 border-l-4 border-red-500"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                {test.pass ? (
-                                  <CheckCircle className="text-green-600 h-5 w-5" />
-                                ) : (
-                                  <XCircle className="text-red-600 h-5 w-5" />
-                                )}
-                                <div>
-                                  <h4 className="font-medium text-gray-900">
-                                    {test.title}
-                                  </h4>
-                                  <p className="text-sm text-gray-600">
-                                    {test.fullTitle}
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-sm text-gray-600 mt-2 pl-7">
-                                Duration: {(test.duration / 1000).toFixed(3)}s
-                              </div>
-                            </div>
-                          ))}
-                        </div>
+                        <TestResultsList tests={tests} />
+
                       </div>
                     );
                   })}

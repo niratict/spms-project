@@ -39,6 +39,27 @@ const SprintStackedChart = ({ sprintResults }) => {
     };
   }, [sprintResults]);
 
+  // ปรับปรุงฟังก์ชัน formatThaiDate ให้จัดการกับ timezone อย่างถูกต้อง
+  const formatThaiDate = (isoDateString) => {
+    try {
+      if (!isoDateString) return "-";
+
+      // แปลงวันที่โดยตรงโดยไม่ผ่าน timezone conversion
+      const [datePart] = isoDateString.split("T");
+      if (!datePart) return "-";
+
+      // แยกส่วนประกอบของวันที่
+      const [year, month, day] = datePart.split("-");
+      if (!year || !month || !day) return "-";
+
+      // จัดรูปแบบใหม่เป็น dd-mm-yyyy
+      return `${day}-${month}-${year}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return "-";
+    }
+  };
+
   // Process the sprint results data for the stacked bar chart
   const chartData = sprintResults.map((sprint) => {
     const totalTests = sprint.suites?.[0]?.tests?.length || 0;
@@ -46,8 +67,23 @@ const SprintStackedChart = ({ sprintResults }) => {
       sprint.suites?.[0]?.tests?.filter((test) => test.pass)?.length || 0;
     const failedTests = totalTests - passedTests;
 
+    // ตรวจสอบและจัดการกับวันที่
+    const startDate = sprint.startDate ? formatThaiDate(sprint.startDate) : "-";
+    const endDate = sprint.endDate ? formatThaiDate(sprint.endDate) : "-";
+
+    // ถ้าไม่มีวันที่ทั้งสองอัน ไม่ต้องแสดงข้อความ "ถึง"
+    const dateRange =
+      startDate !== "-" && endDate !== "-"
+        ? `${startDate} ถึง ${endDate}`
+        : startDate !== "-"
+        ? startDate
+        : endDate !== "-"
+        ? endDate
+        : "-";
+
     return {
-      sprint: sprint.sprint_name,
+      sprint: `${sprint.sprint_name || "Unknown Sprint"}`,
+      dates: dateRange,
       Passed: passedTests,
       Failed: failedTests,
       "Timed Out": 0,
@@ -76,6 +112,36 @@ const SprintStackedChart = ({ sprintResults }) => {
       );
     }
     return null;
+  };
+
+  const CustomXAxisTick = (props) => {
+    const { x, y, payload } = props;
+    const sprint = chartData.find((item) => item.sprint === payload.value);
+
+    return (
+      <g transform={`translate(${x},${y})`}>
+        <text
+          x={0}
+          y={0}
+          dy={16}
+          textAnchor="middle"
+          fill="#374151"
+          className="text-sm font-medium"
+        >
+          {payload.value}
+        </text>
+        <text
+          x={0}
+          y={16}
+          dy={16}
+          textAnchor="middle"
+          fill="#6B7280"
+          className="text-xs"
+        >
+          {sprint?.dates}
+        </text>
+      </g>
+    );
   };
 
   const MetricCard = ({ title, value, change }) => (
@@ -116,17 +182,13 @@ const SprintStackedChart = ({ sprintResults }) => {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 65 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
                 className="stroke-gray-200"
               />
-              <XAxis
-                dataKey="sprint"
-                tick={{ fill: "rgb(55, 65, 81)" }}
-                className="text-sm"
-              />
+              <XAxis dataKey="sprint" tick={<CustomXAxisTick />} height={65} />
               <YAxis tick={{ fill: "rgb(55, 65, 81)" }} className="text-sm" />
               <Tooltip content={<CustomTooltip />} />
               <Legend />
