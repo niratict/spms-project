@@ -33,7 +33,12 @@ const ProjectCard = ({ project }) => (
             {project.name}
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            Created on {new Date(project.created_at).toLocaleDateString()}
+            Created on{" "}
+            {new Date(project.created_at).toLocaleDateString("th-TH", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+            })}
           </p>
         </div>
         <span

@@ -11,6 +11,7 @@ import {
   X,
   Calendar,
   UserCircle,
+  Trash2,
 } from "lucide-react";
 import Modal from "react-modal";
 import axios from "axios";
@@ -38,12 +39,24 @@ const modalStyles = {
   },
 };
 
+const imagePreviewModalStyles = {
+  ...modalStyles,
+  content: {
+    ...modalStyles.content,
+    width: "auto",
+    maxWidth: "90vw",
+    maxHeight: "90vh",
+    padding: "16px",
+  },
+};
+
 const Profile = () => {
   const { user } = useAuth();
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [showImagePreviewModal, setShowImagePreviewModal] = useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [showPassword, setShowPassword] = useState({
@@ -59,7 +72,6 @@ const Profile = () => {
 
   const [formErrors, setFormErrors] = useState({
     name: "",
-    email: "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -107,10 +119,6 @@ const Profile = () => {
   const validateForm = () => {
     const errors = {};
     if (!formData.name.trim()) errors.name = "Name is required";
-    if (!formData.email.trim()) errors.email = "Email is required";
-    if (!/\S+@\S+\.\S+/.test(formData.email))
-      errors.email = "Invalid email format";
-
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -161,14 +169,33 @@ const Profile = () => {
     }
   };
 
+  const handleDeleteImage = async () => {
+    setActionLoading(true);
+    try {
+      await axios.delete(`${API_BASE_URL}/api/profile/delete-image`, {
+        headers: { Authorization: `Bearer ${user.token}` },
+      });
+      setImagePreview(null);
+      await fetchProfile();
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to delete image");
+    } finally {
+      setActionLoading(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!validateForm()) return;
 
     setActionLoading(true);
     try {
-      await axios.put(`${API_BASE_URL}/api/profile/update`, formData, {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
+      await axios.put(
+        `${API_BASE_URL}/api/profile/update`,
+        { name: formData.name },
+        {
+          headers: { Authorization: `Bearer ${user.token}` },
+        }
+      );
       setEditMode(false);
       await fetchProfile();
     } catch (err) {
@@ -241,7 +268,6 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* Content */}
           <div className="p-8">
             {error && (
               <div className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2">
@@ -257,61 +283,84 @@ const Profile = () => {
             )}
 
             {/* Profile Image Section */}
-            <div className="flex items-center space-x-8 mb-8">
-              <div className="relative group">
-                <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg transition-transform group-hover:scale-105">
-                  {imagePreview ? (
-                    <img
-                      src={imagePreview}
-                      alt="Profile"
-                      className="w-full h-full object-cover"
+            <div className="flex flex-col md:flex-row md:items-start gap-8 mb-8">
+              <div className="flex flex-col items-center space-y-4">
+                <div className="relative">
+                  <div
+                    className="w-40 h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg cursor-pointer"
+                    onClick={() =>
+                      imagePreview && setShowImagePreviewModal(true)
+                    }
+                  >
+                    {imagePreview ? (
+                      <img
+                        src={imagePreview}
+                        alt="Profile"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                        <UserCircle className="w-20 h-20 text-gray-400" />
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <label className="bg-blue-500 p-3 rounded-full cursor-pointer hover:bg-blue-600 transition-colors shadow-lg">
+                    <Upload className="w-5 h-5 text-white" />
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/jpeg,image/png"
+                      onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file && file.size <= 5 * 1024 * 1024) {
+                          setSelectedImage(file);
+                          setImagePreview(URL.createObjectURL(file));
+                        } else {
+                          setError("File size must be less than 5MB");
+                        }
+                      }}
                     />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                      <UserCircle className="w-20 h-20 text-gray-400" />
-                    </div>
+                  </label>
+                  {imagePreview && (
+                    <button
+                      onClick={handleDeleteImage}
+                      className="bg-red-500 p-3 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                    >
+                      <Trash2 className="w-5 h-5 text-white" />
+                    </button>
                   )}
                 </div>
-                <label className="absolute bottom-2 right-2 bg-blue-500 p-3 rounded-full cursor-pointer hover:bg-blue-600 transition-colors shadow-lg">
-                  <Upload className="w-5 h-5 text-white" />
-                  <input
-                    type="file"
-                    className="hidden"
-                    accept="image/jpeg,image/png"
-                    onChange={(e) => {
-                      const file = e.target.files[0];
-                      if (file && file.size <= 5 * 1024 * 1024) {
-                        setSelectedImage(file);
-                        setImagePreview(URL.createObjectURL(file));
-                      } else {
-                        setError("File size must be less than 5MB");
-                      }
-                    }}
-                  />
-                </label>
-              </div>
 
-              <div className="flex flex-col space-y-2">
-                <h2 className="text-2xl font-semibold text-gray-800">
-                  {profile?.name}
-                </h2>
-                <div className="flex items-center space-x-2 text-gray-600">
-                  <Calendar className="w-4 h-4" />
-                  <span>Joined {formatDate(profile?.created_at)}</span>
-                </div>
                 {selectedImage && (
                   <button
                     onClick={handleImageUpload}
                     disabled={actionLoading}
-                    className="mt-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 shadow-md"
+                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 shadow-md w-full max-w-[200px]"
                   >
-                    {actionLoading ? "Uploading..." : "Upload Image"}
+                    {actionLoading ? "Uploading..." : "Upload New Image"}
                   </button>
                 )}
               </div>
+
+              <div className="flex flex-col space-y-3 md:pt-2">
+                <h2 className="text-2xl font-semibold text-gray-800">
+                  {profile?.name}
+                </h2>
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <Mail className="w-4 h-4" />
+                  <span>{profile?.email}</span>
+                </div>
+                <div className="flex items-center space-x-2 text-gray-600">
+                  <Calendar className="w-4 h-4" />
+                  <span>Joined {formatDate(profile?.created_at)}</span>
+                </div>
+              </div>
             </div>
 
-            {/* Profile Form */}
+            {/* Form Section */}
             <div className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
@@ -349,23 +398,11 @@ const Profile = () => {
                     <input
                       type="email"
                       value={formData.email}
-                      onChange={(e) => {
-                        setFormData({ ...formData, email: e.target.value });
-                        if (formErrors.email)
-                          setFormErrors({ ...formErrors, email: "" });
-                      }}
-                      disabled={!editMode}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 ${
-                        formErrors.email ? "border-red-500" : ""
-                      }`}
+                      disabled={true}
+                      className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-gray-500"
                     />
                     <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                   </div>
-                  {formErrors.email && (
-                    <p className="mt-1 text-sm text-red-500">
-                      {formErrors.email}
-                    </p>
-                  )}
                 </div>
               </div>
 
@@ -391,8 +428,8 @@ const Profile = () => {
                       onClick={() => {
                         setEditMode(false);
                         setFormData({
+                          ...formData,
                           name: profile?.name || "",
-                          email: profile?.email || "",
                         });
                         setFormErrors({});
                       }}
@@ -414,6 +451,27 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* Image Preview Modal */}
+      <Modal
+        isOpen={showImagePreviewModal}
+        onRequestClose={() => setShowImagePreviewModal(false)}
+        style={imagePreviewModalStyles}
+      >
+        <div className="relative">
+          <button
+            onClick={() => setShowImagePreviewModal(false)}
+            className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+          >
+            <X className="h-6 w-6" />
+          </button>
+          <img
+            src={imagePreview}
+            alt="Profile Preview"
+            className="max-w-full max-h-[80vh] object-contain"
+          />
+        </div>
+      </Modal>
 
       {/* Password Change Modal */}
       <Modal

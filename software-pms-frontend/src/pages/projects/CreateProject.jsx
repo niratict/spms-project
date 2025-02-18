@@ -162,9 +162,9 @@ const CreateProject = () => {
 
   const displayDateRange = () => {
     if (!formData.start_date || !formData.end_date) return "";
-    return `${format(new Date(formData.start_date), "MMM dd, yyyy")} - ${format(
+    return `${format(new Date(formData.start_date), "dd/MM/yyyy")} - ${format(
       new Date(formData.end_date),
-      "MMM dd, yyyy"
+      "dd/MM/yyyy"
     )}`;
   };
 

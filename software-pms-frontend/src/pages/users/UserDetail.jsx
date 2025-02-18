@@ -158,7 +158,7 @@ const UserDetail = () => {
       <div className="container mx-auto max-w-4xl space-y-6">
         {/* Back Button */}
         <button
-          onClick={() => navigate('/users/')}
+          onClick={() => navigate("/users/")}
           className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors mb-4"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -226,12 +226,26 @@ const UserDetail = () => {
                     {
                       icon: <Clock className="text-purple-500" />,
                       label: "Created",
-                      value: new Date(userData.created_at).toLocaleDateString(),
+                      value: new Date(userData.created_at).toLocaleDateString(
+                        "th-TH",
+                        {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        }
+                      ),
                     },
                     {
                       icon: <Clock className="text-indigo-500" />,
                       label: "Last Updated",
-                      value: new Date(userData.updated_at).toLocaleDateString(),
+                      value: new Date(userData.updated_at).toLocaleDateString(
+                        "th-TH",
+                        {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        }
+                      ),
                     },
                   ].map((detail, index) => (
                     <div
@@ -381,7 +395,10 @@ const UserDetail = () => {
                 >
                   Cancel
                 </button>
-                <button type="submit"  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50">
+                <button
+                  type="submit"
+                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                >
                   Change Password
                 </button>
               </div>

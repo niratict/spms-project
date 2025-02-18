@@ -147,9 +147,9 @@ const SprintDetail = () => {
                   <div>
                     <p className="text-sm text-gray-500">Start Date</p>
                     <p className="font-semibold text-gray-900">
-                      {new Date(sprint.start_date).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
+                      {new Date(sprint.start_date).toLocaleDateString("th-TH", {
+                        day: "2-digit",
+                        month: "2-digit",
                         year: "numeric",
                       })}
                     </p>
@@ -165,9 +165,9 @@ const SprintDetail = () => {
                   <div>
                     <p className="text-sm text-gray-500">End Date</p>
                     <p className="font-semibold text-gray-900">
-                      {new Date(sprint.end_date).toLocaleDateString("en-US", {
-                        month: "long",
-                        day: "numeric",
+                      {new Date(sprint.end_date).toLocaleDateString("th-TH", {
+                        day: "2-digit",
+                        month: "2-digit",
                         year: "numeric",
                       })}
                     </p>

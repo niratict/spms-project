@@ -322,8 +322,17 @@ const TestFiles = () => {
                   </h3>
                   <div className="flex items-center text-sm text-gray-600">
                     <Calendar className="w-4 h-4 mr-2 text-gray-500" />
-                    {new Date(sprint.start_date).toLocaleDateString()} -{" "}
-                    {new Date(sprint.end_date).toLocaleDateString()}
+                    {new Date(sprint.start_date).toLocaleDateString("th-TH", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}{" "}
+                    -{" "}
+                    {new Date(sprint.end_date).toLocaleDateString("th-TH", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
                   </div>
                 </div>
               ))}
@@ -438,7 +447,14 @@ const TestFiles = () => {
                         <div className="flex items-center gap-2">
                           <Calendar className="w-4 h-4" />
                           <span>
-                            {new Date(file.upload_date).toLocaleDateString()}
+                            {new Date(file.upload_date).toLocaleDateString(
+                              "th-TH",
+                              {
+                                day: "2-digit",
+                                month: "2-digit",
+                                year: "numeric",
+                              }
+                            )}
                           </span>
                         </div>
                       </div>

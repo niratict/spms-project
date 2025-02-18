@@ -1,11 +1,15 @@
+// profileController.js
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs").promises;
 
-// กำหนดค่า multer สำหรับอัพโหลดรูปภาพ
+// Configure multer for image uploads
 const storage = multer.diskStorage({
-  destination: "./uploads/profiles",
+  destination: (req, file, cb) => {
+    cb(null, "./uploads/profiles");
+  },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(null, `profile-${uniqueSuffix}${path.extname(file.originalname)}`);
@@ -14,7 +18,7 @@ const storage = multer.diskStorage({
 
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 5 * 1024 * 1024 }, // จำกัดขนาดไฟล์ 5MB
+  limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
     const fileTypes = /jpeg|jpg|png/;
     const mimetype = fileTypes.test(file.mimetype);
@@ -29,7 +33,20 @@ const upload = multer({
   },
 }).single("profile_image");
 
-// ดึงข้อมูลโปรไฟล์
+// Create uploads directory if it doesn't exist
+const ensureUploadDirExists = async () => {
+  const uploadDir = "./uploads/profiles";
+  try {
+    await fs.access(uploadDir);
+  } catch (error) {
+    await fs.mkdir(uploadDir, { recursive: true });
+  }
+};
+
+// Initialize upload directory
+ensureUploadDirExists().catch(console.error);
+
+// Get profile information
 const getProfile = async (req, res) => {
   try {
     const [user] = await db.query(
@@ -56,29 +73,22 @@ const getProfile = async (req, res) => {
   }
 };
 
-// อัพเดทข้อมูลโปรไฟล์
+// Update profile (name only)
 const updateProfile = async (req, res) => {
   try {
-    const { name, email } = req.body;
+    const { name } = req.body;
 
-    // ตรวจสอบอีเมลซ้ำ
-    const [existingEmail] = await db.query(
-      "SELECT * FROM users WHERE email = ? AND user_id != ?",
-      [email, req.user.user_id]
-    );
-
-    if (existingEmail.length > 0) {
-      return res.status(400).json({ message: "Email already exists" });
+    // Validate input
+    if (!name || !name.trim()) {
+      return res.status(400).json({ message: "Name is required" });
     }
 
-    // อัพเดทข้อมูล
-    await db.query("UPDATE users SET name = ?, email = ? WHERE user_id = ?", [
-      name,
-      email,
+    await db.query("UPDATE users SET name = ? WHERE user_id = ?", [
+      name.trim(),
       req.user.user_id,
     ]);
 
-    // บันทึก action log
+    // Log the action
     await db.query(
       "INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) VALUES (?, ?, ?, ?, ?)",
       [
@@ -86,7 +96,7 @@ const updateProfile = async (req, res) => {
         "update_profile",
         "users",
         req.user.user_id,
-        JSON.stringify({ name, email }),
+        JSON.stringify({ name }),
       ]
     );
 
@@ -96,7 +106,7 @@ const updateProfile = async (req, res) => {
   }
 };
 
-// อัพเดทรูปโปรไฟล์
+// Update profile image
 const updateProfileImage = async (req, res) => {
   upload(req, res, async (err) => {
     if (err) {
@@ -108,13 +118,32 @@ const updateProfileImage = async (req, res) => {
     }
 
     try {
-      // อัพเดทชื่อไฟล์รูปในฐานข้อมูล
+      // Get old image info
+      const [user] = await db.query(
+        "SELECT profile_image FROM users WHERE user_id = ?",
+        [req.user.user_id]
+      );
+
+      // Delete old image if it exists
+      if (user.length && user[0].profile_image) {
+        const oldImagePath = path.join(
+          "./uploads/profiles",
+          user[0].profile_image
+        );
+        try {
+          await fs.unlink(oldImagePath);
+        } catch (err) {
+          console.error("Error deleting old file:", err);
+        }
+      }
+
+      // Update database with new image
       await db.query("UPDATE users SET profile_image = ? WHERE user_id = ?", [
         req.file.filename,
         req.user.user_id,
       ]);
 
-      // บันทึก action log
+      // Log the action
       await db.query(
         "INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) VALUES (?, ?, ?, ?, ?)",
         [
@@ -122,7 +151,10 @@ const updateProfileImage = async (req, res) => {
           "update_profile_image",
           "users",
           req.user.user_id,
-          JSON.stringify({ filename: req.file.filename }),
+          JSON.stringify({
+            new_image: req.file.filename,
+            old_image: user[0]?.profile_image,
+          }),
         ]
       );
 
@@ -131,17 +163,78 @@ const updateProfileImage = async (req, res) => {
         filename: req.file.filename,
       });
     } catch (error) {
+      // Clean up uploaded file if database operation fails
+      try {
+        await fs.unlink(req.file.path);
+      } catch (err) {
+        console.error("Error deleting uploaded file:", err);
+      }
       res.status(500).json({ error: error.message });
     }
   });
 };
 
-// เปลี่ยนรหัสผ่าน
+// Delete profile image
+const deleteProfileImage = async (req, res) => {
+  try {
+    const [user] = await db.query(
+      "SELECT profile_image FROM users WHERE user_id = ?",
+      [req.user.user_id]
+    );
+
+    if (!user.length || !user[0].profile_image) {
+      return res.status(404).json({ message: "Profile image not found" });
+    }
+
+    const imagePath = path.join("./uploads/profiles", user[0].profile_image);
+
+    // Delete the image file
+    try {
+      await fs.unlink(imagePath);
+    } catch (err) {
+      console.error("Error deleting file:", err);
+    }
+
+    // Update database
+    await db.query("UPDATE users SET profile_image = NULL WHERE user_id = ?", [
+      req.user.user_id,
+    ]);
+
+    // Log the action
+    await db.query(
+      "INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) VALUES (?, ?, ?, ?, ?)",
+      [
+        req.user.user_id,
+        "delete_profile_image",
+        "users",
+        req.user.user_id,
+        JSON.stringify({ deleted_image: user[0].profile_image }),
+      ]
+    );
+
+    res.json({ message: "Profile image deleted successfully" });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// Change password
 const changePassword = async (req, res) => {
   try {
     const { current_password, new_password } = req.body;
 
-    // ดึงข้อมูลผู้ใช้
+    // Validate input
+    if (!current_password || !new_password) {
+      return res.status(400).json({ message: "All fields are required" });
+    }
+
+    if (new_password.length < 8) {
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 8 characters" });
+    }
+
+    // Get user data
     const [user] = await db.query(
       "SELECT password FROM users WHERE user_id = ?",
       [req.user.user_id]
@@ -151,7 +244,7 @@ const changePassword = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // ตรวจสอบรหัสผ่านปัจจุบัน
+    // Verify current password
     const validPassword = await bcrypt.compare(
       current_password,
       user[0].password
@@ -161,17 +254,17 @@ const changePassword = async (req, res) => {
       return res.status(400).json({ message: "Current password is incorrect" });
     }
 
-    // เข้ารหัสรหัสผ่านใหม่
+    // Hash new password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(new_password, salt);
 
-    // อัพเดทรหัสผ่าน
+    // Update password
     await db.query("UPDATE users SET password = ? WHERE user_id = ?", [
       hashedPassword,
       req.user.user_id,
     ]);
 
-    // บันทึก action log
+    // Log the action
     await db.query(
       "INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) VALUES (?, ?, ?, ?, ?)",
       [
@@ -193,5 +286,6 @@ module.exports = {
   getProfile,
   updateProfile,
   updateProfileImage,
+  deleteProfileImage,
   changePassword,
 };

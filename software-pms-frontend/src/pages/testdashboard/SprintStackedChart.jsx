@@ -29,6 +29,7 @@ const SprintStackedChart = ({ sprintResults }) => {
     const totalFailed = totalTests - totalPassed;
     const averagePerSprint = totalTests / sprintResults.length;
     const failureRate = ((totalFailed / totalTests) * 100).toFixed(1);
+    const passRate = ((totalPassed / totalTests) * 100).toFixed(1);
 
     return {
       totalTests,
@@ -36,6 +37,7 @@ const SprintStackedChart = ({ sprintResults }) => {
       totalPassed,
       totalFailed,
       failureRate,
+      passRate,
     };
   }, [sprintResults]);
 
@@ -175,7 +177,7 @@ const SprintStackedChart = ({ sprintResults }) => {
             Sprint Test Results Over Time
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Failure Rate: {summaryMetrics.failureRate}%
+            Pass Rate: {summaryMetrics.passRate}% - Failure Rate: {summaryMetrics.failureRate}%
           </p>
         </div>
         <div className="h-[400px] w-full">

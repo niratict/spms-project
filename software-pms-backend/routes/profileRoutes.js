@@ -10,6 +10,7 @@ router.use(auth);
 router.get("/", profileController.getProfile);
 router.put("/update", profileController.updateProfile);
 router.put("/update-image", profileController.updateProfileImage);
+router.delete("/delete-image", profileController.deleteProfileImage);
 router.put("/change-password", profileController.changePassword);
 
 module.exports = router;

@@ -198,8 +198,23 @@ const Sprints = () => {
                           <div className="flex items-center gap-2">
                             <Calendar className="w-4 h-4 text-gray-500" />
                             <span>
-                              {new Date(sprint.start_date).toLocaleDateString()}{" "}
-                              - {new Date(sprint.end_date).toLocaleDateString()}
+                              {new Date(sprint.start_date).toLocaleDateString(
+                                "th-TH",
+                                {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                }
+                              )}{" "}
+                              -{" "}
+                              {new Date(sprint.end_date).toLocaleDateString(
+                                "th-TH",
+                                {
+                                  day: "2-digit",
+                                  month: "2-digit",
+                                  year: "numeric",
+                                }
+                              )}
                             </span>
                           </div>
                         </div>

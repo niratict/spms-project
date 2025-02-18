@@ -190,7 +190,11 @@ const ProjectDetail = () => {
                 <div>
                   <div className="text-sm text-gray-600">Start Date</div>
                   <div className="font-semibold">
-                    {new Date(project.start_date).toLocaleDateString()}
+                    {new Date(project.start_date).toLocaleDateString("th-TH", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
                   </div>
                 </div>
               </div>
@@ -199,7 +203,11 @@ const ProjectDetail = () => {
                 <div>
                   <div className="text-sm text-gray-600">End Date</div>
                   <div className="font-semibold">
-                    {new Date(project.end_date).toLocaleDateString()}
+                    {new Date(project.end_date).toLocaleDateString("th-TH", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
                   </div>
                 </div>
               </div>
@@ -234,8 +242,20 @@ const ProjectDetail = () => {
                     <div>
                       <h3 className="font-semibold">{sprint.name}</h3>
                       <div className="text-sm text-gray-600">
-                        {new Date(sprint.start_date).toLocaleDateString()} -{" "}
-                        {new Date(sprint.end_date).toLocaleDateString()}
+                        {new Date(sprint.start_date).toLocaleDateString(
+                          "th-TH",
+                          {
+                            day: "2-digit",
+                            month: "2-digit",
+                            year: "numeric",
+                          }
+                        )}{" "}
+                        -{" "}
+                        {new Date(sprint.end_date).toLocaleDateString("th-TH", {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        })}
                       </div>
                     </div>
                     <div className="flex items-center gap-2">

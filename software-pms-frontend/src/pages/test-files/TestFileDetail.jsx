@@ -166,7 +166,11 @@ const TestFileDetail = () => {
                     <Calendar className="w-5 h-5 text-gray-500" />
                     <span>
                       <span className="font-semibold">Upload Date:</span>{" "}
-                      {new Date(testFile.upload_date).toLocaleDateString()}
+                      {new Date(testFile.upload_date).toLocaleDateString("th-TH", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">

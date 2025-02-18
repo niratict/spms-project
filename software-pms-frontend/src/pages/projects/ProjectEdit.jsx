@@ -271,14 +271,9 @@ const ProjectEdit = () => {
 
   const displayDateRange = () => {
     if (!formData.start_date || !formData.end_date) return "";
-
-    // Create dates from the form data strings
-    const startDate = new Date(formData.start_date);
-    const endDate = new Date(formData.end_date);
-
-    return `${format(startDate, "MMM dd, yyyy")} - ${format(
-      endDate,
-      "MMM dd, yyyy"
+    return `${format(new Date(formData.start_date), "dd/MM/yyyy")} - ${format(
+      new Date(formData.end_date),
+      "dd/MM/yyyy"
     )}`;
   };
 

@@ -11,7 +11,7 @@ import { useAuth } from "../../context/AuthContext";
 import { useNavigate, Navigate } from "react-router-dom";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
-const USERS_PER_PAGE = 9;
+const USERS_PER_PAGE = 6;
 
 // Role color mapping
 const ROLE_COLORS = {
@@ -177,7 +177,12 @@ const Users = () => {
                   <UserCircle className="w-4 h-4" /> {userData.email}
                 </p>
                 <p className="text-gray-600">
-                  Created: {new Date(userData.created_at).toLocaleDateString()}
+                  Created:{" "}
+                  {new Date(userData.created_at).toLocaleDateString("th-TH", {
+                    day: "2-digit",
+                    month: "2-digit",
+                    year: "numeric",
+                  })}
                 </p>
               </div>
               <div className="flex justify-start">

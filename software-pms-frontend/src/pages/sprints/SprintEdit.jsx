@@ -116,7 +116,7 @@ const SprintEdit = () => {
   // Disable dates that overlap with existing sprints (excluding current sprint)
   const disabledDays = [
     ...existingSprints
-      .filter((sprint) => sprint.name !== (sprint?.name || ""))
+      .filter((s) => s.name !== sprint.name) // กรองเอาเฉพาะ sprints ที่ไม่ใช่ sprint ปัจจุบัน
       .map((sprint) => ({
         from: new Date(sprint.start_date),
         to: new Date(sprint.end_date),
@@ -236,7 +236,9 @@ const SprintEdit = () => {
                   type="text"
                   value={
                     dateRange?.from && dateRange?.to
-                      ? `${dateRange.from.toLocaleDateString()} - ${dateRange.to.toLocaleDateString()}`
+                      ? `${dateRange.from.toLocaleDateString(
+                          "th-TH"
+                        )} - ${dateRange.to.toLocaleDateString("th-TH")}`
                       : "Select date range"
                   }
                   onClick={() => setShowDatePicker(true)}
@@ -289,8 +291,8 @@ const SprintEdit = () => {
                   {existingSprints.map((sprint) => (
                     <div key={sprint.name} className="text-sm text-gray-600">
                       {sprint.name}:{" "}
-                      {new Date(sprint.start_date).toLocaleDateString()} -{" "}
-                      {new Date(sprint.end_date).toLocaleDateString()}
+                      {new Date(sprint.start_date).toLocaleDateString("th-TH")}{" "}
+                      - {new Date(sprint.end_date).toLocaleDateString("th-TH")}
                     </div>
                   ))}
                 </div>
@@ -310,6 +312,27 @@ const SprintEdit = () => {
                     </p>
                   }
                 />
+              </div>
+
+              {/* Add buttons */}
+              <div className="flex justify-end space-x-4 mt-6">
+                <button
+                  onClick={() => setShowDatePicker(false)}
+                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => {
+                    if (dateRange.from && dateRange.to) {
+                      setShowDatePicker(false);
+                    }
+                  }}
+                  disabled={!dateRange.from || !dateRange.to}
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                >
+                  Confirm
+                </button>
               </div>
             </div>
           </div>

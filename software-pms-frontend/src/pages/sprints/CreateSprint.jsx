@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
-import { ArrowLeft, Plus, Calendar, AlertCircle, Lock } from "lucide-react";
+import { ArrowLeft, Plus, Calendar, AlertCircle, Lock, X } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
 
@@ -212,7 +212,9 @@ const CreateSprint = () => {
                   type="text"
                   value={
                     dateRange?.from && dateRange?.to
-                      ? `${dateRange.from.toLocaleDateString()} - ${dateRange.to.toLocaleDateString()}`
+                      ? `${dateRange.from.toLocaleDateString(
+                          "th-TH"
+                        )} - ${dateRange.to.toLocaleDateString("th-TH")}`
                       : "Select date range"
                   }
                   onClick={() => setShowDateRanges(true)}
@@ -242,6 +244,7 @@ const CreateSprint = () => {
         </div>
       </div>
 
+      {/* Date Picker Modal */}
       {showDateRanges && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
@@ -251,17 +254,7 @@ const CreateSprint = () => {
                 onClick={() => setShowDateRanges(false)}
                 className="text-gray-500 hover:text-gray-700"
               >
-                <svg
-                  className="w-6 h-6"
-                  fill="none"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
+                <X className="w-6 h-6" />
               </button>
             </div>
 
@@ -273,8 +266,8 @@ const CreateSprint = () => {
                 {existingSprints.map((sprint) => (
                   <div key={sprint.name} className="text-sm text-gray-600">
                     {sprint.name}:{" "}
-                    {new Date(sprint.start_date).toLocaleDateString()} -{" "}
-                    {new Date(sprint.end_date).toLocaleDateString()}
+                    {new Date(sprint.start_date).toLocaleDateString("th-TH")} -{" "}
+                    {new Date(sprint.end_date).toLocaleDateString("th-TH")}
                   </div>
                 ))}
               </div>
@@ -294,6 +287,27 @@ const CreateSprint = () => {
                   </p>
                 }
               />
+            </div>
+
+            {/* Add buttons */}
+            <div className="flex justify-end space-x-4 mt-6">
+              <button
+                onClick={() => setShowDateRanges(false)}
+                className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  if (dateRange.from && dateRange.to) {
+                    setShowDateRanges(false);
+                  }
+                }}
+                disabled={!dateRange.from || !dateRange.to}
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+              >
+                Confirm
+              </button>
             </div>
           </div>
         </div>
