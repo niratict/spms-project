@@ -5,7 +5,7 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider } from "./context/AuthContext";
 import { useAuth } from "./context/AuthContext";
 
 // Pages
@@ -30,6 +30,7 @@ import UserEdit from "./pages/users/UserEdit";
 import CreateUser from "./pages/users/CreateUser";
 import ActionLogs from "./pages/actionlogs/ActionLogs";
 import Layout from "./components/layout/Layout";
+import Profile from "./pages/profile/Profile";
 
 // Protected Route with Role Check
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
@@ -199,6 +200,15 @@ const AppRoutes = () => {
                   element={
                     <ProtectedRoute allowedRoles={["Admin"]}>
                       <UserEdit />
+                    </ProtectedRoute>
+                  }
+                />
+
+                <Route
+                  path="/profile"
+                  element={
+                    <ProtectedRoute>
+                      <Profile />
                     </ProtectedRoute>
                   }
                 />

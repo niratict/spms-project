@@ -24,6 +24,24 @@ const ActionLogs = () => {
     limit: 10,
   });
 
+  // Format date to DD/MM/YYYY
+  const formatDateForDisplay = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  // Parse date from DD/MM/YYYY to YYYY-MM-DD for input
+  const parseDateForInput = (dateString) => {
+    if (!dateString) return "";
+    const [day, month, year] = dateString.split("/");
+    return `${year}-${month}-${day}`;
+  };
+
   // Fetch action types and target tables
   useEffect(() => {
     const fetchFilterOptions = async () => {
@@ -59,16 +77,16 @@ const ActionLogs = () => {
     let adjustedEnd = endDate;
 
     if (startDate) {
-      // Set start date to beginning of day in local timezone
+      // Set start date to beginning of day in UTC
       adjustedStart = new Date(startDate);
-      adjustedStart.setHours(0, 0, 0, 0);
+      adjustedStart.setUTCHours(0, 0, 0, 0);
       adjustedStart = adjustedStart.toISOString();
     }
 
     if (endDate) {
-      // Set end date to end of day in local timezone
+      // Set end date to end of day in UTC
       adjustedEnd = new Date(endDate);
-      adjustedEnd.setHours(23, 59, 59, 999);
+      adjustedEnd.setUTCHours(23, 59, 59, 999);
       adjustedEnd = adjustedEnd.toISOString();
     }
 
@@ -104,8 +122,6 @@ const ActionLogs = () => {
 
         setLogs(response.data.logs);
         setTotalLogs(response.data.total);
-
-        // Reset error state on successful fetch
         setError(null);
       } catch (err) {
         if (err.response?.status === 401) {
@@ -239,6 +255,7 @@ const ActionLogs = () => {
                 name="start_date"
                 value={filters.start_date}
                 onChange={handleFilterChange}
+                placeholder="DD/MM/YYYY"
                 className="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -250,6 +267,7 @@ const ActionLogs = () => {
                 name="end_date"
                 value={filters.end_date}
                 onChange={handleFilterChange}
+                placeholder="DD/MM/YYYY"
                 className="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
@@ -271,6 +289,16 @@ const ActionLogs = () => {
             </div>
           )}
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div
+            className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative"
+            role="alert"
+          >
+            <span className="block sm:inline">{error}</span>
+          </div>
+        )}
 
         {/* Logs Table */}
         <div
@@ -304,7 +332,7 @@ const ActionLogs = () => {
                     className="px-6 py-4 whitespace-nowrap text-sm text-gray-600"
                     data-cy="log-date"
                   >
-                    {new Date(log.action_date).toLocaleString()}
+                    {formatDateForDisplay(log.action_date)}
                   </td>
                   <td
                     className="px-6 py-4 whitespace-nowrap"
@@ -378,7 +406,8 @@ const ActionLogs = () => {
           data-cy="pagination"
         >
           <div className="text-sm text-gray-700" data-cy="pagination-info">
-            Showing {(currentPage - 1) * filters.limit + 1} to{" "}
+            Showing{" "}
+            {logs.length > 0 ? (currentPage - 1) * filters.limit + 1 : 0} to{" "}
             {Math.min(currentPage * filters.limit, totalLogs)} of {totalLogs}{" "}
             entries
           </div>
