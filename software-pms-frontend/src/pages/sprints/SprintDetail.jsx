@@ -10,6 +10,7 @@ import {
   Edit,
   Trash2,
   AlertCircle,
+  X,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -22,24 +23,48 @@ const SprintDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showEditWarningModal, setShowEditWarningModal] = useState(false);
+  const [showDeleteWarningModal, setShowDeleteWarningModal] = useState(false);
+  const [deleteWarningMessage, setDeleteWarningMessage] = useState("");
+  const [isLatestSprint, setIsLatestSprint] = useState(false);
 
   useEffect(() => {
-    const fetchSprint = async () => {
+    const fetchSprintData = async () => {
       try {
-        const response = await axios.get(`${API_BASE_URL}/api/sprints/${id}`, {
-          headers: { Authorization: `Bearer ${user.token}` },
-        });
-        setSprint(response.data);
-      } catch (err) {
-        setError(
-          err.response?.data?.message || "Failed to fetch sprint details"
+        // Fetch current sprint
+        const sprintResponse = await axios.get(
+          `${API_BASE_URL}/api/sprints/${id}`,
+          {
+            headers: { Authorization: `Bearer ${user.token}` },
+          }
         );
+        const sprintData = sprintResponse.data;
+        setSprint(sprintData);
+
+        // Fetch all sprints for the project to check if this is the latest
+        const allSprintsResponse = await axios.get(
+          `${API_BASE_URL}/api/sprints/date-ranges?project_id=${sprintData.project_id}`,
+          {
+            headers: { Authorization: `Bearer ${user.token}` },
+          }
+        );
+
+        const sprints = allSprintsResponse.data;
+
+        // Check if this is the latest sprint
+        const currentSprintNumber = parseInt(sprintData.name.split(" ")[1]);
+        const latestSprintNumber = Math.max(
+          ...sprints.map((s) => parseInt(s.name.split(" ")[1]))
+        );
+        setIsLatestSprint(currentSprintNumber === latestSprintNumber);
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to fetch sprint data");
       } finally {
         setLoading(false);
       }
     };
 
-    if (user && id) fetchSprint();
+    if (user && id) fetchSprintData();
   }, [id, user]);
 
   const handleDelete = async () => {
@@ -47,9 +72,20 @@ const SprintDetail = () => {
       await axios.delete(`${API_BASE_URL}/api/sprints/${id}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
-      navigate("/sprints");
+
+      // Navigate back to sprints page with the project selection preserved
+      navigate("/sprints", {
+        state: {
+          selectedProjectId: sprint.project_id,
+        },
+        replace: true,
+      });
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete sprint");
+      setShowDeleteModal(false);
+      setDeleteWarningMessage(
+        err.response?.data?.message || "Failed to delete sprint"
+      );
+      setShowDeleteWarningModal(true);
     }
   };
 
@@ -57,9 +93,17 @@ const SprintDetail = () => {
     navigate("/sprints", {
       state: {
         selectedProjectId: sprint.project_id,
-        projectName: sprint.project_name,
       },
+      replace: true,
     });
+  };
+
+  const handleEditClick = () => {
+    if (!isLatestSprint) {
+      setShowEditWarningModal(true);
+    } else {
+      navigate(`/sprints/${id}/edit`);
+    }
   };
 
   if (loading) {
@@ -106,7 +150,7 @@ const SprintDetail = () => {
             </button>
             <div className="flex gap-3">
               <button
-                onClick={() => navigate(`/sprints/${id}/edit`)}
+                onClick={handleEditClick}
                 className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2"
               >
                 <Edit className="w-4 h-4" />
@@ -192,7 +236,7 @@ const SprintDetail = () => {
           </div>
         </div>
 
-        {/* Delete Modal */}
+        {/* Delete Confirmation Modal */}
         {showDeleteModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
@@ -225,6 +269,83 @@ const SprintDetail = () => {
                   >
                     <Trash2 className="w-4 h-4" />
                     Delete Sprint
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Edit Warning Modal */}
+        {showEditWarningModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <AlertCircle className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        Cannot Edit Sprint
+                      </h2>
+                    </div>
+                    <button
+                      onClick={() => setShowEditWarningModal(false)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  <p className="text-gray-600">
+                    Only the latest sprint can be edited. This sprint cannot be
+                    modified as there are more recent sprints in the project.
+                  </p>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setShowEditWarningModal(false)}
+                    className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Delete Warning Modal */}
+        {showDeleteWarningModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
+              <div className="p-6">
+                <div className="mb-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <AlertCircle className="w-6 h-6 text-orange-600" />
+                      </div>
+                      <h2 className="text-xl font-semibold text-gray-900">
+                        Cannot Delete Sprint
+                      </h2>
+                    </div>
+                    <button
+                      onClick={() => setShowDeleteWarningModal(false)}
+                      className="text-gray-500 hover:text-gray-700"
+                    >
+                      <X className="w-6 h-6" />
+                    </button>
+                  </div>
+                  <p className="text-gray-600">{deleteWarningMessage}</p>
+                </div>
+                <div className="flex justify-end">
+                  <button
+                    onClick={() => setShowDeleteWarningModal(false)}
+                    className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                  >
+                    Close
                   </button>
                 </div>
               </div>

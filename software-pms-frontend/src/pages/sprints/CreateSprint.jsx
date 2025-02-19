@@ -5,6 +5,7 @@ import axios from "axios";
 import { ArrowLeft, Plus, Calendar, AlertCircle, Lock, X } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
+import ExistingSprintsList from "./ExistingSprintsList";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -197,13 +198,6 @@ const CreateSprint = () => {
                 <label className="block text-sm font-medium text-gray-700">
                   Sprint Duration
                 </label>
-                <button
-                  type="button"
-                  onClick={() => setShowDateRanges(true)}
-                  className="text-sm text-blue-600 hover:text-blue-700"
-                >
-                  View Existing Sprints
-                </button>
               </div>
 
               <div className="relative">
@@ -258,20 +252,7 @@ const CreateSprint = () => {
               </button>
             </div>
 
-            <div className="mb-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">
-                Existing Sprints:
-              </h4>
-              <div className="space-y-2">
-                {existingSprints.map((sprint) => (
-                  <div key={sprint.name} className="text-sm text-gray-600">
-                    {sprint.name}:{" "}
-                    {new Date(sprint.start_date).toLocaleDateString("th-TH")} -{" "}
-                    {new Date(sprint.end_date).toLocaleDateString("th-TH")}
-                  </div>
-                ))}
-              </div>
-            </div>
+            <ExistingSprintsList sprints={existingSprints} />
 
             <div className="flex justify-center">
               <DayPicker

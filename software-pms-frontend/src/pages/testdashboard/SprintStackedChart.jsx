@@ -12,7 +12,7 @@ import {
 import { TrendingUp, TrendingDown } from "lucide-react";
 
 const SprintStackedChart = ({ sprintResults }) => {
-  // Calculate summary metrics
+  // Calculate summary metrics and changes
   const summaryMetrics = useMemo(() => {
     const totalTests = sprintResults.reduce(
       (acc, sprint) => acc + (sprint.suites?.[0]?.tests?.length || 0),
@@ -26,6 +26,30 @@ const SprintStackedChart = ({ sprintResults }) => {
       0
     );
 
+    // Calculate changes compared to previous sprint
+    const currentSprint = sprintResults[sprintResults.length - 1];
+    const previousSprint = sprintResults[sprintResults.length - 2];
+
+    const currentTestCount = currentSprint?.suites?.[0]?.tests?.length || 0;
+    const previousTestCount = previousSprint?.suites?.[0]?.tests?.length || 0;
+
+    // Calculate total tests change
+    const testsChange = previousTestCount
+      ? (
+          ((currentTestCount - previousTestCount) / previousTestCount) *
+          100
+        ).toFixed(1)
+      : 0;
+
+    // Calculate average per sprint change
+    const currentAverage = currentTestCount;
+    const previousAverage = previousTestCount;
+    const averageChange = previousAverage
+      ? (((currentAverage - previousAverage) / previousAverage) * 100).toFixed(
+          1
+        )
+      : 0;
+
     const totalFailed = totalTests - totalPassed;
     const averagePerSprint = totalTests / sprintResults.length;
     const failureRate = ((totalFailed / totalTests) * 100).toFixed(1);
@@ -38,54 +62,40 @@ const SprintStackedChart = ({ sprintResults }) => {
       totalFailed,
       failureRate,
       passRate,
+      testsChange: Number(testsChange),
+      averageChange: Number(averageChange),
     };
   }, [sprintResults]);
 
-  // ปรับปรุงฟังก์ชัน formatThaiDate ให้จัดการกับ timezone อย่างถูกต้อง
   const formatThaiDate = (isoDateString) => {
     try {
       if (!isoDateString) return "-";
-
-      // แปลงวันที่โดยตรงโดยไม่ผ่าน timezone conversion
       const [datePart] = isoDateString.split("T");
       if (!datePart) return "-";
-
-      // แยกส่วนประกอบของวันที่
       const [year, month, day] = datePart.split("-");
       if (!year || !month || !day) return "-";
-
-      // จัดรูปแบบใหม่เป็น dd-mm-yyyy
-      return `${day}-${month}-${year}`;
+      // Convert to Buddhist year by adding 543 to the Christian year
+      const buddhistYear = parseInt(year) + 543;
+      return `${day}-${month}-${buddhistYear}`;
     } catch (error) {
       console.error("Error formatting date:", error);
       return "-";
     }
   };
 
-  // Process the sprint results data for the stacked bar chart
   const chartData = sprintResults.map((sprint) => {
     const totalTests = sprint.suites?.[0]?.tests?.length || 0;
     const passedTests =
       sprint.suites?.[0]?.tests?.filter((test) => test.pass)?.length || 0;
     const failedTests = totalTests - passedTests;
 
-    // ตรวจสอบและจัดการกับวันที่
     const startDate = sprint.startDate ? formatThaiDate(sprint.startDate) : "-";
     const endDate = sprint.endDate ? formatThaiDate(sprint.endDate) : "-";
 
-    // ถ้าไม่มีวันที่ทั้งสองอัน ไม่ต้องแสดงข้อความ "ถึง"
-    const dateRange =
-      startDate !== "-" && endDate !== "-"
-        ? `${startDate} ถึง ${endDate}`
-        : startDate !== "-"
-        ? startDate
-        : endDate !== "-"
-        ? endDate
-        : "-";
-
     return {
       sprint: `${sprint.sprint_name || "Unknown Sprint"}`,
-      dates: dateRange,
+      startDate,
+      endDate,
       Passed: passedTests,
       Failed: failedTests,
       "Timed Out": 0,
@@ -96,9 +106,14 @@ const SprintStackedChart = ({ sprintResults }) => {
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
+      const sprintData = chartData.find((item) => item.sprint === label);
       return (
         <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
           <p className="font-semibold text-gray-800 mb-2">{label}</p>
+          <div className="text-sm text-gray-600 mb-2">
+            <p>Start Date: {sprintData.startDate}</p>
+            <p>End Date: {sprintData.endDate}</p>
+          </div>
           {payload.map((entry, index) => (
             <div key={index} className="flex items-center gap-2">
               <div
@@ -140,7 +155,6 @@ const SprintStackedChart = ({ sprintResults }) => {
           fill="#6B7280"
           className="text-xs"
         >
-          {sprint?.dates}
         </text>
       </g>
     );
@@ -151,7 +165,7 @@ const SprintStackedChart = ({ sprintResults }) => {
       <p className="text-sm text-gray-500">{title}</p>
       <div className="mt-2 flex items-baseline gap-2">
         <p className="text-2xl font-semibold text-gray-900">{value}</p>
-        {change && (
+        {change !== undefined && (
           <span
             className={`flex items-center text-sm ${
               change > 0 ? "text-green-600" : "text-red-600"
@@ -177,7 +191,8 @@ const SprintStackedChart = ({ sprintResults }) => {
             Sprint Test Results Over Time
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Pass Rate: {summaryMetrics.passRate}% - Failure Rate: {summaryMetrics.failureRate}%
+            Pass Rate: {summaryMetrics.passRate}% - Failure Rate:{" "}
+            {summaryMetrics.failureRate}%
           </p>
         </div>
         <div className="h-[400px] w-full">
@@ -205,12 +220,12 @@ const SprintStackedChart = ({ sprintResults }) => {
         <MetricCard
           title="Total Tests"
           value={summaryMetrics.totalTests}
-          change={18}
+          change={summaryMetrics.testsChange}
         />
         <MetricCard
           title="Average per Sprint"
           value={summaryMetrics.averagePerSprint}
-          change={26}
+          change={summaryMetrics.averageChange}
         />
         <MetricCard title="Passed Tests" value={summaryMetrics.totalPassed} />
         <MetricCard title="Failed Tests" value={summaryMetrics.totalFailed} />

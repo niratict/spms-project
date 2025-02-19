@@ -5,6 +5,7 @@ import { Edit, X, Save, Calendar, AlertCircle } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
+import ExistingSprintsList from "./ExistingSprintsList";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -283,20 +284,7 @@ const SprintEdit = () => {
                 </button>
               </div>
 
-              <div className="mb-4">
-                <h4 className="text-sm font-medium text-gray-700 mb-2">
-                  Existing Sprints:
-                </h4>
-                <div className="space-y-2">
-                  {existingSprints.map((sprint) => (
-                    <div key={sprint.name} className="text-sm text-gray-600">
-                      {sprint.name}:{" "}
-                      {new Date(sprint.start_date).toLocaleDateString("th-TH")}{" "}
-                      - {new Date(sprint.end_date).toLocaleDateString("th-TH")}
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ExistingSprintsList sprints={existingSprints} />
 
               <div className="flex justify-center">
                 <DayPicker
