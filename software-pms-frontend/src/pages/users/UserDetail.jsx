@@ -20,6 +20,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 // Modal Configuration
 Modal.setAppElement("#root");
 
+
 const UserDetail = () => {
   // State Management
   const { id } = useParams();
@@ -151,7 +152,7 @@ const UserDetail = () => {
 
   // Permission Flags
   const canEdit = user.role === "Admin" || user.user_id === parseInt(id);
-  const canDelete = user.role === "Admin" && user.user_id !== parseInt(id);
+  const canDelete = user.role === "Admin" && user.user_id !== parseInt(id) && userData.role !== "Admin";
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">

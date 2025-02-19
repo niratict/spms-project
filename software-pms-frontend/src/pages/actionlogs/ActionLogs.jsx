@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import { Calendar, Filter, X } from "lucide-react";
+import { Calendar, Filter } from "lucide-react";
 import { useNavigate, Navigate } from "react-router-dom";
+import { format } from "date-fns";
+import { th } from "date-fns/locale";
+import { DayPicker } from "react-day-picker";
+import "react-day-picker/dist/style.css";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -16,6 +20,11 @@ const ActionLogs = () => {
   const [targetTables, setTargetTables] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalLogs, setTotalLogs] = useState(0);
+  const [isDatePickerOpen, setIsDatePickerOpen] = useState(false);
+  const [selectedRange, setSelectedRange] = useState({
+    from: undefined,
+    to: undefined,
+  });
   const [filters, setFilters] = useState({
     action_type: "",
     target_table: "",
@@ -24,22 +33,45 @@ const ActionLogs = () => {
     limit: 10,
   });
 
-  // Format date to DD/MM/YYYY
-  const formatDateForDisplay = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString("th-TH", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+  // Format date to Thai Buddhist calendar (DD/MM/YYYY+543)
+  const formatThaiDate = (date) => {
+    if (!date) return "";
+    const buddhistYear = parseInt(format(date, "yyyy", { locale: th })) + 543;
+    return format(date, "dd/MM/") + buddhistYear;
   };
 
-  // Parse date from DD/MM/YYYY to YYYY-MM-DD for input
-  const parseDateForInput = (dateString) => {
-    if (!dateString) return "";
-    const [day, month, year] = dateString.split("/");
-    return `${year}-${month}-${day}`;
+  // Format date range for display
+  const formatDateRange = () => {
+    if (!selectedRange.from && !selectedRange.to) return "เลือกช่วงเวลา";
+    if (selectedRange.from && !selectedRange.to)
+      return formatThaiDate(selectedRange.from);
+    return `${formatThaiDate(selectedRange.from)} ถึง ${formatThaiDate(
+      selectedRange.to
+    )}`;
+  };
+
+  // Handle date selection
+  const handleDateRangeSelect = (range) => {
+    setSelectedRange(range || { from: undefined, to: undefined });
+    if (range?.from) {
+      setFilters((prev) => ({
+        ...prev,
+        start_date: format(range.from, "yyyy-MM-dd"),
+      }));
+    }
+    if (range?.to) {
+      setFilters((prev) => ({
+        ...prev,
+        end_date: format(range.to, "yyyy-MM-dd"),
+      }));
+    }
+    if (!range) {
+      setFilters((prev) => ({
+        ...prev,
+        start_date: "",
+        end_date: "",
+      }));
+    }
   };
 
   // Fetch action types and target tables
@@ -77,14 +109,12 @@ const ActionLogs = () => {
     let adjustedEnd = endDate;
 
     if (startDate) {
-      // Set start date to beginning of day in UTC
       adjustedStart = new Date(startDate);
       adjustedStart.setUTCHours(0, 0, 0, 0);
       adjustedStart = adjustedStart.toISOString();
     }
 
     if (endDate) {
-      // Set end date to end of day in UTC
       adjustedEnd = new Date(endDate);
       adjustedEnd.setUTCHours(23, 59, 59, 999);
       adjustedEnd = adjustedEnd.toISOString();
@@ -100,7 +130,6 @@ const ActionLogs = () => {
         setLoading(true);
         const offset = (currentPage - 1) * filters.limit;
 
-        // Adjust dates to include full day range
         const { startDate, endDate } = adjustDateRange(
           filters.start_date,
           filters.end_date
@@ -146,8 +175,8 @@ const ActionLogs = () => {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters((prev) => ({ ...prev, [name]: value }));
-    setCurrentPage(1); // Reset to first page when filters change
-    setError(null); // Clear any existing errors
+    setCurrentPage(1);
+    setError(null);
   };
 
   // Clear all filters
@@ -159,23 +188,20 @@ const ActionLogs = () => {
       end_date: "",
       limit: 10,
     });
+    setSelectedRange({ from: undefined, to: undefined });
     setCurrentPage(1);
     setError(null);
   };
 
   // Calculate pagination
   const totalPages = Math.ceil(totalLogs / filters.limit);
-
-  // Validate pagination buttons
   const canGoToNextPage = currentPage < totalPages && logs.length > 0;
   const canGoToPreviousPage = currentPage > 1 && logs.length > 0;
 
-  // Handle unauthorized access
   if (!user?.token) {
     return <Navigate to="/login" />;
   }
 
-  // Loading state
   if (loading) {
     return (
       <div className="flex justify-center items-center h-screen bg-gray-50">
@@ -202,7 +228,7 @@ const ActionLogs = () => {
           className="bg-white shadow-md rounded-lg p-6 border border-gray-200"
           data-cy="filters-section"
         >
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {/* Action Type Filter */}
             <div className="relative">
               <select
@@ -247,29 +273,50 @@ const ActionLogs = () => {
               </select>
             </div>
 
-            {/* Date Filters */}
+            {/* Date Range Picker */}
             <div className="relative">
-              <input
-                data-cy="start-date-filter"
-                type="date"
-                name="start_date"
-                value={filters.start_date}
-                onChange={handleFilterChange}
-                placeholder="DD/MM/YYYY"
-                className="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
-            </div>
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
+                  className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  data-cy="date-range-picker"
+                >
+                  <span className="text-gray-700">{formatDateRange()}</span>
+                  <Calendar className="h-4 w-4 text-gray-400" />
+                </button>
 
-            <div className="relative">
-              <input
-                data-cy="end-date-filter"
-                type="date"
-                name="end_date"
-                value={filters.end_date}
-                onChange={handleFilterChange}
-                placeholder="DD/MM/YYYY"
-                className="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              />
+                {isDatePickerOpen && (
+                  <div className="absolute z-10 mt-1 bg-white rounded-md shadow-lg p-4 border border-gray-200">
+                    <DayPicker
+                      mode="range"
+                      selected={selectedRange}
+                      onSelect={handleDateRangeSelect}
+                      locale={th}
+                      formatters={{
+                        formatYear: (year) => `${year + 543}`,
+                      }}
+                      modifiers={{
+                        selected: [selectedRange.from, selectedRange.to],
+                      }}
+                      modifiersStyles={{
+                        selected: {
+                          backgroundColor: "#3b82f6",
+                          color: "white",
+                        },
+                      }}
+                    />
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        onClick={() => setIsDatePickerOpen(false)}
+                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                      >
+                        ตกลง
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -299,7 +346,6 @@ const ActionLogs = () => {
             <span className="block sm:inline">{error}</span>
           </div>
         )}
-
         {/* Logs Table */}
         <div
           className="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200"
@@ -332,7 +378,7 @@ const ActionLogs = () => {
                     className="px-6 py-4 whitespace-nowrap text-sm text-gray-600"
                     data-cy="log-date"
                   >
-                    {formatDateForDisplay(log.action_date)}
+                    {formatThaiDate(new Date(log.action_date))}
                   </td>
                   <td
                     className="px-6 py-4 whitespace-nowrap"

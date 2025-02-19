@@ -188,127 +188,131 @@ const UserEdit = () => {
     return <div className="text-center p-6 text-gray-500">User not found</div>;
 
   return (
-    <div className="p-6 max-w-4xl mx-auto bg-gray-50 min-h-screen">
-      <button
-        onClick={handleBackNavigation}
-        className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>Back to Users</span>
-      </button>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-6">
+        <button
+          onClick={handleBackNavigation}
+          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+        >
+          <ArrowLeft className="w-5 h-5" />
+          <span>Back to Users</span>
+        </button>
 
-      <div className="bg-white shadow-md rounded-lg overflow-hidden">
-        <div className="bg-blue-50 p-6 border-b border-blue-100 flex items-center">
-          <User className="w-6 h-6 text-blue-600 mr-3" />
-          <h2 className="text-xl font-semibold text-blue-800">
-            Edit User Profile
-          </h2>
-        </div>
-
-        <form className="p-6 space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 p-4 rounded-lg flex items-center space-x-3">
-              <AlertCircle className="h-6 w-6 text-red-500" />
-              <span className="text-red-700">{error}</span>
-            </div>
-          )}
-
-          <div className="space-y-4">
-            <div className="flex items-center space-x-3">
-              <User className="w-5 h-5 text-gray-500" />
-              <div className="flex-grow">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  name="name"
-                  value={formData.name}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200 transition-all"
-                />
-              </div>
-            </div>
-
-            <div className="flex items-center space-x-3">
-              <Mail className="w-5 h-5 text-gray-500" />
-              <div className="flex-grow">
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200 transition-all"
-                />
-              </div>
-            </div>
-
-            {user.role === "Admin" && (
-              <div className="flex items-center space-x-3">
-                <Edit className="w-5 h-5 text-gray-500" />
-                <div className="flex-grow">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Role
-                  </label>
-                  <select
-                    name="role"
-                    value={formData.role}
-                    onChange={handleChange}
-                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200 transition-all"
-                  >
-                    <option value="Viewer">Viewer</option>
-                    <option value="Tester">Tester</option>
-                    <option value="Admin">Admin</option>
-                  </select>
-                </div>
-              </div>
-            )}
+        <div className="bg-white shadow-md rounded-lg overflow-hidden mb-6">
+          <div className="bg-blue-50 p-6 border-b border-blue-100 flex items-center">
+            <User className="w-6 h-6 text-blue-600 mr-3" />
+            <h2 className="text-xl font-semibold text-blue-800">
+              Edit User Profile
+            </h2>
           </div>
 
-          <div className="flex justify-between pt-4 border-t border-gray-200">
-            <div className="flex space-x-4">
-              <button
-                type="button"
-                onClick={() => setShowPasswordModal(true)}
-                className="flex items-center px-4 py-2 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
-              >
-                <Lock className="w-4 h-4 mr-2" />
-                Change Password
-              </button>
-              {user.role === "Admin" && user.user_id !== parseInt(id) && (
-                <button
-                  type="button"
-                  onClick={() => setShowDeleteModal(true)}
-                  className="flex items-center px-4 py-2 text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors"
-                >
-                  <Trash2 className="w-4 h-4 mr-2" />
-                  Delete User
-                </button>
+          <form className="p-6">
+            {error && (
+              <div className="bg-red-50 border border-red-200 p-4 rounded-lg flex items-center space-x-3 mb-6">
+                <AlertCircle className="h-6 w-6 text-red-500" />
+                <span className="text-red-700">{error}</span>
+              </div>
+            )}
+
+            <div className="grid gap-6 mb-6">
+              <div className="flex items-center space-x-3">
+                <User className="w-5 h-5 text-gray-500" />
+                <div className="flex-grow">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200 transition-all"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-3">
+                <Mail className="w-5 h-5 text-gray-500" />
+                <div className="flex-grow">
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={formData.email}
+                    onChange={handleChange}
+                    className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200 transition-all"
+                  />
+                </div>
+              </div>
+
+              {user.role === "Admin" && (
+                <div className="flex items-center space-x-3">
+                  <Edit className="w-5 h-5 text-gray-500" />
+                  <div className="flex-grow">
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Role
+                    </label>
+                    <select
+                      name="role"
+                      value={formData.role}
+                      onChange={handleChange}
+                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200 transition-all"
+                    >
+                      <option value="Viewer">Viewer</option>
+                      <option value="Tester">Tester</option>
+                      <option value="Admin">Admin</option>
+                    </select>
+                  </div>
+                </div>
               )}
             </div>
 
-            <div className="flex space-x-4">
-              <button
-                type="button"
-                onClick={handleBackNavigation}
-                className="px-4 py-2 border rounded hover:bg-gray-100 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowConfirmModal(true)}
-                className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Save Changes
-              </button>
+            <div className="flex justify-between pt-4 border-t border-gray-200">
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={() => setShowPasswordModal(true)}
+                  className="flex items-center px-4 py-2 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
+                >
+                  <Lock className="w-4 h-4 mr-2" />
+                  Change Password
+                </button>
+                {user.role === "Admin" &&
+                  user.user_id !== parseInt(id) &&
+                  userData.role !== "Admin" && (
+                    <button
+                      type="button"
+                      onClick={() => setShowDeleteModal(true)}
+                      className="flex items-center px-4 py-2 text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors"
+                    >
+                      <Trash2 className="w-4 h-4 mr-2" />
+                      Delete User
+                    </button>
+                  )}
+              </div>
+
+              <div className="flex space-x-4">
+                <button
+                  type="button"
+                  onClick={handleBackNavigation}
+                  className="px-4 py-2 border rounded hover:bg-gray-100 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmModal(true)}
+                  className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Save Changes
+                </button>
+              </div>
             </div>
-          </div>
-        </form>
+          </form>
+        </div>
       </div>
 
       {/* Confirm Changes Modal */}

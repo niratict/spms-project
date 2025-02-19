@@ -15,6 +15,7 @@ import {
   BarChart2,
   Folder,
 } from "lucide-react";
+import TestStatsDashboard from "./TestStatsDashboard";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -40,7 +41,7 @@ const TestFiles = () => {
   const [error, setError] = useState(null);
   const [stats, setStats] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-
+  const [isDashboardVisible, setIsDashboardVisible] = useState(true);
   // Cleanup function to clear localStorage
   const clearStoredSelections = () => {
     Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
@@ -344,43 +345,11 @@ const TestFiles = () => {
         {selectedSprint && (
           <div className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-              {[
-                {
-                  icon: <FileText className="w-8 h-8 text-blue-500" />,
-                  value: stats?.total_files || 0,
-                  label: "Total Files",
-                },
-                {
-                  icon: <Check className="w-8 h-8 text-green-500" />,
-                  value: stats?.passed_files || 0,
-                  label: "Passed Files",
-                },
-                {
-                  icon: <X className="w-8 h-8 text-red-500" />,
-                  value: stats?.failed_files || 0,
-                  label: "Failed Files",
-                },
-                {
-                  icon: <BarChart2 className="w-8 h-8 text-purple-500" />,
-                  value: `${stats?.pass_rate || 0}%`,
-                  label: "Pass Rate",
-                },
-              ].map((stat, index) => (
-                <div
-                  key={index}
-                  className="bg-white rounded-xl shadow-md p-6 flex items-center space-x-4 hover:shadow-lg transition-all"
-                >
-                  {stat.icon}
-                  <div>
-                    <div className="text-3xl font-bold text-gray-800">
-                      {stat.value}
-                    </div>
-                    <div className="text-sm text-gray-500">{stat.label}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <TestStatsDashboard
+              testFiles={testFiles}
+              isVisible={isDashboardVisible}
+              onToggle={() => setIsDashboardVisible(!isDashboardVisible)}
+            />
 
             {/* Test Files Header */}
             <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-md">
