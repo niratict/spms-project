@@ -9,8 +9,8 @@ const storage = multer.diskStorage({
     cb(null, "uploads/test-files");
   },
   filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+    // Use original filename instead of generating unique name
+    cb(null, file.originalname);
   },
 });
 
@@ -55,14 +55,31 @@ const uploadJsonTestFile = async (req, res) => {
         const fileContent = await fs.readFile(req.file.path, "utf8");
         const jsonContent = JSON.parse(fileContent);
 
+        // Check if file already exists
+        const [existingFile] = await db.query(
+          `SELECT file_id FROM test_files 
+           WHERE original_filename = ? AND sprint_id = ? AND status != 'Deleted'`,
+          [req.file.originalname, sprint_id]
+        );
+
+        if (existingFile.length > 0) {
+          // File exists - return special response
+          return res.status(409).json({
+            message: "File already exists",
+            file_id: existingFile[0].file_id,
+            requiresConfirmation: true,
+          });
+        }
+
+        // If no existing file, proceed with insert
         const [result] = await db.query(
           `INSERT INTO test_files 
            (filename, original_filename, file_size, upload_date, 
             last_modified_by, sprint_id, json_content, status) 
            VALUES (?, ?, ?, NOW(), ?, ?, ?, 'Pending')`,
           [
-            filename || req.file.filename,
-            req.file.filename,
+            filename || req.file.originalname,
+            req.file.originalname,
             req.file.size,
             req.user.name,
             sprint_id,
@@ -102,7 +119,7 @@ const uploadJsonTestFile = async (req, res) => {
         res.status(201).json({
           message: "Test file uploaded successfully",
           file_id: result.insertId,
-          filename: filename || req.file.filename,
+          filename: filename || req.file.originalname,
         });
       } catch (parseError) {
         console.error("JSON parse error:", parseError);
@@ -349,12 +366,8 @@ const updateTestFile = async (req, res) => {
     };
 
     if (newFile) {
-      // สร้างชื่อไฟล์ใหม่แบบสุ่ม
-      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      const newFilename = `${uniqueSuffix}${path.extname(
-        newFile.originalname
-      )}`;
-      const newFilePath = path.join("uploads/test-files", newFilename);
+      // ใช้ชื่อไฟล์ต้นฉบับเดิม
+      const newFilePath = path.join("uploads/test-files", newFile.originalname);
 
       // ลบไฟล์เก่า (ถ้ามี)
       if (currentFileData.original_filename) {
@@ -373,9 +386,9 @@ const updateTestFile = async (req, res) => {
       await fs.rename(newFile.path, newFilePath);
 
       // อัปเดตข้อมูลไฟล์ใน updateData
-      updateData.original_filename = newFilename;
+      updateData.original_filename = newFile.originalname;
       updateData.file_size = newFile.size;
-      updateData.filename = filename || newFilename;
+      updateData.filename = filename || newFile.originalname;
 
       // อ่านเนื้อหาไฟล์ใหม่
       const fileContent = await fs.readFile(newFilePath, "utf8");

@@ -15,6 +15,8 @@ const CreateTestFile = () => {
   const [selectedFile, setSelectedFile] = useState(null);
   const [fileError, setFileError] = useState(null);
   const [filename, setFilename] = useState("");
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [pendingFileId, setPendingFileId] = useState(null);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -43,8 +45,7 @@ const CreateTestFile = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const handleUpload = async (isConfirmed = false) => {
     if (!selectedFile) {
       setFileError("Please select a file");
       return;
@@ -77,9 +78,49 @@ const CreateTestFile = () => {
 
       navigate(`/test-files/${response.data.file_id}`);
     } catch (err) {
+      // ตรวจสอบกรณีไฟล์ซ้ำ
+      if (err.response?.status === 409 && !isConfirmed) {
+        setPendingFileId(err.response.data.file_id);
+        setShowConfirmDialog(true);
+        setLoading(false);
+        return;
+      }
+
       setError(err.response?.data?.message || "Failed to upload test file");
-    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    handleUpload();
+  };
+
+  const handleConfirmUpdate = async () => {
+    setShowConfirmDialog(false);
+    setLoading(true);
+
+    if (pendingFileId) {
+      const formData = new FormData();
+      formData.append("testFile", selectedFile);
+      formData.append("filename", filename);
+
+      try {
+        await axios.put(
+          `${API_BASE_URL}/api/test-files/${pendingFileId}`,
+          formData,
+          {
+            headers: {
+              Authorization: `Bearer ${user.token}`,
+              "Content-Type": "multipart/form-data",
+            },
+          }
+        );
+        navigate(`/test-files/${pendingFileId}`);
+      } catch (err) {
+        setError(err.response?.data?.message || "Failed to update test file");
+        setLoading(false);
+      }
     }
   };
 
@@ -206,6 +247,37 @@ const CreateTestFile = () => {
             </div>
           </form>
         </div>
+
+        {/* Confirmation Modal using Tailwind */}
+        {showConfirmDialog && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
+              <div className="px-6 py-4">
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                  Update Existing Test File?
+                </h3>
+                <p className="text-gray-600">
+                  A test file with the same name already exists. Would you like
+                  to update it with the new results?
+                </p>
+              </div>
+              <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+                <button
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleConfirmUpdate}
+                  className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                >
+                  Update File
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
