@@ -28,7 +28,7 @@ import {
   PieChart as PieChartIcon, // Add this line
 } from "lucide-react";
 import SprintStackedChart from "./SprintStackedChart";
-import TestResultsList from './TestResultsList';
+import TestResultsList from "./TestResultsList";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 
@@ -396,8 +396,12 @@ export default function TestDashboard() {
   // Filter Handling
   useEffect(() => {
     if (testResults) {
-      let filtered = testResults.results;
+      // First filter out deleted records
+      let filtered = testResults.results.filter(
+        (result) => result.status !== "Deleted"
+      );
 
+      // Then apply search and status filters
       if (searchTerm) {
         filtered = filtered.filter(
           (result) =>
@@ -422,7 +426,7 @@ export default function TestDashboard() {
       }
 
       setFilteredTests(filtered);
-      setCurrentPage(1);
+      setCurrentPage(1); // Reset to first page when filters change
     }
   }, [testResults, searchTerm, filterStatus]);
 
@@ -762,55 +766,52 @@ export default function TestDashboard() {
             {/* Test Results List */}
             <div className="bg-white rounded-xl shadow-md p-6">
               <div className="space-y-4">
-                {currentTests
-                  .filter((result) => result.status !== "Deleted") // กรองข้อมูลที่ไม่ใช่ "Deleted"
-                  .map((result, index) => {
-                    const suiteTitle = result.suites[0]?.title;
-                    const tests = result.suites[0]?.tests || [];
-                    const passCount = tests.filter((test) => test.pass).length;
-                    const failCount = tests.length - passCount;
-                    const duration = tests.reduce(
-                      (sum, test) => sum + (test.duration || 0),
-                      0
-                    );
-                    const allPassed = failCount === 0;
-                    return (
-                      <div
-                        key={index}
-                        className={`border-l-4 p-4 rounded-lg ${
-                          allPassed
-                            ? "border-green-500 bg-green-50"
-                            : "border-red-500 bg-red-50"
-                        }`}
-                      >
-                        <div className="flex justify-between items-start mb-4">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-800">
-                              {suiteTitle}
-                            </h3>
-                            <p className="text-sm text-gray-600">
-                              Story: {result.filename}
-                            </p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-green-600 flex items-center">
-                              <CheckCircle className="mr-1 h-4 w-4" />
-                              {passCount} passed
-                            </span>
-                            {failCount > 0 && (
-                              <span className="text-red-600 flex items-center">
-                                <XCircle className="mr-1 h-4 w-4" />
-                                {failCount} failed
-                              </span>
-                            )}
-                          </div>
+                {currentTests.map((result, index) => {
+                  const suiteTitle = result.suites[0]?.title;
+                  const tests = result.suites[0]?.tests || [];
+                  const passCount = tests.filter((test) => test.pass).length;
+                  const failCount = tests.length - passCount;
+                  const duration = tests.reduce(
+                    (sum, test) => sum + (test.duration || 0),
+                    0
+                  );
+                  const allPassed = failCount === 0;
+                  return (
+                    <div
+                      key={index}
+                      className={`border-l-4 p-4 rounded-lg ${
+                        allPassed
+                          ? "border-green-500 bg-green-50"
+                          : "border-red-500 bg-red-50"
+                      }`}
+                    >
+                      <div className="flex justify-between items-start mb-4">
+                        <div>
+                          <h3 className="text-lg font-semibold text-gray-800">
+                            {suiteTitle}
+                          </h3>
+                          <p className="text-sm text-gray-600">
+                            Story: {result.filename}
+                          </p>
                         </div>
-
-                        <TestResultsList tests={tests} />
-
+                        <div className="flex items-center gap-2">
+                          <span className="text-green-600 flex items-center">
+                            <CheckCircle className="mr-1 h-4 w-4" />
+                            {passCount} passed
+                          </span>
+                          {failCount > 0 && (
+                            <span className="text-red-600 flex items-center">
+                              <XCircle className="mr-1 h-4 w-4" />
+                              {failCount} failed
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    );
-                  })}
+
+                      <TestResultsList tests={tests} />
+                    </div>
+                  );
+                })}
               </div>
 
               {/* Pagination */}
