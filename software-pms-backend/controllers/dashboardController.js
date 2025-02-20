@@ -5,6 +5,101 @@ const fs = require("fs").promises;
 const { existsSync } = require("fs");
 const uploadFolder = path.join(__dirname, "../uploads/test-files");
 
+// Utility function to safely process test results
+const processTestResults = (jsonContent) => {
+  try {
+    const results = {
+      totalTests: 0,
+      passedTests: 0,
+      failedTests: 0,
+      timedOutTests: 0,
+      erroredTests: 0,
+      canceledTests: 0,
+      duration: 0,
+    };
+
+    // Handle direct stats if available
+    if (jsonContent.stats) {
+      results.totalTests = jsonContent.stats.tests || 0;
+      results.passedTests = jsonContent.stats.passes || 0;
+      results.failedTests = jsonContent.stats.failures || 0;
+      results.duration = jsonContent.stats.duration || 0;
+      // If we have complete stats, return early
+      if (results.totalTests > 0) {
+        return results;
+      }
+    }
+
+    // Process detailed results if stats are not complete
+    if (jsonContent.results) {
+      jsonContent.results.forEach((result) => {
+        // Handle flat test structure
+        if (Array.isArray(result.tests)) {
+          result.tests.forEach((test) => {
+            processTestCase(test, results);
+          });
+        }
+
+        // Handle nested suites
+        if (Array.isArray(result.suites)) {
+          result.suites.forEach((suite) => {
+            processSuite(suite, results);
+          });
+        }
+      });
+    }
+
+    return results;
+  } catch (error) {
+    console.error("Error processing test results:", error);
+    return {
+      totalTests: 0,
+      passedTests: 0,
+      failedTests: 0,
+      timedOutTests: 0,
+      erroredTests: 0,
+      canceledTests: 0,
+      duration: 0,
+    };
+  }
+};
+
+// Helper function to process a test suite recursively
+const processSuite = (suite, results) => {
+  if (Array.isArray(suite.tests)) {
+    suite.tests.forEach((test) => {
+      processTestCase(test, results);
+    });
+  }
+
+  if (Array.isArray(suite.suites)) {
+    suite.suites.forEach((childSuite) => {
+      processSuite(childSuite, results);
+    });
+  }
+};
+
+// Helper function to process individual test case
+const processTestCase = (test, results) => {
+  results.totalTests++;
+
+  if (test.state === "passed" || test.pass) {
+    results.passedTests++;
+  } else if (test.state === "failed" || test.fail) {
+    results.failedTests++;
+  } else if (test.timedOut) {
+    results.timedOutTests++;
+  } else if (test.err && Object.keys(test.err).length > 0) {
+    results.erroredTests++;
+  } else if (test.skipped || test.pending) {
+    results.canceledTests++;
+  }
+
+  if (test.duration) {
+    results.duration += test.duration;
+  }
+};
+
 const dashboardController = {
   // Get Dashboard Stats
   getDashboardStats: async (req, res) => {
@@ -203,7 +298,6 @@ const dashboardController = {
   getSprintStackedChartData: async (req, res) => {
     const connection = await db.getConnection();
     try {
-      // Get all sprints for the project
       const [sprints] = await connection.execute(
         `SELECT s.*, 
          COUNT(tf.file_id) as test_files_count
@@ -215,10 +309,8 @@ const dashboardController = {
         [req.params.projectId]
       );
 
-      // For each sprint, get and process test files
       const sprintData = await Promise.all(
         sprints.map(async (sprint) => {
-          // Get test files for this sprint
           const [files] = await connection.execute(
             `SELECT tf.* 
              FROM test_files tf
@@ -227,15 +319,16 @@ const dashboardController = {
             [sprint.sprint_id]
           );
 
-          // Process test files
-          let passedTests = 0;
-          let failedTests = 0;
-          let timedOutTests = 0;
-          let erroredTests = 0;
-          let canceledTests = 0;
-          let totalTests = 0;
+          let aggregatedResults = {
+            passedTests: 0,
+            failedTests: 0,
+            timedOutTests: 0,
+            erroredTests: 0,
+            canceledTests: 0,
+            totalTests: 0,
+            totalDuration: 0,
+          };
 
-          // Read and process JSON content for each file
           await Promise.all(
             files.map(async (file) => {
               try {
@@ -247,20 +340,16 @@ const dashboardController = {
                   const content = await fs.readFile(filePath, "utf8");
                   const jsonContent = JSON.parse(content);
 
-                  // Process test results from the JSON
-                  if (jsonContent.results && jsonContent.results[0]?.suites) {
-                    jsonContent.results[0].suites.forEach((suite) => {
-                      suite.tests.forEach((test) => {
-                        totalTests++;
-                        if (test.pass) passedTests++;
-                        else if (test.fail) failedTests++;
-                        else if (test.timedOut) timedOutTests++;
-                        else if (test.err && Object.keys(test.err).length > 0)
-                          erroredTests++;
-                        else if (test.skipped) canceledTests++;
-                      });
-                    });
-                  }
+                  const results = processTestResults(jsonContent);
+
+                  // Aggregate results
+                  Object.keys(results).forEach((key) => {
+                    if (key === "duration") {
+                      aggregatedResults.totalDuration += results[key];
+                    } else {
+                      aggregatedResults[key] += results[key];
+                    }
+                  });
                 }
               } catch (error) {
                 console.error(
@@ -275,12 +364,7 @@ const dashboardController = {
             sprintName: sprint.name,
             startDate: sprint.start_date,
             endDate: sprint.end_date,
-            passedTests,
-            failedTests,
-            timedOutTests,
-            erroredTests,
-            canceledTests,
-            totalTests,
+            ...aggregatedResults,
           };
         })
       );
