@@ -28,7 +28,6 @@ const upload = multer({
   },
 });
 
-// Backend: uploadJsonTestFile function
 const uploadJsonTestFile = async (req, res) => {
   try {
     upload.single("testFile")(req, res, async (err) => {
@@ -48,7 +47,7 @@ const uploadJsonTestFile = async (req, res) => {
 
       const { sprint_id, filename } = req.body;
       if (!sprint_id) {
-        await fs.unlink(req.file.path); // ยังคงลบในกรณีที่ไม่มี sprint_id เพราะเป็น error case
+        await fs.unlink(req.file.path);
         return res.status(400).json({ message: "Sprint ID is required" });
       }
 
@@ -56,7 +55,7 @@ const uploadJsonTestFile = async (req, res) => {
         const fileContent = await fs.readFile(req.file.path, "utf8");
         const jsonContent = JSON.parse(fileContent);
 
-        // ตรวจสอบไฟล์ที่มีอยู่
+        // Check if file exists in any sprint
         const [existingFiles] = await db.query(
           `SELECT tf.file_id, tf.sprint_id, s.name as sprint_name 
            FROM test_files tf
@@ -67,27 +66,25 @@ const uploadJsonTestFile = async (req, res) => {
 
         if (existingFiles.length > 0) {
           const existingFile = existingFiles[0];
+          await fs.unlink(req.file.path);
 
-          // กรณีเป็น sprint เดียวกัน
-          if (existingFile.sprint_id === parseInt(sprint_id)) {
-            return res.status(409).json({
-              message: "File already exists in this sprint",
+          // Return appropriate response based on whether it's same sprint or different sprint
+          return res.status(409).json({
+            message:
+              existingFile.sprint_id === parseInt(sprint_id)
+                ? "File already exists in this sprint"
+                : "File already exists in another sprint",
+            existingFileDetails: {
               file_id: existingFile.file_id,
-              requiresConfirmation: true,
-              sameSprint: true,
-            });
-          }
-
-          // กรณีเป็นคนละ sprint - ไม่ลบไฟล์แล้ว แค่ส่ง error response กลับไป
-          return res.status(400).json({
-            message: "This file has already been uploaded to another sprint",
-            existingSprintId: existingFile.sprint_id,
-            existingSprintName: existingFile.sprint_name,
-            cannotUpload: true,
+              sprint_id: existingFile.sprint_id,
+              sprint_name: existingFile.sprint_name,
+            },
+            requiresConfirmation: true,
+            isSameSprint: existingFile.sprint_id === parseInt(sprint_id),
           });
         }
 
-        // กรณีเป็นไฟล์ใหม่
+        // If no existing file, proceed with insert
         const [result] = await db.query(
           `INSERT INTO test_files 
            (filename, original_filename, file_size, upload_date, 
@@ -131,9 +128,6 @@ const uploadJsonTestFile = async (req, res) => {
             JSON.stringify(req.file),
           ]
         );
-
-        // หลังจากบันทึกข้อมูลเสร็จแล้วค่อยลบไฟล์ชั่วคราว
-        await fs.unlink(req.file.path);
 
         res.status(201).json({
           message: "Test file uploaded successfully",

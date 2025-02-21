@@ -1,4 +1,3 @@
-// Frontend: CreateTestFile.jsx
 import React, { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
@@ -17,14 +16,12 @@ const CreateTestFile = () => {
   const [fileError, setFileError] = useState(null);
   const [filename, setFilename] = useState("");
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [showErrorDialog, setShowErrorDialog] = useState(false);
-  const [pendingFileId, setPendingFileId] = useState(null);
-  const [existingSprintName, setExistingSprintName] = useState(null);
+  const [existingFileDetails, setExistingFileDetails] = useState(null);
+  const [isSameSprint, setIsSameSprint] = useState(false);
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setFileError(null);
-    setError(null);
 
     if (!file) {
       setSelectedFile(null);
@@ -49,7 +46,7 @@ const CreateTestFile = () => {
     }
   };
 
-  const handleUpload = async (isConfirmed = false) => {
+  const handleUpload = async () => {
     if (!selectedFile) {
       setFileError("Please select a file");
       return;
@@ -80,20 +77,14 @@ const CreateTestFile = () => {
         }
       );
 
-      navigate(`/test-files/${response.data.file_id}`);
-    } catch (err) {
-      // กรณีไฟล์ซ้ำใน sprint เดียวกัน
-      if (err.response?.status === 409 && err.response.data.sameSprint) {
-        setPendingFileId(err.response.data.file_id);
-        setShowConfirmDialog(true);
-        setLoading(false);
-        return;
+      if (response.data.file_id) {
+        navigate(`/test-files/${response.data.file_id}`);
       }
-
-      // กรณีไฟล์ถูกใช้ในอีก sprint
-      if (err.response?.data?.cannotUpload) {
-        setExistingSprintName(err.response.data.existingSprintName);
-        setShowErrorDialog(true);
+    } catch (err) {
+      if (err.response?.status === 409) {
+        setExistingFileDetails(err.response.data.existingFileDetails);
+        setIsSameSprint(err.response.data.isSameSprint);
+        setShowConfirmDialog(true);
         setLoading(false);
         return;
       }
@@ -103,23 +94,18 @@ const CreateTestFile = () => {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    handleUpload();
-  };
-
   const handleConfirmUpdate = async () => {
     setShowConfirmDialog(false);
     setLoading(true);
 
-    if (pendingFileId) {
+    if (existingFileDetails?.file_id) {
       const formData = new FormData();
       formData.append("testFile", selectedFile);
       formData.append("filename", filename);
 
       try {
         await axios.put(
-          `${API_BASE_URL}/api/test-files/${pendingFileId}`,
+          `${API_BASE_URL}/api/test-files/${existingFileDetails.file_id}`,
           formData,
           {
             headers: {
@@ -128,12 +114,17 @@ const CreateTestFile = () => {
             },
           }
         );
-        navigate(`/test-files/${pendingFileId}`);
+        navigate(`/test-files/${existingFileDetails.file_id}`);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to update test file");
         setLoading(false);
       }
     }
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    handleUpload();
   };
 
   return (
@@ -260,61 +251,56 @@ const CreateTestFile = () => {
           </form>
         </div>
 
-        {/* Error Dialog สำหรับแจ้งเตือนกรณีไฟล์ถูกใช้ในอีก sprint */}
-        {showErrorDialog && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
-              <div className="px-6 py-4">
-                <div className="flex items-center mb-4">
-                  <AlertTriangle className="text-red-500 mr-2" />
-                  <h3 className="text-lg font-semibold text-gray-900">
-                    Cannot Upload File
-                  </h3>
-                </div>
-                <p className="text-gray-600">
-                  This test file has already been uploaded to {" "}
-                  {existingSprintName}. You cannot upload the same file to
-                  multiple sprints.
-                </p>
-              </div>
-              <div className="px-6 py-4 bg-gray-50 flex justify-end">
-                <button
-                  onClick={() => setShowErrorDialog(false)}
-                  className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                >
-                  Understand
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Confirmation Modal using Tailwind */}
+        {/* Confirmation Modal */}
         {showConfirmDialog && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
               <div className="px-6 py-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Update Existing Test File?
-                </h3>
-                <p className="text-gray-600">
-                  A test file with the same name already exists. Would you like
-                  to update it with the new results?
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="w-6 h-6 text-amber-500" />
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {isSameSprint
+                      ? "Update Existing File?"
+                      : "File Already Exists"}
+                  </h3>
+                </div>
+                <p className="text-gray-600 mb-3">
+                  {isSameSprint
+                    ? `This file already exists in this sprint. Would you like to update the existing file?`
+                    : `This test file already exists in Sprint "${existingFileDetails?.sprint_name}". Test files cannot be used in multiple sprints.`}
                 </p>
+                <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                  <p className="text-sm text-amber-700">
+                    {isSameSprint
+                      ? "Updating will replace the current file content."
+                      : "Please use a different test file for this sprint or modify the existing file name."}
+                  </p>
+                </div>
               </div>
               <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
-                <button
-                  onClick={() => setShowConfirmDialog(false)}
-                  className="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  onClick={handleConfirmUpdate}
-                  className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-                >
-                  Update File
-                </button>
+                {isSameSprint ? (
+                  <>
+                    <button
+                      onClick={() => setShowConfirmDialog(false)}
+                      className="px-4 py-2 rounded-lg text-gray-600 hover:text-gray-800 transition-colors"
+                    >
+                      Cancel
+                    </button>
+                    <button
+                      onClick={handleConfirmUpdate}
+                      className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                    >
+                      Update File
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={() => setShowConfirmDialog(false)}
+                    className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                  >
+                    OK, I Understand
+                  </button>
+                )}
               </div>
             </div>
           </div>
