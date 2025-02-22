@@ -294,7 +294,10 @@ export default function TestDashboard() {
 
   // Process Test Results
   const processTestResults = (data) => {
-    const processedResults = data
+    // กรองเฉพาะไฟล์ที่ไม่ถูกลบออกก่อน
+    const activeFiles = data.filter((file) => file.status !== "Deleted");
+
+    const processedResults = activeFiles
       .map((file) => {
         try {
           const jsonContent = file.json_content;
@@ -321,7 +324,7 @@ export default function TestDashboard() {
       })
       .filter(Boolean);
 
-    // Calculate statistics
+    // Calculate statistics จากเฉพาะไฟล์ที่ active
     const totalTests = processedResults.reduce(
       (acc, result) => acc + result.suites[0]?.tests?.length || 0,
       0

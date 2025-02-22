@@ -31,7 +31,7 @@ const getDashboardStats = async (req, res) => {
         p.status,
         p.created_at,
         COUNT(DISTINCT s.sprint_id) as sprint_count,
-        COUNT(DISTINCT tf.file_id) as file_count
+        COUNT(DISTINCT CASE WHEN tf.status != 'Deleted' THEN tf.file_id END) as file_count
       FROM projects p
       LEFT JOIN sprints s ON p.project_id = s.project_id
       LEFT JOIN test_files tf ON s.sprint_id = tf.sprint_id
@@ -65,14 +65,14 @@ const getProjectActivity = async (req, res) => {
   try {
     // Get monthly project activity
     const [monthlyActivity] = await db.query(`
-            SELECT 
-                DATE_FORMAT(created_at, '%Y-%m') as month,
-                COUNT(*) as activity
-            FROM projects
-            WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
-            ORDER BY month
-        `);
+      SELECT 
+        DATE_FORMAT(created_at, '%Y-%m') as month,
+        COUNT(*) as activity
+      FROM projects
+      WHERE created_at >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+      GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+      ORDER BY month
+    `);
 
     // Transform data to match frontend expectations
     const monthlyStats = monthlyActivity.map((item) => ({
@@ -92,16 +92,16 @@ const getTestFileActivity = async (req, res) => {
   try {
     // Get monthly test file activity
     const [monthlyActivity] = await db.query(`
-            SELECT 
-                DATE_FORMAT(upload_date, '%Y-%m') as month,
-                COUNT(*) as total_files,
-                COUNT(CASE WHEN status = 'Pass' THEN 1 END) as passed_files,
-                COUNT(CASE WHEN status = 'Fail' THEN 1 END) as failed_files
-            FROM test_files
-            WHERE upload_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(upload_date, '%Y-%m')
-            ORDER BY month
-        `);
+      SELECT 
+        DATE_FORMAT(upload_date, '%Y-%m') as month,
+        COUNT(CASE WHEN status != 'Deleted' THEN 1 END) as total_files,
+        COUNT(CASE WHEN status = 'Pass' THEN 1 END) as passed_files,
+        COUNT(CASE WHEN status = 'Fail' THEN 1 END) as failed_files
+      FROM test_files
+      WHERE upload_date >= DATE_SUB(CURRENT_DATE(), INTERVAL 6 MONTH)
+      GROUP BY DATE_FORMAT(upload_date, '%Y-%m')
+      ORDER BY month
+    `);
 
     // Transform data to match frontend expectations
     const monthlyStats = monthlyActivity.map((item) => ({

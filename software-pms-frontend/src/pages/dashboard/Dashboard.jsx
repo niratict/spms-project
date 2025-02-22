@@ -61,7 +61,7 @@ const ProjectCard = ({ project }) => (
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4 text-gray-400" />
           <span className="text-sm text-gray-600">
-            {project.fileCount || 0} Test Files
+            {project.fileCount  || 0} Test Files
           </span>
         </div>
       </div>
@@ -170,7 +170,7 @@ const Dashboard = () => {
             title="Test Files"
             value={stats.totalFiles}
             icon={FileText}
-            description="Total test files uploaded"
+            description="Active test files"
           />
           <StatCard
             title="Active Projects"
