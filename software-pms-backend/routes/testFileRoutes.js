@@ -46,6 +46,7 @@ router.put(
   upload.single("testFile"),
   testFileController.updateTestFile
 );
+router.post("/upload/:id", testFileController.uploadJsonTestFile); // Add this new route for updates
 
 // CRUD routes
 router.post("/", testFileController.createTestFile);

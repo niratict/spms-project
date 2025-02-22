@@ -25,9 +25,6 @@ const TestFileEdit = () => {
   const [fileError, setFileError] = useState(null);
   const [selectedFile, setSelectedFile] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
-  const [showErrorDialog, setShowErrorDialog] = useState(false);
-  const [showDuplicateDialog, setShowDuplicateDialog] = useState(false);
-  const [existingSprintName, setExistingSprintName] = useState(null);
   const [formData, setFormData] = useState({
     filename: "",
     status: "Pending",
@@ -82,34 +79,7 @@ const TestFileEdit = () => {
     setSelectedFile(file);
   };
 
-  const handleSubmitConfirm = async () => {
-    // Validate first if there's a new file
-    if (selectedFile) {
-      try {
-        const validateData = new FormData();
-        validateData.append("testFile", selectedFile);
-        validateData.append("sprint_id", testFile.sprint_id);
-
-        await axios.post(
-          `${API_BASE_URL}/api/test-files/upload`,
-          validateData,
-          {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-      } catch (validateErr) {
-        if (validateErr.response?.data?.cannotUpload) {
-          setExistingSprintName(validateErr.response.data.existingSprintName);
-          setShowErrorDialog(true);
-          return;
-        }
-      }
-    }
-
-    // If we get here, either there's no new file or the file is valid
+  const handleSubmitConfirm = () => {
     setShowConfirmModal(true);
   };
 
@@ -125,78 +95,6 @@ const TestFileEdit = () => {
       }
       submitData.append("filename", formData.filename);
       submitData.append("status", formData.status);
-
-      // First, validate the file if a new one is selected
-      if (selectedFile) {
-        try {
-          // Create a separate FormData for validation
-          const validateData = new FormData();
-          validateData.append("testFile", selectedFile);
-          validateData.append("sprint_id", testFile.sprint_id);
-
-          // Call the upload endpoint to validate the file
-          const validateResponse = await axios.post(
-            `${API_BASE_URL}/api/test-files/upload`,
-            validateData,
-            {
-              headers: {
-                Authorization: `Bearer ${user.token}`,
-                "Content-Type": "multipart/form-data",
-              },
-            }
-          );
-
-          // If we get here, the file is valid and doesn't exist in other sprints
-          // Now we can proceed with the actual update
-        } catch (validateErr) {
-          // Check if file exists in another sprint
-          if (validateErr.response?.data?.cannotUpload) {
-            setExistingSprintName(validateErr.response.data.existingSprintName);
-            setShowErrorDialog(true);
-            setSaving(false);
-            return;
-          }
-
-          // If it's in the same sprint, we can proceed
-          if (!validateErr.response?.data?.sameSprint) {
-            throw validateErr;
-          }
-        }
-      }
-
-      // Proceed with the actual update
-      const response = await axios.put(
-        `${API_BASE_URL}/api/test-files/${id}`,
-        submitData,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
-
-      navigate(`/test-files/${id}`);
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to update test file");
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Handle confirmation of duplicate file update
-  const handleConfirmDuplicate = async () => {
-    try {
-      setSaving(true);
-      setShowDuplicateDialog(false);
-
-      const submitData = new FormData();
-      if (selectedFile) {
-        submitData.append("testFile", selectedFile);
-      }
-      submitData.append("filename", formData.filename);
-      submitData.append("status", formData.status);
-      submitData.append("confirmUpdate", "true");
 
       await axios.put(
         `${API_BASE_URL}/api/test-files/${id}/upload`,
@@ -383,69 +281,7 @@ const TestFileEdit = () => {
         </div>
       </div>
 
-      {/* Duplicate File in Same Sprint Dialog */}
-      {showDuplicateDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
-            <div className="px-6 py-4">
-              <div className="flex items-center mb-4">
-                <AlertTriangle className="text-yellow-500 w-6 h-6 mr-2" />
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Update Existing File?
-                </h3>
-              </div>
-              <p className="text-gray-600">
-                This file already exists in this sprint. Do you want to update
-                it with the new content?
-              </p>
-            </div>
-            <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
-              <button
-                onClick={() => setShowDuplicateDialog(false)}
-                className="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmDuplicate}
-                className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-              >
-                Update File
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Error Dialog for file in another sprint */}
-      {showErrorDialog && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
-            <div className="px-6 py-4">
-              <div className="flex items-center mb-4">
-                <AlertTriangle className="text-red-500 w-6 h-6 mr-2" />
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Cannot Upload File
-                </h3>
-              </div>
-              <p className="text-gray-600">
-                This test file has already been uploaded to {existingSprintName}
-                . You cannot upload the same file to multiple sprints.
-              </p>
-            </div>
-            <div className="px-6 py-4 bg-gray-50 flex justify-end">
-              <button
-                onClick={() => setShowErrorDialog(false)}
-                className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
-              >
-                Understand
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Existing Confirmation Modal */}
+      {/* Confirmation Modal */}
       {showConfirmModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
@@ -483,14 +319,14 @@ const TestFileEdit = () => {
             <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
               >
                 {saving ? (
                   <>

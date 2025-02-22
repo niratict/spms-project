@@ -29,8 +29,13 @@ const upload = multer({
 });
 
 // Backend: uploadJsonTestFile function
+// แก้ไข uploadJsonTestFile function
 const uploadJsonTestFile = async (req, res) => {
+  const uploadDir = "uploads/test-files/temp"; // โฟลเดอร์ชั่วคราว
   try {
+    // สร้างโฟลเดอร์ชั่วคราวถ้ายังไม่มี
+    await fs.mkdir(uploadDir, { recursive: true });
+
     upload.single("testFile")(req, res, async (err) => {
       if (err) {
         console.error("Upload error:", err);
@@ -48,70 +53,156 @@ const uploadJsonTestFile = async (req, res) => {
 
       const { sprint_id, filename } = req.body;
       if (!sprint_id) {
-        await fs.unlink(req.file.path); // ยังคงลบในกรณีที่ไม่มี sprint_id เพราะเป็น error case
         return res.status(400).json({ message: "Sprint ID is required" });
       }
 
-      try {
-        const fileContent = await fs.readFile(req.file.path, "utf8");
-        const jsonContent = JSON.parse(fileContent);
+      const uploadedFilePath = req.file.path;
 
-        // ตรวจสอบไฟล์ที่มีอยู่
+      try {
+        // ตรวจสอบ format JSON
+        const fileContent = await fs.readFile(uploadedFilePath, "utf8");
+        JSON.parse(fileContent); // ถ้า parse ไม่ได้จะ throw error
+
+        // ตรวจสอบไฟล์ซ้ำ
         const [existingFiles] = await db.query(
-          `SELECT tf.file_id, tf.sprint_id, s.name as sprint_name 
+          `SELECT tf.file_id, tf.sprint_id, s.name as sprint_name, tf.status 
            FROM test_files tf
            JOIN sprints s ON tf.sprint_id = s.sprint_id
            WHERE tf.original_filename = ? AND tf.status != 'Deleted'`,
           [req.file.originalname]
         );
 
-        if (existingFiles.length > 0) {
+        // ตรวจสอบว่าเป็นการอัปเดตไฟล์เดิมหรือไม่
+        const isUpdateRequest = req.path.includes("/upload") && req.params.id;
+
+        if (existingFiles.length > 0 && !isUpdateRequest) {
           const existingFile = existingFiles[0];
 
-          // กรณีเป็น sprint เดียวกัน
+          // ลบไฟล์ชั่วคราวที่เพิ่งอัปโหลด
+          await fs.unlink(uploadedFilePath);
+
           if (existingFile.sprint_id === parseInt(sprint_id)) {
+            // แจ้งว่าพบไฟล์ซ้ำในสปรินท์เดียวกัน
             return res.status(409).json({
               message: "File already exists in this sprint",
               file_id: existingFile.file_id,
               requiresConfirmation: true,
               sameSprint: true,
             });
+          } else {
+            // แจ้งว่าพบไฟล์ซ้ำในสปรินท์อื่น
+            return res.status(400).json({
+              message: "This file has already been uploaded to another sprint",
+              existingSprintId: existingFile.sprint_id,
+              existingSprintName: existingFile.sprint_name,
+              cannotUpload: true,
+            });
           }
-
-          // กรณีเป็นคนละ sprint - ไม่ลบไฟล์แล้ว แค่ส่ง error response กลับไป
-          return res.status(400).json({
-            message: "This file has already been uploaded to another sprint",
-            existingSprintId: existingFile.sprint_id,
-            existingSprintName: existingFile.sprint_name,
-            cannotUpload: true,
-          });
         }
 
-        // กรณีเป็นไฟล์ใหม่
-        const [result] = await db.query(
-          `INSERT INTO test_files 
-           (filename, original_filename, file_size, upload_date, 
-            last_modified_by, sprint_id, json_content, status) 
-           VALUES (?, ?, ?, NOW(), ?, ?, ?, 'Pending')`,
-          [
-            filename || req.file.originalname,
-            req.file.originalname,
-            req.file.size,
-            req.user.name,
-            sprint_id,
-            JSON.stringify(jsonContent),
-          ]
-        );
+        // กำหนดตำแหน่งไฟล์ถาวร
+        const permanentDir = "uploads/test-files";
+        await fs.mkdir(permanentDir, { recursive: true });
+        const permanentPath = path.join(permanentDir, req.file.originalname);
 
+        // ย้ายไฟล์จากโฟลเดอร์ชั่วคราวไปยังโฟลเดอร์ถาวร
+        try {
+          await fs.rename(uploadedFilePath, permanentPath);
+        } catch (moveError) {
+          console.error("Error moving file:", moveError);
+          // ถ้าย้ายไฟล์ไม่ได้ ให้ใช้วิธี copy แล้วลบไฟล์เดิม
+          await fs.copyFile(uploadedFilePath, permanentPath);
+          await fs.unlink(uploadedFilePath);
+        }
+
+        let file_id;
+        if (isUpdateRequest) {
+          // อัปเดตไฟล์เดิม
+          const [updateResult] = await db.query(
+            `UPDATE test_files 
+             SET filename = ?, 
+                 original_filename = ?,
+                 file_size = ?,
+                 last_modified_date = NOW(),
+                 last_modified_by = ?,
+                 json_content = ?
+             WHERE file_id = ?`,
+            [
+              filename || req.file.originalname,
+              req.file.originalname,
+              req.file.size,
+              req.user.name,
+              fileContent,
+              req.params.id,
+            ]
+          );
+
+          file_id = req.params.id;
+
+          // บันทึกประวัติการอัปเดต
+          await db.query(
+            `INSERT INTO test_file_history 
+             (file_id, action_type, action_by, details)
+             VALUES (?, 'modify', ?, ?)`,
+            [
+              file_id,
+              req.user.name,
+              JSON.stringify({
+                update_date: new Date(),
+                file_size: req.file.size,
+                original_filename: req.file.originalname,
+                custom_filename: filename,
+              }),
+            ]
+          );
+        } else {
+          // สร้างไฟล์ใหม่
+          const [insertResult] = await db.query(
+            `INSERT INTO test_files 
+             (filename, original_filename, file_size, upload_date,
+              last_modified_by, sprint_id, json_content, status)
+             VALUES (?, ?, ?, NOW(), ?, ?, ?, 'Pending')`,
+            [
+              filename || req.file.originalname,
+              req.file.originalname,
+              req.file.size,
+              req.user.name,
+              sprint_id,
+              fileContent,
+            ]
+          );
+
+          file_id = insertResult.insertId;
+
+          // บันทึกประวัติการสร้างไฟล์ใหม่
+          await db.query(
+            `INSERT INTO test_file_history 
+             (file_id, action_type, action_by, details)
+             VALUES (?, 'upload', ?, ?)`,
+            [
+              file_id,
+              req.user.name,
+              JSON.stringify({
+                upload_date: new Date(),
+                file_size: req.file.size,
+                original_filename: req.file.originalname,
+                custom_filename: filename,
+              }),
+            ]
+          );
+        }
+
+        // บันทึก action log
         await db.query(
-          `INSERT INTO test_file_history 
-           (file_id, action_type, action_by, details) 
-           VALUES (?, 'upload', ?, ?)`,
+          `INSERT INTO action_logs 
+           (user_id, action_type, target_table, target_id, details)
+           VALUES (?, ?, ?, ?, ?)`,
           [
-            result.insertId,
-            req.user.name,
+            req.user.user_id,
+            isUpdateRequest ? "update" : "upload",
+            "test_files",
+            file_id,
             JSON.stringify({
-              upload_date: new Date(),
               file_size: req.file.size,
               original_filename: req.file.originalname,
               custom_filename: filename,
@@ -119,30 +210,22 @@ const uploadJsonTestFile = async (req, res) => {
           ]
         );
 
-        await db.query(
-          `INSERT INTO action_logs 
-           (user_id, action_type, target_table, target_id, details) 
-           VALUES (?, ?, ?, ?, ?)`,
-          [
-            req.user.user_id,
-            "upload",
-            "test_files",
-            result.insertId,
-            JSON.stringify(req.file),
-          ]
-        );
-
-        // หลังจากบันทึกข้อมูลเสร็จแล้วค่อยลบไฟล์ชั่วคราว
-        await fs.unlink(req.file.path);
-
         res.status(201).json({
-          message: "Test file uploaded successfully",
-          file_id: result.insertId,
+          message: isUpdateRequest
+            ? "Test file updated successfully"
+            : "Test file uploaded successfully",
+          file_id: file_id,
           filename: filename || req.file.originalname,
         });
       } catch (parseError) {
+        // ลบไฟล์ชั่วคราวถ้าเกิด error
+        try {
+          await fs.unlink(uploadedFilePath);
+        } catch (deleteError) {
+          console.error("Error deleting invalid file:", deleteError);
+        }
+
         console.error("JSON parse error:", parseError);
-        await fs.unlink(req.file.path);
         return res.status(400).json({
           message: "Invalid JSON file: " + parseError.message,
         });
@@ -358,13 +441,11 @@ const getTestFileById = async (req, res) => {
 
 const updateTestFile = async (req, res) => {
   try {
-    const { status, filename, json_content } = req.body;
+    const { status, filename } = req.body;
     const fileId = req.params.id;
     const newFile = req.file;
 
-    console.log("Updating file:", fileId);
-
-    // ตรวจสอบว่ามีไฟล์อยู่ในฐานข้อมูล
+    // ตรวจสอบไฟล์ในฐานข้อมูล
     const [currentFile] = await db.query(
       'SELECT * FROM test_files WHERE file_id = ? AND status != "Deleted"',
       [fileId]
@@ -376,47 +457,89 @@ const updateTestFile = async (req, res) => {
 
     const currentFileData = currentFile[0];
 
-    // กำหนดค่าเริ่มต้นให้กับ updateData
+    // ข้อมูลที่จะอัพเดต
     let updateData = {
       status: status || currentFileData.status,
-      filename: filename || currentFileData.filename,
       last_modified_date: new Date(),
       last_modified_by: req.user.name,
     };
 
-    if (newFile) {
-      // ใช้ชื่อไฟล์ต้นฉบับเดิม
-      const newFilePath = path.join("uploads/test-files", newFile.originalname);
-
-      // ลบไฟล์เก่า (ถ้ามี)
-      if (currentFileData.original_filename) {
-        const oldFilePath = path.join(
-          "uploads/test-files",
-          currentFileData.original_filename
-        );
-        try {
-          await fs.unlink(oldFilePath);
-        } catch (err) {
-          console.error("Error deleting old file:", err);
-        }
-      }
-
-      // ย้ายไฟล์ใหม่ไปยังตำแหน่งปลายทาง
-      await fs.rename(newFile.path, newFilePath);
-
-      // อัปเดตข้อมูลไฟล์ใน updateData
-      updateData.original_filename = newFile.originalname;
-      updateData.file_size = newFile.size;
-      updateData.filename = filename || newFile.originalname;
-
-      // อ่านเนื้อหาไฟล์ใหม่
-      const fileContent = await fs.readFile(newFilePath, "utf8");
-      updateData.json_content = fileContent;
-    } else if (json_content) {
-      updateData.json_content = JSON.stringify(json_content);
+    // อัพเดตชื่อที่แสดง
+    if (filename) {
+      updateData.filename = filename;
     }
 
-    // อัปเดตฐานข้อมูล
+    // จัดการกรณีมีการอัพโหลดไฟล์ใหม่
+    if (newFile) {
+      // ตรวจสอบไฟล์ที่มีอยู่แล้ว
+      const [existingFiles] = await db.query(
+        `SELECT tf.file_id, tf.sprint_id, s.name as sprint_name, tf.status 
+         FROM test_files tf 
+         JOIN sprints s ON tf.sprint_id = s.sprint_id 
+         WHERE tf.original_filename = ? AND tf.status != 'Deleted' AND tf.file_id != ?`,
+        [newFile.originalname, fileId]
+      );
+
+      // ถ้าพบไฟล์ที่มีอยู่แล้วในอีก sprint
+      if (existingFiles.length > 0) {
+        try {
+          // ลบเฉพาะไฟล์ที่เพิ่งอัพโหลดเข้ามาใหม่
+          await fs.unlink(newFile.path);
+        } catch (deleteError) {
+          console.error("Error deleting temporary file:", deleteError);
+        }
+
+        const existingFile = existingFiles[0];
+        if (existingFile.sprint_id === parseInt(currentFileData.sprint_id)) {
+          return res.status(409).json({
+            message: "File already exists in this sprint",
+            sameSprint: true,
+          });
+        }
+        return res.status(400).json({
+          message: "This file has already been uploaded to another sprint",
+          existingSprintName: existingFile.sprint_name,
+          cannotUpload: true,
+        });
+      }
+
+      // อ่านและตรวจสอบ content ของไฟล์ใหม่
+      try {
+        const fileContent = await fs.readFile(newFile.path, "utf8");
+        JSON.parse(fileContent); // ตรวจสอบ JSON format
+
+        // อัพเดตข้อมูลไฟล์
+        updateData = {
+          ...updateData,
+          file_size: newFile.size,
+          json_content: fileContent,
+          original_filename: newFile.originalname,
+        };
+
+        // ถ้าไม่ได้ระบุชื่อใหม่ ใช้ชื่อไฟล์ใหม่เป็นชื่อที่แสดง
+        if (!filename) {
+          updateData.filename = newFile.originalname;
+        }
+
+        // ย้ายไฟล์ใหม่ไปที่ถาวร
+        const newFilePath = path.join(
+          "uploads/test-files",
+          newFile.originalname
+        );
+        await fs.rename(newFile.path, newFilePath);
+      } catch (error) {
+        // ถ้าเกิด error ให้ลบไฟล์ที่อัพโหลดด้วย
+        try {
+          await fs.unlink(newFile.path);
+        } catch (deleteError) {
+          console.error("Error deleting invalid file:", deleteError);
+        }
+
+        return res.status(400).json({ message: "Invalid JSON format" });
+      }
+    }
+
+    // อัพเดตฐานข้อมูล
     const updateQuery = `
       UPDATE test_files 
       SET ${Object.keys(updateData)
@@ -441,7 +564,7 @@ const updateTestFile = async (req, res) => {
       ]
     );
 
-    // บันทึก action logs
+    // บันทึก log
     await db.query(
       `INSERT INTO action_logs 
        (user_id, action_type, target_table, target_id, details) 
@@ -457,7 +580,7 @@ const updateTestFile = async (req, res) => {
 
     res.json({
       message: "Test file updated successfully",
-      filename: updateData.filename,
+      filename: updateData.filename || currentFileData.filename,
     });
   } catch (error) {
     console.error("Error in updateTestFile:", error);

@@ -1,5 +1,4 @@
-// Frontend: CreateTestFile.jsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
@@ -20,6 +19,41 @@ const CreateTestFile = () => {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [pendingFileId, setPendingFileId] = useState(null);
   const [existingSprintName, setExistingSprintName] = useState(null);
+  const [existingFiles, setExistingFiles] = useState([]);
+  const [isUpdateMode, setIsUpdateMode] = useState(false); // เพิ่มสถานะสำหรับโหมดอัปเดต
+
+  useEffect(() => {
+    const fetchExistingFiles = async () => {
+      try {
+        const response = await axios.get(`${API_BASE_URL}/api/test-files`, {
+          headers: { Authorization: `Bearer ${user.token}` },
+        });
+        setExistingFiles(response.data);
+      } catch (err) {
+        console.error("Error fetching existing files:", err);
+      }
+    };
+    fetchExistingFiles();
+  }, [user.token]);
+
+  const checkExistingFile = (file) => {
+    const existingFile = existingFiles.find(
+      (ef) => ef.original_filename === file.name && ef.status !== "Deleted"
+    );
+
+    if (existingFile) {
+      if (existingFile.sprint_id === parseInt(sprintId)) {
+        setPendingFileId(existingFile.file_id);
+        setShowConfirmDialog(true);
+        return "SAME_SPRINT";
+      } else {
+        setExistingSprintName(existingFile.sprint_name);
+        setShowErrorDialog(true);
+        return "DIFFERENT_SPRINT";
+      }
+    }
+    return "NEW_FILE";
+  };
 
   const handleFileChange = (e) => {
     const file = e.target.files[0];
@@ -43,13 +77,21 @@ const CreateTestFile = () => {
       return;
     }
 
-    setSelectedFile(file);
-    if (!filename) {
-      setFilename(file.name.replace(".json", ""));
+    const fileStatus = checkExistingFile(file);
+    if (fileStatus === "NEW_FILE" || fileStatus === "SAME_SPRINT") {
+      setSelectedFile(file);
+      if (!filename) {
+        setFilename(file.name.replace(".json", ""));
+      }
+    } else {
+      setSelectedFile(null);
+      if (!filename) {
+        setFilename("");
+      }
     }
   };
 
-  const handleUpload = async (isConfirmed = false) => {
+  const handleUpload = async () => {
     if (!selectedFile) {
       setFileError("Please select a file");
       return;
@@ -69,31 +111,23 @@ const CreateTestFile = () => {
     formData.append("filename", filename);
 
     try {
-      const response = await axios.post(
-        `${API_BASE_URL}/api/test-files/upload`,
-        formData,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      // Use the correct endpoint for update mode
+      const endpoint = isUpdateMode
+        ? `${API_BASE_URL}/api/test-files/upload/${pendingFileId}`
+        : `${API_BASE_URL}/api/test-files/upload`;
 
-      navigate(`/test-files/${response.data.file_id}`);
+      const response = await axios.post(endpoint, formData, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
+
+      navigate(`/test-files/${response.data.file_id || pendingFileId}`);
     } catch (err) {
-      // กรณีไฟล์ซ้ำใน sprint เดียวกัน
       if (err.response?.status === 409 && err.response.data.sameSprint) {
         setPendingFileId(err.response.data.file_id);
         setShowConfirmDialog(true);
-        setLoading(false);
-        return;
-      }
-
-      // กรณีไฟล์ถูกใช้ในอีก sprint
-      if (err.response?.data?.cannotUpload) {
-        setExistingSprintName(err.response.data.existingSprintName);
-        setShowErrorDialog(true);
         setLoading(false);
         return;
       }
@@ -108,32 +142,9 @@ const CreateTestFile = () => {
     handleUpload();
   };
 
-  const handleConfirmUpdate = async () => {
+  const handleConfirmUpdate = () => {
     setShowConfirmDialog(false);
-    setLoading(true);
-
-    if (pendingFileId) {
-      const formData = new FormData();
-      formData.append("testFile", selectedFile);
-      formData.append("filename", filename);
-
-      try {
-        await axios.put(
-          `${API_BASE_URL}/api/test-files/${pendingFileId}`,
-          formData,
-          {
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-              "Content-Type": "multipart/form-data",
-            },
-          }
-        );
-        navigate(`/test-files/${pendingFileId}`);
-      } catch (err) {
-        setError(err.response?.data?.message || "Failed to update test file");
-        setLoading(false);
-      }
-    }
+    setIsUpdateMode(true); // เปิดโหมดอัปเดตเมื่อผู้ใช้ยืนยัน
   };
 
   return (
@@ -151,7 +162,7 @@ const CreateTestFile = () => {
           <div className="bg-blue-50 px-6 py-5 border-b border-blue-100">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center">
               <FileUp className="mr-3 text-blue-600" />
-              Upload Test File
+              {isUpdateMode ? "Update Test File" : "Upload Test File"}
             </h2>
           </div>
 
@@ -244,7 +255,11 @@ const CreateTestFile = () => {
                   }
                 `}
               >
-                {loading ? "Uploading..." : "Upload File"}
+                {loading
+                  ? "Uploading..."
+                  : isUpdateMode
+                  ? "Update File"
+                  : "Upload File"}
               </button>
               <button
                 type="button"
@@ -260,7 +275,6 @@ const CreateTestFile = () => {
           </form>
         </div>
 
-        {/* Error Dialog สำหรับแจ้งเตือนกรณีไฟล์ถูกใช้ในอีก sprint */}
         {showErrorDialog && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
@@ -272,7 +286,7 @@ const CreateTestFile = () => {
                   </h3>
                 </div>
                 <p className="text-gray-600">
-                  This test file has already been uploaded to {" "}
+                  This test file has already been uploaded to{" "}
                   {existingSprintName}. You cannot upload the same file to
                   multiple sprints.
                 </p>
@@ -289,7 +303,6 @@ const CreateTestFile = () => {
           </div>
         )}
 
-        {/* Confirmation Modal using Tailwind */}
         {showConfirmDialog && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
             <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
@@ -298,8 +311,8 @@ const CreateTestFile = () => {
                   Update Existing Test File?
                 </h3>
                 <p className="text-gray-600">
-                  A test file with the same name already exists. Would you like
-                  to update it with the new results?
+                  A test file with the same name already exists in this sprint.
+                  Would you like to update it with the new results?
                 </p>
               </div>
               <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
