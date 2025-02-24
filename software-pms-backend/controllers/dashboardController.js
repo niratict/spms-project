@@ -6,6 +6,7 @@ const { existsSync } = require("fs");
 const uploadFolder = path.join(__dirname, "../uploads/test-files");
 
 // Utility function to safely process test results
+// Utility function to safely process test results
 const processTestResults = (jsonContent) => {
   try {
     const results = {
@@ -18,32 +19,29 @@ const processTestResults = (jsonContent) => {
       duration: 0,
     };
 
-    // Handle direct stats if available
-    if (jsonContent.stats) {
+    // Handle direct stats if they're complete
+    if (jsonContent.stats && jsonContent.stats.tests > 0) {
       results.totalTests = jsonContent.stats.tests || 0;
       results.passedTests = jsonContent.stats.passes || 0;
       results.failedTests = jsonContent.stats.failures || 0;
       results.duration = jsonContent.stats.duration || 0;
-      // If we have complete stats, return early
-      if (results.totalTests > 0) {
-        return results;
-      }
+      return results;
     }
 
-    // Process detailed results if stats are not complete
+    // Process detailed results if stats are incomplete or missing
     if (jsonContent.results) {
       jsonContent.results.forEach((result) => {
-        // Handle flat test structure
+        // Process root level tests if any
         if (Array.isArray(result.tests)) {
           result.tests.forEach((test) => {
             processTestCase(test, results);
           });
         }
 
-        // Handle nested suites
+        // Process suites recursively
         if (Array.isArray(result.suites)) {
           result.suites.forEach((suite) => {
-            processSuite(suite, results);
+            processSuiteAndNestedSuites(suite, results);
           });
         }
       });
@@ -64,38 +62,47 @@ const processTestResults = (jsonContent) => {
   }
 };
 
-// Helper function to process a test suite recursively
-const processSuite = (suite, results) => {
+// New helper function to process both suite and its nested suites
+const processSuiteAndNestedSuites = (suite, results) => {
+  // Process tests in current suite
   if (Array.isArray(suite.tests)) {
     suite.tests.forEach((test) => {
       processTestCase(test, results);
     });
   }
 
+  // Process nested suites
   if (Array.isArray(suite.suites)) {
-    suite.suites.forEach((childSuite) => {
-      processSuite(childSuite, results);
+    suite.suites.forEach((nestedSuite) => {
+      processSuiteAndNestedSuites(nestedSuite, results);
     });
+  }
+
+  // Add suite duration if available
+  if (suite.duration) {
+    results.duration += suite.duration;
   }
 };
 
-// Helper function to process individual test case
+// Enhanced helper function to process individual test case
 const processTestCase = (test, results) => {
   results.totalTests++;
 
-  if (test.state === "passed" || test.pass) {
+  // Handle different test result formats
+  if (test.state === "passed" || test.pass === true) {
     results.passedTests++;
-  } else if (test.state === "failed" || test.fail) {
+  } else if (test.state === "failed" || test.fail === true) {
     results.failedTests++;
-  } else if (test.timedOut) {
+  } else if (test.timedOut === true) {
     results.timedOutTests++;
   } else if (test.err && Object.keys(test.err).length > 0) {
     results.erroredTests++;
-  } else if (test.skipped || test.pending) {
+  } else if (test.skipped === true || test.pending === true) {
     results.canceledTests++;
   }
 
-  if (test.duration) {
+  // Add test duration if available
+  if (typeof test.duration === "number") {
     results.duration += test.duration;
   }
 };

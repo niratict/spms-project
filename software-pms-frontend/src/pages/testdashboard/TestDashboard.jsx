@@ -293,29 +293,65 @@ export default function TestDashboard() {
   };
 
   // Process Test Results
+  // Process Test Results
   const processTestResults = (data) => {
-    // กรองเฉพาะไฟล์ที่ไม่ถูกลบออกก่อน
+    // Filter out deleted files first
     const activeFiles = data.filter((file) => file.status !== "Deleted");
 
     const processedResults = activeFiles
       .map((file) => {
         try {
           const jsonContent = file.json_content;
+          if (!jsonContent || !jsonContent.results) return null;
+
+          // Process all test suites and their tests
+          const processedTests = [];
+          const processSuite = (suite) => {
+            // Add tests from current suite
+            if (suite.tests && Array.isArray(suite.tests)) {
+              processedTests.push(...suite.tests);
+            }
+            // Recursively process nested suites
+            if (suite.suites && Array.isArray(suite.suites)) {
+              suite.suites.forEach(processSuite);
+            }
+          };
+
+          // Process each result and its suites
+          jsonContent.results.forEach((result) => {
+            if (result.suites && Array.isArray(result.suites)) {
+              result.suites.forEach(processSuite);
+            }
+            // Also check for tests at result level
+            if (result.tests && Array.isArray(result.tests)) {
+              processedTests.push(...result.tests);
+            }
+          });
+
           return {
-            id: file.id,
+            id: file.file_id,
             filename: file.filename,
             projectName: file.project_name,
             sprintName: file.sprint_name,
             uploadDate: file.upload_date,
             status: file.status,
-            suites: jsonContent
-              ? [
-                  {
-                    title: `${file.project_name} - ${file.sprint_name}`,
-                    tests: jsonContent.results[0].suites[0].tests || [],
-                  },
-                ]
-              : [],
+            suites: [
+              {
+                title: `${file.project_name} - ${file.sprint_name}`,
+                tests: processedTests.map((test) => ({
+                  title: test.title || "",
+                  fullTitle: test.fullTitle || test.title || "",
+                  duration: test.duration || 0,
+                  state: test.state,
+                  pass: test.state === "passed" || test.pass === true,
+                  fail: test.state === "failed" || test.fail === true,
+                  pending: test.pending || false,
+                  skipped: test.skipped || false,
+                  timedOut: test.timedOut || false,
+                  err: test.err || null,
+                })),
+              },
+            ],
           };
         } catch (error) {
           console.error(`Error processing file ${file.filename}:`, error);
@@ -324,34 +360,29 @@ export default function TestDashboard() {
       })
       .filter(Boolean);
 
-    // Calculate statistics จากเฉพาะไฟล์ที่ active
-    const totalTests = processedResults.reduce(
-      (acc, result) => acc + result.suites[0]?.tests?.length || 0,
-      0
-    );
-    const passedTests = processedResults.reduce(
-      (acc, result) =>
-        acc + (result.suites[0]?.tests?.filter((t) => t.pass)?.length || 0),
-      0
-    );
-    const totalDuration = processedResults.reduce(
-      (acc, result) =>
-        acc +
-          result.suites[0]?.tests?.reduce(
-            (sum, test) => sum + (test.duration || 0),
-            0
-          ) || 0,
-      0
+    // Calculate overall statistics
+    const stats = processedResults.reduce(
+      (acc, result) => {
+        const tests = result.suites[0]?.tests || [];
+        const passedTests = tests.filter((t) => t.pass).length;
+        const totalDuration = tests.reduce(
+          (sum, test) => sum + (test.duration || 0),
+          0
+        );
+
+        return {
+          tests: acc.tests + tests.length,
+          passes: acc.passes + passedTests,
+          failures: acc.failures + (tests.length - passedTests),
+          duration: acc.duration + totalDuration,
+        };
+      },
+      { tests: 0, passes: 0, failures: 0, duration: 0 }
     );
 
     setTestResults({
       results: processedResults,
-      stats: {
-        tests: totalTests,
-        passes: passedTests,
-        failures: totalTests - passedTests,
-        duration: totalDuration,
-      },
+      stats: stats,
     });
     setFilteredTests(processedResults);
   };
@@ -770,7 +801,6 @@ export default function TestDashboard() {
             <div className="bg-white rounded-xl shadow-md p-6">
               <div className="space-y-4">
                 {currentTests.map((result, index) => {
-                  const suiteTitle = result.suites[0]?.title;
                   const tests = result.suites[0]?.tests || [];
                   const passCount = tests.filter((test) => test.pass).length;
                   const failCount = tests.length - passCount;
@@ -791,10 +821,10 @@ export default function TestDashboard() {
                       <div className="flex justify-between items-start mb-4">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-800">
-                            {suiteTitle}
+                            {result.projectName} - {result.sprintName}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            Story: {result.filename}
+                            Filename: {result.filename}
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
