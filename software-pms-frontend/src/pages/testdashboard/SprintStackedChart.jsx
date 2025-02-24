@@ -67,60 +67,128 @@ const SprintStackedChart = ({ sprintResults }) => {
     };
   }, [sprintResults]);
 
+  const getThaiMonth = (date) => {
+    const thaiMonths = [
+      "มกราคม",
+      "กุมภาพันธ์",
+      "มีนาคม",
+      "เมษายน",
+      "พฤษภาคม",
+      "มิถุนายน",
+      "กรกฎาคม",
+      "สิงหาคม",
+      "กันยายน",
+      "ตุลาคม",
+      "พฤศจิกายน",
+      "ธันวาคม",
+    ];
+    return thaiMonths[new Date(date).getMonth()];
+  };
+
   const formatThaiDate = (isoDateString) => {
     try {
       if (!isoDateString) return "-";
-      const [datePart] = isoDateString.split("T");
-      if (!datePart) return "-";
-      const [year, month, day] = datePart.split("-");
-      if (!year || !month || !day) return "-";
-      // Convert to Buddhist year by adding 543 to the Christian year
-      const buddhistYear = parseInt(year) + 543;
-      return `${day}-${month}-${buddhistYear}`;
+
+      // Create a new Date object and adjust for timezone
+      const date = new Date(isoDateString);
+
+      // Get the date in Thai format
+      const day = date.getDate().toString().padStart(2, "0");
+      const month = (date.getMonth() + 1).toString().padStart(2, "0");
+      const year = date.getFullYear() + 543; // Convert to Buddhist year
+
+      return `${day}-${month}-${year}`;
     } catch (error) {
       console.error("Error formatting date:", error);
       return "-";
     }
   };
 
-  const chartData = sprintResults.map((sprint) => {
-    const totalTests = sprint.suites?.[0]?.tests?.length || 0;
-    const passedTests =
-      sprint.suites?.[0]?.tests?.filter((test) => test.pass)?.length || 0;
-    const failedTests = totalTests - passedTests;
+  const chartData = useMemo(() => {
+    return sprintResults.map((sprint, index, array) => {
+      const totalTests = sprint.suites?.[0]?.tests?.length || 0;
+      const passedTests =
+        sprint.suites?.[0]?.tests?.filter((test) => test.pass)?.length || 0;
+      const failedTests = totalTests - passedTests;
 
-    const startDate = sprint.startDate ? formatThaiDate(sprint.startDate) : "-";
-    const endDate = sprint.endDate ? formatThaiDate(sprint.endDate) : "-";
+      const startDate = sprint.startDate
+        ? formatThaiDate(sprint.startDate)
+        : "-";
+      const endDate = sprint.endDate ? formatThaiDate(sprint.endDate) : "-";
 
-    return {
-      sprint: `${sprint.sprint_name || "Unknown Sprint"}`,
-      startDate,
-      endDate,
-      Passed: passedTests,
-      Failed: failedTests,
-      "Timed Out": 0,
-      Errored: 0,
-      Canceled: 0,
-    };
-  });
+      // Get month and year for current sprint
+      const currentMonth = sprint.startDate
+        ? getThaiMonth(sprint.startDate)
+        : "";
+      const currentYear = sprint.startDate
+        ? new Date(sprint.startDate).getFullYear() + 543
+        : "";
+
+      // Check if this is the first sprint of the month
+      const previousSprint = array[index - 1];
+      const isFirstInMonth =
+        !previousSprint ||
+        new Date(sprint.startDate).getMonth() !==
+          new Date(previousSprint.startDate).getMonth();
+
+      // Check if next sprint exists and is in the same month
+      const nextSprint = array[index + 1];
+      const isLastInMonth =
+        !nextSprint ||
+        new Date(sprint.startDate).getMonth() !==
+          new Date(nextSprint.startDate).getMonth();
+
+      return {
+        sprint: `${sprint.sprint_name || "Unknown Sprint"}`,
+        startDate,
+        endDate,
+        Passed: passedTests,
+        Failed: failedTests,
+        "Timed Out": 0,
+        Errored: 0,
+        Canceled: 0,
+        monthDisplay: `(${currentMonth} ${currentYear})`,
+        isFirstInMonth,
+        isLastInMonth,
+        currentMonth: sprint.startDate
+          ? new Date(sprint.startDate).getMonth()
+          : null,
+      };
+    });
+  }, [sprintResults]);
 
   const CustomTooltip = ({ active, payload, label }) => {
     if (active && payload && payload.length) {
       const sprintData = chartData.find((item) => item.sprint === label);
+      const totalTests = payload.reduce((sum, entry) => sum + entry.value, 0);
+
       return (
         <div className="bg-white p-4 rounded-lg shadow-lg border border-gray-200">
-          <p className="font-semibold text-gray-800 mb-2">{label}</p>
-          <div className="text-sm text-gray-600 mb-2">
-            <p>Start Date: {sprintData.startDate}</p>
+          {/* Sprint title - largest and most prominent */}
+          <p className="text-lg font-semibold text-gray-800 mb-3">{label}</p>
+
+          {/* Dates - slightly smaller but still clearly readable */}
+          <div className="text-sm text-gray-600 mb-3">
+            <p className="mb-1">Start Date: {sprintData.startDate}</p>
             <p>End Date: {sprintData.endDate}</p>
           </div>
+
+          {/* Total Tests - emphasized but not overpowering */}
+          <div className="flex items-center gap-2 mb-3">
+            <div className="w-3 h-3 rounded-full bg-gray-400" />
+            <span className="text-sm font-medium text-gray-700">
+              Total Tests: {totalTests}
+            </span>
+          </div>
+
+          {/* Individual test counts - same size as total for consistency */}
           {payload.map((entry, index) => (
-            <div key={index} className="flex items-center gap-2">
+            <div key={index} className="flex items-center gap-2 mb-1 last:mb-0">
               <div
                 className="w-3 h-3 rounded-full"
                 style={{ backgroundColor: entry.color }}
               />
-              <span className="text-gray-600">
+              <span className="text-sm font-medium text-gray-700">
                 {entry.name}: {entry.value} tests
               </span>
             </div>
@@ -132,30 +200,43 @@ const SprintStackedChart = ({ sprintResults }) => {
   };
 
   const CustomXAxisTick = (props) => {
-    const { x, y, payload } = props;
-    const sprint = chartData.find((item) => item.sprint === payload.value);
+    const { x, y, payload, index, width } = props;
+    const currentSprintData = chartData[index];
+    const previousSprintData = index > 0 ? chartData[index - 1] : null;
+
+    // Check if current sprint is in the same month as the previous sprint
+    const inSameMonth =
+      previousSprintData &&
+      currentSprintData.currentMonth === previousSprintData.currentMonth;
+
+    // If we're showing the month label, shift it to center between sprints
+    const offsetX = inSameMonth ? -50 : 0;
 
     return (
       <g transform={`translate(${x},${y})`}>
+        {/* Sprint name */}
         <text
           x={0}
-          y={0}
-          dy={16}
+          y={20}
           textAnchor="middle"
-          fill="#374151"
-          className="text-sm font-medium"
+          fill="#4B5563"
+          className="text-sm"
         >
           {payload.value}
         </text>
-        <text
-          x={0}
-          y={16}
-          dy={16}
-          textAnchor="middle"
-          fill="#6B7280"
-          className="text-xs"
-        >
-        </text>
+
+        {/* Month display */}
+        {currentSprintData.isLastInMonth && inSameMonth && (
+          <text
+            x={offsetX}
+            y={60}
+            textAnchor="middle"
+            fill="#4B5563"
+            className="text-xs font-medium"
+          >
+            {currentSprintData.monthDisplay}
+          </text>
+        )}
       </g>
     );
   };
@@ -199,13 +280,13 @@ const SprintStackedChart = ({ sprintResults }) => {
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 65 }}
+              margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
             >
               <CartesianGrid
                 strokeDasharray="3 3"
                 className="stroke-gray-200"
               />
-              <XAxis dataKey="sprint" tick={<CustomXAxisTick />} height={65} />
+              <XAxis dataKey="sprint" tick={<CustomXAxisTick />} height={100} />
               <YAxis tick={{ fill: "rgb(55, 65, 81)" }} className="text-sm" />
               <Tooltip content={<CustomTooltip />} />
               <Legend />

@@ -668,9 +668,65 @@ export default function TestDashboard() {
                           innerRadius={60}
                           outerRadius={90}
                           paddingAngle={1}
-                          label={({ name, percent }) =>
-                            `${name} ${(percent * 100).toFixed(0)}%`
-                          }
+                          labelLine={false}
+                          label={({
+                            cx,
+                            cy,
+                            midAngle,
+                            innerRadius,
+                            outerRadius,
+                            percent,
+                            name,
+                            index,
+                          }) => {
+                            const RADIAN = Math.PI / 180;
+                            // Calculate label position
+                            const radius =
+                              innerRadius + (outerRadius - innerRadius) * 0.5;
+                            const x =
+                              cx + radius * Math.cos(-midAngle * RADIAN);
+                            const y =
+                              cy + radius * Math.sin(-midAngle * RADIAN);
+
+                            // Define styles based on pass/fail status
+                            const bgColor =
+                              name === "Passed"
+                                ? "rgba(74, 222, 128, 0.9)"
+                                : "rgba(248, 113, 113, 0.9)";
+                            const textColor = "white";
+
+                            const content = `${name} ${(percent * 100).toFixed(
+                              0
+                            )}%`;
+
+                            return (
+                              <>
+                                {/* Background rectangle */}
+                                <rect
+                                  x={x - 40} // Adjust these values based on your text length
+                                  y={y - 10}
+                                  width="80" // Adjust these values based on your text length
+                                  height="20"
+                                  rx="4" // Rounded corners
+                                  fill={bgColor}
+                                  stroke="white" // เพิ่มเส้นขอบสีดำ
+                                  strokeWidth="0.5" // กำหนดความหนาของเส้นขอบ
+                                  className="text-label-bg"
+                                />
+                                {/* Text */}
+                                <text
+                                  x={x}
+                                  y={y}
+                                  fill={textColor}
+                                  textAnchor="middle"
+                                  dominantBaseline="central"
+                                  className="text-xs font-medium"
+                                >
+                                  {content}
+                                </text>
+                              </>
+                            );
+                          }}
                         >
                           <Cell fill="#4ADE80" />
                           <Cell fill="#F87171" />
@@ -804,11 +860,13 @@ export default function TestDashboard() {
                   const tests = result.suites[0]?.tests || [];
                   const passCount = tests.filter((test) => test.pass).length;
                   const failCount = tests.length - passCount;
+                  const totalTests = tests.length;
                   const duration = tests.reduce(
                     (sum, test) => sum + (test.duration || 0),
                     0
                   );
                   const allPassed = failCount === 0;
+
                   return (
                     <div
                       key={index}
@@ -818,7 +876,7 @@ export default function TestDashboard() {
                           : "border-red-500 bg-red-50"
                       }`}
                     >
-                      <div className="flex justify-between items-start mb-4">
+                      <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
                         <div>
                           <h3 className="text-lg font-semibold text-gray-800">
                             {result.projectName} - {result.sprintName}
@@ -827,17 +885,11 @@ export default function TestDashboard() {
                             Filename: {result.filename}
                           </p>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <span className="text-green-600 flex items-center">
-                            <CheckCircle className="mr-1 h-4 w-4" />
-                            {passCount} passed
+                        <div className="flex flex-wrap items-center gap-4">
+                          <span className="text-gray-700 flex items-center bg-white px-3 py-1 rounded-full shadow-sm">
+                            <FileCode className="mr-2 h-4 w-4" />
+                            {totalTests} total tests
                           </span>
-                          {failCount > 0 && (
-                            <span className="text-red-600 flex items-center">
-                              <XCircle className="mr-1 h-4 w-4" />
-                              {failCount} failed
-                            </span>
-                          )}
                         </div>
                       </div>
 

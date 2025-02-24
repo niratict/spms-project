@@ -33,6 +33,38 @@ const ActionLogs = () => {
     limit: 10,
   });
 
+  // New function to format details
+  const formatDetails = (details, targetTable, actionType) => {
+    if (!details) return "-";
+
+    if (typeof details === "object") {
+      // Create a copy of details to modify
+      const displayDetails = { ...details };
+
+      // Remove json_content if target is test_files and action is update or delete
+      if (
+        targetTable === "test_files" &&
+        (actionType === "update" || actionType === "delete") &&
+        displayDetails.json_content
+      ) {
+        delete displayDetails.json_content;
+      }
+
+      return Object.entries(displayDetails)
+        .filter(([_, value]) => value !== null && value !== undefined)
+        .map(([key, value]) => (
+          <div key={key} className="whitespace-normal">
+            <span className="font-medium">{key}:</span>{" "}
+            {typeof value === "object"
+              ? JSON.stringify(value)
+              : value.toString()}
+          </div>
+        ));
+    }
+
+    return details;
+  };
+
   // Format date to Thai Buddhist calendar (DD/MM/YYYY+543)
   const formatThaiDate = (date) => {
     if (!date) return "";
@@ -412,23 +444,11 @@ const ActionLogs = () => {
                     className="px-6 py-4 text-sm text-gray-500"
                     data-cy="log-details"
                   >
-                    {log.details
-                      ? typeof log.details === "object"
-                        ? Object.entries(log.details)
-                            .filter(
-                              ([_, value]) =>
-                                value !== null && value !== undefined
-                            )
-                            .map(([key, value]) => (
-                              <div key={key} className="whitespace-normal">
-                                <span className="font-medium">{key}:</span>{" "}
-                                {typeof value === "object"
-                                  ? JSON.stringify(value)
-                                  : value.toString()}
-                              </div>
-                            ))
-                        : log.details
-                      : "-"}
+                    {formatDetails(
+                      log.details,
+                      log.target_table,
+                      log.action_type
+                    )}
                   </td>
                 </tr>
               ))}

@@ -79,7 +79,8 @@ const Projects = () => {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 p-8">
+    <div className="container mx-auto max-w-7xl">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-4xl font-bold text-gray-800">Project Management</h1>
         <button
@@ -137,6 +138,7 @@ const Projects = () => {
           </button>
         </div>
       )}
+    </div>
     </div>
   );
 };
