@@ -65,9 +65,11 @@ const uploadJsonTestFile = async (req, res) => {
 
         // ตรวจสอบไฟล์ซ้ำ
         const [existingFiles] = await db.query(
-          `SELECT tf.file_id, tf.sprint_id, s.name as sprint_name, tf.status 
+          `SELECT tf.file_id, tf.sprint_id, s.name as sprint_name, 
+           p.project_id, p.name as project_name
            FROM test_files tf
            JOIN sprints s ON tf.sprint_id = s.sprint_id
+           JOIN projects p ON s.project_id = p.project_id
            WHERE tf.original_filename = ? AND tf.status != 'Deleted'`,
           [req.file.originalname]
         );
@@ -95,7 +97,9 @@ const uploadJsonTestFile = async (req, res) => {
               message: "This file has already been uploaded to another sprint",
               existingSprintId: existingFile.sprint_id,
               existingSprintName: existingFile.sprint_name,
-              cannotUpload: true,
+              existingProjectId: existingFile.project_id,
+              existingProjectName: existingFile.project_name,
+              cannotUpload: true
             });
           }
         }
@@ -507,6 +511,21 @@ const updateTestFile = async (req, res) => {
       try {
         const fileContent = await fs.readFile(newFile.path, "utf8");
         JSON.parse(fileContent); // ตรวจสอบ JSON format
+
+        // ลบไฟล์เก่าก่อนที่จะบันทึกไฟล์ใหม่
+        const oldFilePath = path.join(
+          "uploads/test-files",
+          currentFileData.original_filename
+        );
+        try {
+          await fs.access(oldFilePath);
+          await fs.unlink(oldFilePath);
+          console.log(`Old file ${oldFilePath} deleted successfully`);
+        } catch (deleteError) {
+          if (deleteError.code !== "ENOENT") {
+            console.error("Error deleting old file:", deleteError);
+          }
+        }
 
         // อัพเดตข้อมูลไฟล์
         updateData = {

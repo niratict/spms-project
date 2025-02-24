@@ -19,6 +19,7 @@ const CreateTestFile = () => {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [pendingFileId, setPendingFileId] = useState(null);
   const [existingSprintName, setExistingSprintName] = useState(null);
+  const [existingProjectName, setExistingProjectName] = useState(null);
   const [existingFiles, setExistingFiles] = useState([]);
   const [isUpdateMode, setIsUpdateMode] = useState(false); // เพิ่มสถานะสำหรับโหมดอัปเดต
 
@@ -48,6 +49,7 @@ const CreateTestFile = () => {
         return "SAME_SPRINT";
       } else {
         setExistingSprintName(existingFile.sprint_name);
+        setExistingProjectName(existingFile.project_name);
         setShowErrorDialog(true);
         return "DIFFERENT_SPRINT";
       }
@@ -287,8 +289,9 @@ const CreateTestFile = () => {
                 </div>
                 <p className="text-gray-600">
                   This test file has already been uploaded to{" "}
-                  {existingSprintName}. You cannot upload the same file to
-                  multiple sprints.
+                  {existingSprintName} in project{" "}
+                  <span className="font-medium">{existingProjectName}</span>.
+                  You cannot upload the same file to multiple sprints.
                 </p>
               </div>
               <div className="px-6 py-4 bg-gray-50 flex justify-end">
