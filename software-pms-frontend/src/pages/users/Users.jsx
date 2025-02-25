@@ -110,13 +110,14 @@ const Users = () => {
       <div className="container mx-auto">
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-extrabold text-gray-800">
-            User Management
+            การจัดการผู้ใช้
           </h1>
           <button
             onClick={() => navigate("/users/create")}
             className="flex items-center gap-2 bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition"
           >
-            <UserCircle className="w-5 h-5" /> Create User
+            <UserCircle className="w-5 h-5" />
+            เพิ่มผู้ใช้
           </button>
         </div>
 
@@ -125,7 +126,7 @@ const Users = () => {
             <div className="relative flex-grow">
               <input
                 type="text"
-                placeholder="Search users by name or email"
+                placeholder="ค้นหาผู้ใช้งานด้วย ชื่อ หรือ อีเมล"
                 value={searchTerm}
                 onChange={(e) => {
                   setSearchTerm(e.target.value);
@@ -144,7 +145,7 @@ const Users = () => {
               }}
               className="border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <option value="">All Roles</option>
+              <option value="">ทุกบทบาท</option>
               {roleOptions.map((role) => (
                 <option key={role} value={role}>
                   {role}
@@ -177,7 +178,7 @@ const Users = () => {
                   <UserCircle className="w-4 h-4" /> {userData.email}
                 </p>
                 <p className="text-gray-600">
-                  Created:{" "}
+                  เริ่มใช้งาน{" "}
                   {new Date(userData.created_at).toLocaleDateString("th-TH", {
                     day: "2-digit",
                     month: "2-digit",
@@ -190,7 +191,7 @@ const Users = () => {
                   onClick={() => navigate(`/users/${userData.user_id}`)}
                   className="flex items-center gap-2 text-blue-500 hover:text-blue-700"
                 >
-                  <Eye className="w-5 h-5" /> View Details
+                  <Eye className="w-5 h-5" /> ดูละเอียดเพิ่มเติม
                 </button>
               </div>
             </div>
@@ -199,7 +200,7 @@ const Users = () => {
 
         {filteredUsers.length === 0 && (
           <div className="text-center text-gray-500 mt-8">
-            No users found matching your search criteria.
+            ไม่พบผู้ใช้งานที่ตรงกับเกณฑ์การค้นหา
           </div>
         )}
 
@@ -210,10 +211,10 @@ const Users = () => {
               disabled={currentPage === 1}
               className="flex items-center gap-2 px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
             >
-              <ChevronLeft className="w-5 h-5" /> Previous
+              <ChevronLeft className="w-5 h-5" /> ก้อนหน้า
             </button>
             <span className="text-gray-600">
-              Page {currentPage} of {totalPages}
+              หน้า {currentPage} ถึง {totalPages}
             </span>
             <button
               onClick={() =>
@@ -222,7 +223,7 @@ const Users = () => {
               disabled={currentPage === totalPages}
               className="flex items-center gap-2 px-4 py-2 bg-gray-200 rounded-lg disabled:opacity-50"
             >
-              Next <ChevronRight className="w-5 h-5" />
+              ถัดไป <ChevronRight className="w-5 h-5" />
             </button>
           </div>
         )}

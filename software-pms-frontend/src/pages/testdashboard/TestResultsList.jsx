@@ -62,16 +62,16 @@ const TestCase = ({ test }) => {
           )}
           <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
             <div className="px-3 py-1 rounded-full bg-white shadow-sm">
-              Duration: {duration}s
+              ใช้ระยะเวลา: {duration}s
             </div>
             {test.timedOut && (
               <div className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">
-                Timed Out
+                หมดเวลา
               </div>
             )}
             {test.skipped && (
               <div className="px-3 py-1 rounded-full bg-gray-100 text-gray-800">
-                Skipped
+                ข้ามกรณีทดสอบ
               </div>
             )}
           </div>
@@ -204,14 +204,14 @@ const TestResultsList = ({ tests }) => {
             <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm">
               <CheckCircle className="text-green-500 h-5 w-5" />
               <span className="text-green-700 font-medium">
-                {stats.passed} passed
+               ผ่านการทดสอบ {stats.passed} กรณีทดสอบ
               </span>
             </div>
             {stats.failed > 0 && (
               <div className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm">
                 <XCircle className="text-red-500 h-5 w-5" />
                 <span className="text-red-700 font-medium">
-                  {stats.failed} failed
+                ผิดพลาด {stats.failed} กรณีทดสอบ
                 </span>
               </div>
             )}
@@ -232,12 +232,12 @@ const TestResultsList = ({ tests }) => {
           >
             {isExpanded ? (
               <>
-                Hide Details
+                ปิด
                 <ChevronUp className="h-4 w-4" />
               </>
             ) : (
               <>
-                Show Details
+                ดูเพิ่มเติม
                 <ChevronDown className="h-4 w-4" />
               </>
             )}
@@ -251,7 +251,7 @@ const TestResultsList = ({ tests }) => {
                 <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
                 <input
                   type="text"
-                  placeholder="Search test cases..."
+                  placeholder="ค้นหากรณีทดสอบ..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 bg-white rounded-lg border border-gray-200 
@@ -266,9 +266,9 @@ const TestResultsList = ({ tests }) => {
                   className="flex-1 px-4 py-2 bg-white rounded-lg border border-gray-200
                     focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="all">All Results</option>
-                  <option value="passed">Passed Only</option>
-                  <option value="failed">Failed Only</option>
+                  <option value="all">ทั้งหมด</option>
+                  <option value="passed">เฉพาะที่ผ่าน</option>
+                  <option value="failed">เฉพาะที่ผิดพลาด</option>
                 </select>
               </div>
             </div>

@@ -83,7 +83,7 @@ const UserEdit = () => {
           role: userData.role,
         });
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch user");
+        setError(err.response?.data?.message || "ไม่สามารถดึงข้อมูลผู้ใช้ได้");
       } finally {
         setLoading(false);
       }
@@ -119,7 +119,7 @@ const UserEdit = () => {
       setShowConfirmModal(false);
       navigate(`/users/${id}`);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update user");
+      setError(err.response?.data?.message || "ไม่สามารถอัปเดตผู้ใช้ได้");
     } finally {
       setActionLoading(false);
     }
@@ -127,7 +127,7 @@ const UserEdit = () => {
 
   const handlePasswordSubmit = async () => {
     if (passwordData.new_password !== passwordData.confirm_password) {
-      setPasswordError("New passwords do not match");
+      setPasswordError("รหัสผ่านใหม่ไม่ตรงกัน");
       return;
     }
 
@@ -151,7 +151,7 @@ const UserEdit = () => {
       });
     } catch (err) {
       setPasswordError(
-        err.response?.data?.message || "Failed to change password"
+        err.response?.data?.message || "ไม่สามารถเปลี่ยนรหัสผ่านได้"
       );
     } finally {
       setActionLoading(false);
@@ -166,14 +166,14 @@ const UserEdit = () => {
       });
       navigate("/users");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to delete user");
+      setError(err.response?.data?.message || "ไม่สามารถลบผู้ใช้ได้");
     } finally {
       setActionLoading(false);
     }
   };
 
   if (loading)
-    return <div className="text-center p-6 text-gray-500">Loading...</div>;
+    return <div className="text-center p-6 text-gray-500">กำลังโหลด...</div>;
   if (error) {
     return (
       <div className="p-6">
@@ -185,7 +185,9 @@ const UserEdit = () => {
     );
   }
   if (!userData)
-    return <div className="text-center p-6 text-gray-500">User not found</div>;
+    return (
+      <div className="text-center p-6 text-gray-500">ไม่พบข้อมูลผู้ใช้</div>
+    );
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -195,14 +197,14 @@ const UserEdit = () => {
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back to Users</span>
+          <span>กลับไปหน้าผู้ใช้</span>
         </button>
 
         <div className="bg-white shadow-md rounded-lg overflow-hidden mb-6">
           <div className="bg-blue-50 p-6 border-b border-blue-100 flex items-center">
             <User className="w-6 h-6 text-blue-600 mr-3" />
             <h2 className="text-xl font-semibold text-blue-800">
-              Edit User Profile
+              แก้ไขข้อมูลผู้ใช้
             </h2>
           </div>
 
@@ -219,7 +221,7 @@ const UserEdit = () => {
                 <User className="w-5 h-5 text-gray-500" />
                 <div className="flex-grow">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Name
+                    ชื่อ
                   </label>
                   <input
                     type="text"
@@ -235,7 +237,7 @@ const UserEdit = () => {
                 <Mail className="w-5 h-5 text-gray-500" />
                 <div className="flex-grow">
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
+                    อีเมล
                   </label>
                   <input
                     type="email"
@@ -252,7 +254,7 @@ const UserEdit = () => {
                   <Edit className="w-5 h-5 text-gray-500" />
                   <div className="flex-grow">
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Role
+                      บทบาท
                     </label>
                     <select
                       name="role"
@@ -277,7 +279,7 @@ const UserEdit = () => {
                   className="flex items-center px-4 py-2 text-blue-600 border border-blue-600 rounded hover:bg-blue-50 transition-colors"
                 >
                   <Lock className="w-4 h-4 mr-2" />
-                  Change Password
+                  เปลี่ยนรหัสผ่าน
                 </button>
                 {user.role === "Admin" &&
                   user.user_id !== parseInt(id) &&
@@ -288,7 +290,7 @@ const UserEdit = () => {
                       className="flex items-center px-4 py-2 text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors"
                     >
                       <Trash2 className="w-4 h-4 mr-2" />
-                      Delete User
+                      ลบผู้ใช้
                     </button>
                   )}
               </div>
@@ -299,7 +301,7 @@ const UserEdit = () => {
                   onClick={handleBackNavigation}
                   className="px-4 py-2 border rounded hover:bg-gray-100 transition-colors"
                 >
-                  Cancel
+                  ยกเลิก
                 </button>
                 <button
                   type="button"
@@ -307,7 +309,7 @@ const UserEdit = () => {
                   className="flex items-center px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                 >
                   <Edit className="w-4 h-4 mr-2" />
-                  Save Changes
+                  บันทึกการเปลี่ยนแปลง
                 </button>
               </div>
             </div>
@@ -326,10 +328,10 @@ const UserEdit = () => {
         <div className="space-y-4">
           <div className="text-center">
             <h2 className="text-xl font-bold text-gray-800 mb-2">
-              Confirm Changes
+              ยืนยันการเปลี่ยนแปลง
             </h2>
             <p className="text-gray-600">
-              Are you sure you want to save these changes to the user profile?
+              คุณแน่ใจหรือไม่ว่าต้องการบันทึกการเปลี่ยนแปลงข้อมูลผู้ใช้นี้?
             </p>
           </div>
           <div className="flex justify-center space-x-4 pt-4">
@@ -338,14 +340,14 @@ const UserEdit = () => {
               disabled={actionLoading}
               className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
-              Cancel
+              ยกเลิก
             </button>
             <button
               onClick={handleSubmit}
               disabled={actionLoading}
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
             >
-              {actionLoading ? "Saving..." : "Confirm"}
+              {actionLoading ? "กำลังบันทึก..." : "ยืนยัน"}
             </button>
           </div>
         </div>
@@ -362,9 +364,11 @@ const UserEdit = () => {
         <div className="space-y-4">
           <div className="text-center">
             <h2 className="text-xl font-bold text-gray-800 mb-2">
-              Change Password
+              เปลี่ยนรหัสผ่าน
             </h2>
-            <p className="text-gray-600">Enter your current and new password</p>
+            <p className="text-gray-600">
+              กรุณากรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่
+            </p>
           </div>
 
           {passwordError && (
@@ -378,7 +382,7 @@ const UserEdit = () => {
             {user.role !== "Admin" && (
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Current Password
+                  รหัสผ่านปัจจุบัน
                 </label>
                 <input
                   type="password"
@@ -392,7 +396,7 @@ const UserEdit = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                New Password
+                รหัสผ่านใหม่
               </label>
               <input
                 type="password"
@@ -405,7 +409,7 @@ const UserEdit = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
-                Confirm New Password
+                ยืนยันรหัสผ่านใหม่
               </label>
               <input
                 type="password"
@@ -423,14 +427,14 @@ const UserEdit = () => {
               disabled={actionLoading}
               className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
-              Cancel
+              ยกเลิก
             </button>
             <button
               onClick={handlePasswordSubmit}
               disabled={actionLoading}
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
             >
-              {actionLoading ? "Updating..." : "Update Password"}
+              {actionLoading ? "กำลังอัปเดต..." : "อัปเดตรหัสผ่าน"}
             </button>
           </div>
         </div>
@@ -446,10 +450,9 @@ const UserEdit = () => {
       >
         <div className="space-y-4">
           <div className="text-center">
-            <h2 className="text-xl font-bold text-red-600 mb-2">Delete User</h2>
+            <h2 className="text-xl font-bold text-red-600 mb-2">ลบผู้ใช้</h2>
             <p className="text-gray-600">
-              Are you sure you want to delete this user? This action cannot be
-              undone.
+              คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?
             </p>
           </div>
           <div className="flex justify-center space-x-4 pt-4">
@@ -458,14 +461,14 @@ const UserEdit = () => {
               disabled={actionLoading}
               className="px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50"
             >
-              Cancel
+              ยกเลิก
             </button>
             <button
               onClick={handleDelete}
               disabled={actionLoading}
               className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors disabled:opacity-50"
             >
-              {actionLoading ? "Deleting..." : "Delete"}
+              {actionLoading ? "กำลังลบ..." : "ลบ"}
             </button>
           </div>
         </div>

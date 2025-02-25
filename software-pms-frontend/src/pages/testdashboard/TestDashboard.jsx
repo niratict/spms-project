@@ -543,7 +543,7 @@ export default function TestDashboard() {
       <div className="max-w-7xl mx-auto">
         <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg mb-8">
           <h1 className="text-3xl sm:text-4xl font-bold text-center text-white py-6 px-4">
-            Test Results Dashboard
+            แดชบอร์ดแสดงผลการทดสอบ
           </h1>
         </div>
 
@@ -561,7 +561,7 @@ export default function TestDashboard() {
             <option value="all">Select Project</option>
             {projects.map((project) => (
               <option key={project.project_id} value={project.project_id}>
-                {project.name}
+               Project {project.name}
               </option>
             ))}
           </select>
@@ -832,7 +832,7 @@ export default function TestDashboard() {
                   <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                   <input
                     type="text"
-                    placeholder="Search tests..."
+                    placeholder="ค้นหาการทดสอบ..."
                     className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -845,9 +845,9 @@ export default function TestDashboard() {
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                   >
-                    <option value="all">All Tests</option>
-                    <option value="passed">Passed Only</option>
-                    <option value="failed">Failed Only</option>
+                    <option value="all">การทดสอบทั้งหมด</option>
+                    <option value="passed">เฉพาะที่ผ่าน</option>
+                    <option value="failed">เฉพาะที่ผิดพลาด</option>
                   </select>
                 </div>
               </div>
@@ -882,13 +882,13 @@ export default function TestDashboard() {
                             {result.projectName} - {result.sprintName}
                           </h3>
                           <p className="text-sm text-gray-600">
-                            Filename: {result.filename}
+                            ชื่อไฟล์ทดสอบ: {result.filename}
                           </p>
                         </div>
                         <div className="flex flex-wrap items-center gap-4">
                           <span className="text-gray-700 flex items-center bg-white px-3 py-1 rounded-full shadow-sm">
                             <FileCode className="mr-2 h-4 w-4" />
-                            {totalTests} total tests
+                            {totalTests} กรณีทดสอบ
                           </span>
                         </div>
                       </div>

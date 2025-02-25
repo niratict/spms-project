@@ -20,7 +20,6 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 // Modal Configuration
 Modal.setAppElement("#root");
 
-
 const UserDetail = () => {
   // State Management
   const { id } = useParams();
@@ -41,7 +40,7 @@ const UserDetail = () => {
   useEffect(() => {
     const fetchUser = async () => {
       if (!user?.token || !id) {
-        setError("Unauthorized access");
+        setError("ไม่มีสิทธิ์เข้าถึง");
         return;
       }
 
@@ -56,7 +55,7 @@ const UserDetail = () => {
           navigate("/login");
           return;
         }
-        setError(err.response?.data?.message || "Failed to fetch user details");
+        setError(err.response?.data?.message || "ไม่สามารถดึงข้อมูลผู้ใช้ได้");
       } finally {
         setLoading(false);
       }
@@ -78,7 +77,7 @@ const UserDetail = () => {
         navigate("/login");
         return;
       }
-      setError(err.response?.data?.message || "Failed to delete user");
+      setError(err.response?.data?.message || "ไม่สามารถลบผู้ใช้ได้");
     }
   };
 
@@ -87,12 +86,12 @@ const UserDetail = () => {
     e.preventDefault();
 
     if (passwordData.new_password !== passwordData.confirm_password) {
-      alert("New passwords don't match");
+      alert("รหัสผ่านใหม่ไม่ตรงกัน");
       return;
     }
 
     if (passwordData.new_password.length < 6) {
-      alert("New password must be at least 6 characters long");
+      alert("รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
       return;
     }
 
@@ -113,14 +112,14 @@ const UserDetail = () => {
         new_password: "",
         confirm_password: "",
       });
-      alert("Password changed successfully");
+      alert("เปลี่ยนรหัสผ่านสำเร็จ");
     } catch (err) {
       if (err.response?.status === 401) {
         logout();
         navigate("/login");
         return;
       }
-      alert(err.response?.data?.message || "Failed to change password");
+      alert(err.response?.data?.message || "ไม่สามารถเปลี่ยนรหัสผ่านได้");
     }
   };
 
@@ -135,24 +134,25 @@ const UserDetail = () => {
       <div className="text-center p-6 min-h-screen bg-gray-100 flex items-center justify-center">
         <div className="bg-white p-8 rounded-xl shadow-lg">
           <h2 className="text-2xl font-bold text-red-600 mb-4">
-            Access Denied
+            ไม่มีสิทธิ์เข้าถึง
           </h2>
-          <p className="text-gray-600">
-            You don't have permission to view this profile.
-          </p>
+          <p className="text-gray-600">คุณไม่มีสิทธิ์ในการดูโปรไฟล์นี้</p>
         </div>
       </div>
     );
   }
 
   // Loading and Error States
-  if (loading) return <div className="text-center p-6">Loading...</div>;
+  if (loading) return <div className="text-center p-6">กำลังโหลด...</div>;
   if (error) return <div className="text-center text-red-500 p-6">{error}</div>;
-  if (!userData) return <div className="text-center p-6">User not found</div>;
+  if (!userData) return <div className="text-center p-6">ไม่พบผู้ใช้</div>;
 
   // Permission Flags
   const canEdit = user.role === "Admin" || user.user_id === parseInt(id);
-  const canDelete = user.role === "Admin" && user.user_id !== parseInt(id) && userData.role !== "Admin";
+  const canDelete =
+    user.role === "Admin" &&
+    user.user_id !== parseInt(id) &&
+    userData.role !== "Admin";
 
   return (
     <div className="min-h-screen bg-gray-100 p-6">
@@ -163,7 +163,7 @@ const UserDetail = () => {
           className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors mb-4"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back</span>
+          <span>ย้อนกลับ</span>
         </button>
 
         {/* User Profile Card */}
@@ -183,14 +183,14 @@ const UserDetail = () => {
                     className="btn-primary flex items-center space-x-2"
                   >
                     <Edit className="w-5 h-5" />
-                    <span>Edit Profile</span>
+                    <span>แก้ไขโปรไฟล์</span>
                   </button>
                   <button
                     onClick={() => setShowPasswordModal(true)}
                     className="btn-secondary flex items-center space-x-2"
                   >
                     <KeyRound className="w-5 h-5" />
-                    <span>Change Password</span>
+                    <span>เปลี่ยนรหัสผ่าน</span>
                   </button>
                 </>
               )}
@@ -200,7 +200,7 @@ const UserDetail = () => {
                   className="btn-danger flex items-center space-x-2"
                 >
                   <Trash2 className="w-5 h-5" />
-                  <span>Delete User</span>
+                  <span>ลบผู้ใช้</span>
                 </button>
               )}
             </div>
@@ -210,23 +210,23 @@ const UserDetail = () => {
               <div className="p-6 bg-white/70 backdrop-blur-sm">
                 <h2 className="text-2xl font-bold text-blue-800 mb-6 flex items-center">
                   <Shield className="mr-3 text-blue-600" />
-                  User Details
+                  ข้อมูลผู้ใช้
                 </h2>
                 <div className="grid md:grid-cols-2 gap-6">
                   {[
                     {
                       icon: <Calendar className="text-blue-500" />,
-                      label: "Email",
+                      label: "อีเมล",
                       value: userData.email,
                     },
                     {
                       icon: <Shield className="text-green-500" />,
-                      label: "Role",
+                      label: "บทบาท",
                       value: userData.role,
                     },
                     {
                       icon: <Clock className="text-purple-500" />,
-                      label: "Created",
+                      label: "สร้างเมื่อ",
                       value: new Date(userData.created_at).toLocaleDateString(
                         "th-TH",
                         {
@@ -238,7 +238,7 @@ const UserDetail = () => {
                     },
                     {
                       icon: <Clock className="text-indigo-500" />,
-                      label: "Last Updated",
+                      label: "อัปเดตล่าสุด",
                       value: new Date(userData.updated_at).toLocaleDateString(
                         "th-TH",
                         {
@@ -284,25 +284,22 @@ const UserDetail = () => {
             >
               <X className="w-6 h-6" />
             </button>
-            <h2 className="text-2xl font-bold text-red-600 mb-4">
-              Delete User
-            </h2>
+            <h2 className="text-2xl font-bold text-red-600 mb-4">ลบผู้ใช้</h2>
             <p className="text-gray-600 mb-6">
-              Are you sure you want to delete this user? This action cannot be
-              undone.
+              คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?
             </p>
             <div className="flex justify-end space-x-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
                 className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
               >
-                Cancel
+                ยกเลิก
               </button>
               <button
                 onClick={handleDelete}
                 className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
               >
-                Confirm Delete
+                ยืนยันการลบ
               </button>
             </div>
           </div>
@@ -323,13 +320,13 @@ const UserDetail = () => {
               <X className="w-6 h-6" />
             </button>
             <h2 className="text-2xl font-bold text-blue-600 mb-4">
-              Change Password
+              เปลี่ยนรหัสผ่าน
             </h2>
             <form onSubmit={handlePasswordChange} className="space-y-4">
               {user.role !== "Admin" && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Current Password
+                    รหัสผ่านปัจจุบัน
                   </label>
                   <input
                     type="password"
@@ -347,7 +344,7 @@ const UserDetail = () => {
               )}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  New Password
+                  รหัสผ่านใหม่
                 </label>
                 <input
                   type="password"
@@ -365,7 +362,7 @@ const UserDetail = () => {
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Confirm New Password
+                  ยืนยันรหัสผ่านใหม่
                 </label>
                 <input
                   type="password"
@@ -394,13 +391,13 @@ const UserDetail = () => {
                   }}
                   className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
                 >
-                  Cancel
+                  ยกเลิก
                 </button>
                 <button
                   type="submit"
                   className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                 >
-                  Change Password
+                  เปลี่ยนรหัสผ่าน
                 </button>
               </div>
             </form>

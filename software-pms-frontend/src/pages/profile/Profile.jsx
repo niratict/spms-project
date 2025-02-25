@@ -118,7 +118,7 @@ const Profile = () => {
 
   const validateForm = () => {
     const errors = {};
-    if (!formData.name.trim()) errors.name = "Name is required";
+    if (!formData.name.trim()) errors.name = "โปรดระบุชื่อ";
     setFormErrors(errors);
     return Object.keys(errors).length === 0;
   };
@@ -126,20 +126,20 @@ const Profile = () => {
   const validatePassword = () => {
     const errors = {};
     if (!passwordData.current_password) {
-      errors.current_password = "Current password is required";
+      errors.current_password = "โปรดระบุรหัสผ่านปัจจุบัน";
     }
     if (!passwordData.new_password) {
-      errors.new_password = "New password is required";
+      errors.new_password = "โปรดระบุรหัสผ่าน";
     } else if (passwordData.new_password.length < 8) {
-      errors.new_password = "Password must be at least 8 characters";
+      errors.new_password = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
     } else if (
       !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordData.new_password)
     ) {
       errors.new_password =
-        "Password must contain uppercase, lowercase and numbers";
+        "รหัสผ่านจะต้องมีตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และตัวเลข";
     }
     if (passwordData.new_password !== passwordData.confirm_password) {
-      errors.confirm_password = "Passwords do not match";
+      errors.confirm_password = "รหัสผ่านไม่ตรงกัน";
     }
 
     setPasswordErrors(errors);
@@ -258,7 +258,7 @@ const Profile = () => {
           <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-6">
             <div className="flex items-center justify-between">
               <h1 className="text-3xl font-bold text-white">
-                Profile Settings
+                ตั้งค่าโปรไฟล์
               </h1>
               <div className="px-4 py-2 bg-white rounded-lg">
                 <span className="text-black font-medium capitalize">
@@ -355,7 +355,7 @@ const Profile = () => {
                 </div>
                 <div className="flex items-center space-x-2 text-gray-600">
                   <Calendar className="w-4 h-4" />
-                  <span>Joined {formatDate(profile?.created_at)}</span>
+                  <span>เริ่มใช้งาน {formatDate(profile?.created_at)}</span>
                 </div>
               </div>
             </div>
@@ -365,7 +365,7 @@ const Profile = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Name
+                    ชื่อ
                   </label>
                   <div className="relative">
                     <input
@@ -392,7 +392,7 @@ const Profile = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Email
+                    อีเมล
                   </label>
                   <div className="relative">
                     <input
@@ -413,7 +413,7 @@ const Profile = () => {
                     onClick={() => setEditMode(true)}
                     className="flex items-center gap-2 px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md"
                   >
-                    Edit Profile
+                    แก้ไขโปรไฟล์
                   </button>
                 ) : (
                   <>
@@ -422,7 +422,7 @@ const Profile = () => {
                       disabled={actionLoading}
                       className="px-6 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-md disabled:opacity-50"
                     >
-                      {actionLoading ? "Saving..." : "Save Changes"}
+                      {actionLoading ? "Saving..." : "บันทึก"}
                     </button>
                     <button
                       onClick={() => {
@@ -435,7 +435,7 @@ const Profile = () => {
                       }}
                       className="px-6 py-2.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors shadow-md"
                     >
-                      Cancel
+                      ยกเลิก
                     </button>
                   </>
                 )}
@@ -444,7 +444,7 @@ const Profile = () => {
                   className="flex items-center gap-2 px-6 py-2.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors shadow-md ml-auto"
                 >
                   <Lock className="h-4 w-4" />
-                  Change Password
+                  เปลี่ยนรหัสผ่าน
                 </button>
               </div>
             </div>
@@ -489,7 +489,7 @@ const Profile = () => {
       >
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800">Change Password</h2>
+            <h2 className="text-xl font-bold text-gray-800">เปลี่ยนรหัสผ่าน</h2>
             <button
               onClick={() => {
                 setShowPasswordModal(false);
@@ -508,7 +508,7 @@ const Profile = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Current Password
+              รหัสผ่านปัจจุบัน
             </label>
             <div className="relative">
               <input
@@ -556,7 +556,7 @@ const Profile = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              New Password
+              รหัสผ่านใหม่
             </label>
             <div className="relative">
               <input
@@ -601,7 +601,7 @@ const Profile = () => {
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
-              Confirm New Password
+              ยืนยันรหัสผ่านใหม่
             </label>
             <div className="relative">
               <input
@@ -653,7 +653,7 @@ const Profile = () => {
               disabled={actionLoading}
               className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
             >
-              {actionLoading ? "Changing..." : "Change Password"}
+              {actionLoading ? "Changing..." : "ยืนยัน"}
             </button>
             <button
               onClick={() => {
@@ -667,7 +667,7 @@ const Profile = () => {
               }}
               className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
             >
-              Cancel
+              ยกเลิก
             </button>
           </div>
         </div>

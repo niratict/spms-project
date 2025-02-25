@@ -120,7 +120,7 @@ const TestFileEdit = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading file details...</p>
+          <p className="text-gray-600">กำลังโหลดรายละเอียดไฟล์...</p>
         </div>
       </div>
     );
@@ -130,7 +130,7 @@ const TestFileEdit = () => {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="bg-white p-8 rounded-xl shadow-lg text-center">
           <FileText className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">Test file not found</p>
+          <p className="text-gray-600 text-lg">ไม่พบไฟล์ทดสอบ</p>
         </div>
       </div>
     );
@@ -141,11 +141,11 @@ const TestFileEdit = () => {
         <div className="container mx-auto max-w-2xl px-4">
           <div className="flex items-center justify-between mb-6">
             <button
-              onClick={() => navigate("/test-files")}
+              onClick={() => navigate(`/test-files/${id}`)}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span>Back to Test Files</span>
+              <span>กลับไปหน้ารายละเอียด</span>
             </button>
             {testFile.status === "Pass" ? (
               <div className="flex items-center gap-2 text-green-600">
@@ -162,9 +162,9 @@ const TestFileEdit = () => {
 
           <div className="bg-white shadow-xl rounded-xl overflow-hidden">
             <div className="bg-blue-600 text-white p-6">
-              <h1 className="text-2xl font-bold">Edit Test File</h1>
+              <h1 className="text-2xl font-bold">แก้ไขไฟล์ทดสอบ</h1>
               <p className="text-blue-100 mt-1">
-                Editing: {testFile.original_filename}
+                กำลังแก้ไข {testFile.original_filename}
               </p>
             </div>
 
@@ -179,7 +179,7 @@ const TestFileEdit = () => {
               <div className="space-y-6">
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Upload New File (Optional)
+                    อัพโหลดไฟล์ใหม่ (เลือกได้)
                   </label>
                   <div className="flex items-center gap-4">
                     <label className="relative cursor-pointer">
@@ -191,7 +191,7 @@ const TestFileEdit = () => {
                       />
                       <div className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors">
                         <Upload className="w-5 h-5" />
-                        <span>Choose File</span>
+                        <span>เลือกไฟล์</span>
                       </div>
                     </label>
                     {selectedFile && (
@@ -207,7 +207,7 @@ const TestFileEdit = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Filename
+                    ชื่อไฟล์
                   </label>
                   <input
                     type="text"
@@ -224,7 +224,7 @@ const TestFileEdit = () => {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Status
+                    สถานะ
                   </label>
                   <div className="relative">
                     <select
@@ -259,7 +259,7 @@ const TestFileEdit = () => {
                   onClick={() => navigate(`/test-files/${id}`)}
                   className="px-4 py-2 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
                 >
-                  Cancel
+                  ยกเลิก
                 </button>
                 <button
                   onClick={handleSubmitConfirm}
@@ -272,7 +272,7 @@ const TestFileEdit = () => {
                       Saving...
                     </>
                   ) : (
-                    "Save Changes"
+                    "บันทึก"
                   )}
                 </button>
               </div>
@@ -289,28 +289,28 @@ const TestFileEdit = () => {
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-6 h-6 text-blue-600" />
                 <h3 className="text-lg font-semibold text-gray-900">
-                  Confirm Changes
+                  ยืนยันการเปลี่ยนแปลง
                 </h3>
               </div>
             </div>
 
             <div className="px-6 py-4">
               <p className="text-gray-600">
-                Are you sure you want to save these changes to the test file?
+                คุณแน่ใจหรือไม่ว่าต้องการบันทึกการเปลี่ยนแปลงนี้ในไฟล์ทดสอบ?
                 {selectedFile && (
                   <span className="block mt-2 font-medium">
-                    You are about to upload a new file: {selectedFile.name}
+                    คุณกำลังจะอัพโหลดไฟล์ใหม่: {selectedFile.name}
                   </span>
                 )}
               </p>
 
               <div className="mt-4 text-sm text-gray-500">
                 <p>
-                  • Status will be changed to:{" "}
+                  • สถานะจะถูกเปลี่ยนเป็น:{" "}
                   <span className="font-medium">{formData.status}</span>
                 </p>
                 <p>
-                  • Filename will be:{" "}
+                  • ชื่อไฟล์จะเป็น:{" "}
                   <span className="font-medium">{formData.filename}</span>
                 </p>
               </div>
@@ -321,7 +321,7 @@ const TestFileEdit = () => {
                 onClick={() => setShowConfirmModal(false)}
                 className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
               >
-                Cancel
+                ยกเลิก
               </button>
               <button
                 onClick={handleSubmit}
@@ -331,10 +331,10 @@ const TestFileEdit = () => {
                 {saving ? (
                   <>
                     <span className="animate-spin">↻</span>
-                    Saving...
+                    กำลังบันทึก...
                   </>
                 ) : (
-                  "Confirm Changes"
+                  "ยืนยันการเปลี่ยนแปลง"
                 )}
               </button>
             </div>

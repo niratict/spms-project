@@ -24,12 +24,10 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-6">
         <div className="text-center">
           <Trash2 className="mx-auto h-16 w-16 text-red-500 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Delete Project
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">ลบโปรเจกต์</h2>
           <p className="text-gray-600 mb-6">
-            Are you sure you want to delete this project? This action cannot be
-            undone and will remove all associated data.
+            คุณแน่ใจหรือไม่ว่าต้องการลบโปรเจกต์นี้
+            ระบบจะลบข้อมูลที่เกี่ยวข้องทั้งหมดของโปรเจกต์นี้!
           </p>
         </div>
         <div className="flex justify-center space-x-4">
@@ -37,14 +35,14 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
             onClick={onClose}
             className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
           >
-            Cancel
+            ยกเลิก
           </button>
           <button
             onClick={onConfirm}
             className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-2 transition-colors"
           >
             <Trash2 className="w-5 h-5" />
-            Delete Project
+            ต้องการลบ
           </button>
         </div>
       </div>
@@ -61,12 +59,12 @@ const DeleteErrorModal = ({ isOpen, onClose, sprintCount }) => {
         <div className="text-center">
           <AlertTriangle className="mx-auto h-16 w-16 text-yellow-500 mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-2">
-            Cannot Delete Project
+            ไม่สามารถลบโปรเจกต์นี้ได้
           </h2>
           <p className="text-gray-600 mb-6">
-            This project cannot be deleted because it has {sprintCount} existing{" "}
-            {sprintCount === 1 ? "sprint" : "sprints"}. Please delete all
-            sprints first before attempting to delete this project.
+            ไม่สามารถลบโปรเจกต์นี้ได้ เนื่องจากมี {sprintCount}
+            {sprintCount === 1 ? "สปรินต์" : "สปรินต์"} ที่กำลังดำเนินการอยู่
+            กรุณาลบทุกสปรินต์ก่อนที่จะลบโปรเจกต์นี้
           </p>
         </div>
         <div className="flex justify-center">
@@ -74,7 +72,7 @@ const DeleteErrorModal = ({ isOpen, onClose, sprintCount }) => {
             onClick={onClose}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
-            Understood
+            เข้าใจ
           </button>
         </div>
       </div>
@@ -236,7 +234,7 @@ const ProjectDetail = () => {
           className="group flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-          Back to Projects
+          กลับไปที่หน้าเลือกโปรเจกต์
         </button>
 
         <div className="flex space-x-3">
@@ -245,14 +243,14 @@ const ProjectDetail = () => {
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
           >
             <Edit className="w-5 h-5" />
-            Edit Project
+            แก้ไขโปรเจกต์
           </button>
           <button
             onClick={() => setShowDeleteModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
           >
             <Trash2 className="w-5 h-5" />
-            Delete
+            ลบ
           </button>
         </div>
       </div>
@@ -262,7 +260,7 @@ const ProjectDetail = () => {
           <div className="flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                {project.name}
+                โปรเจกต์ {project.name}
               </h1>
               <div className="flex items-center gap-2">
                 {project.status && (
@@ -275,7 +273,7 @@ const ProjectDetail = () => {
                         : "bg-gray-100 text-gray-800"
                     }`}
                   >
-                    {project.status}
+                    สถานะ {project.status}
                   </span>
                 )}
               </div>
@@ -286,7 +284,7 @@ const ProjectDetail = () => {
         <div className="p-6">
           <div className="mb-8">
             <h2 className="text-lg font-semibold text-gray-700 mb-3">
-              Description
+              รายละเอียด
             </h2>
             <p className="text-gray-600">{project.description}</p>
           </div>
@@ -316,7 +314,7 @@ const ProjectDetail = () => {
               <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
                 <Calendar className="w-6 h-6 text-blue-500" />
                 <div>
-                  <div className="text-sm text-gray-600">Start Date</div>
+                  <div className="text-sm text-gray-600">วันที่เริ่มต้น</div>
                   <div className="font-semibold">
                     {new Date(project.start_date).toLocaleDateString("th-TH", {
                       day: "2-digit",
@@ -329,7 +327,7 @@ const ProjectDetail = () => {
               <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
                 <Calendar className="w-6 h-6 text-blue-500" />
                 <div>
-                  <div className="text-sm text-gray-600">End Date</div>
+                  <div className="text-sm text-gray-600">วันที่สิ้นสุด</div>
                   <div className="font-semibold">
                     {new Date(project.end_date).toLocaleDateString("th-TH", {
                       day: "2-digit",
@@ -342,14 +340,14 @@ const ProjectDetail = () => {
               <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
                 <Activity className="w-6 h-6 text-green-500" />
                 <div>
-                  <div className="text-sm text-gray-600">Status</div>
+                  <div className="text-sm text-gray-600">สถานะ</div>
                   <div className="font-semibold">{project.status}</div>
                 </div>
               </div>
               <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
                 <Users className="w-6 h-6 text-purple-500" />
                 <div>
-                  <div className="text-sm text-gray-600">Created By</div>
+                  <div className="text-sm text-gray-600">ถูกสร้างโดย</div>
                   <div className="font-semibold">{project.created_by}</div>
                 </div>
               </div>
@@ -358,7 +356,7 @@ const ProjectDetail = () => {
 
           <div className="border-t pt-8">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Sprints</h2>
+              <h2 className="text-xl font-semibold">Sprints (สปรินต์)</h2>
             </div>
 
             {project.sprints && project.sprints.length > 0 && (

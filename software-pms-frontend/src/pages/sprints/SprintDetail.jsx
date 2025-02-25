@@ -146,7 +146,7 @@ const SprintDetail = () => {
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
-              <span className="font-medium">Back to Sprints</span>
+              <span className="font-medium">กลับไปที่หน้าเลือกสปรินต์</span>
             </button>
             <div className="flex gap-3">
               <button
@@ -154,14 +154,14 @@ const SprintDetail = () => {
                 className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2"
               >
                 <Edit className="w-4 h-4" />
-                <span>Edit</span>
+                <span>แก้ไขสปรินต์</span>
               </button>
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
-                <span>Delete</span>
+                <span>ลบ</span>
               </button>
             </div>
           </div>
@@ -189,7 +189,7 @@ const SprintDetail = () => {
                     <Calendar className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Start Date</p>
+                    <p className="text-sm text-gray-500">วันที่เริ่มต้น</p>
                     <p className="font-semibold text-gray-900">
                       {new Date(sprint.start_date).toLocaleDateString("th-TH", {
                         day: "2-digit",
@@ -207,7 +207,7 @@ const SprintDetail = () => {
                     <Calendar className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">End Date</p>
+                    <p className="text-sm text-gray-500">วันที่สิ้นสุด</p>
                     <p className="font-semibold text-gray-900">
                       {new Date(sprint.end_date).toLocaleDateString("th-TH", {
                         day: "2-digit",
@@ -225,7 +225,7 @@ const SprintDetail = () => {
                     <Users className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
-                    <p className="text-sm text-gray-500">Created By</p>
+                    <p className="text-sm text-gray-500">สร้างโดย</p>
                     <p className="font-semibold text-gray-900">
                       {sprint.created_by}
                     </p>
@@ -247,13 +247,13 @@ const SprintDetail = () => {
                       <Trash2 className="w-6 h-6 text-red-600" />
                     </div>
                     <h2 className="text-xl font-semibold text-gray-900">
-                      Delete Sprint
+                      ลบสปรินต์
                     </h2>
                   </div>
                   <p className="text-gray-600">
-                    Are you sure you want to delete this sprint? This action
-                    cannot be undone and all associated data will be permanently
-                    removed.
+                    คุณแน่ใจหรือไม่ว่าต้องการลบสปรินต์นี้?
+                    การกระทำนี้ไม่สามารถย้อนกลับได้
+                    และข้อมูลที่เกี่ยวข้องทั้งหมดจะถูกลบอย่างถาวร
                   </p>
                 </div>
                 <div className="flex justify-end gap-3">
@@ -261,14 +261,14 @@ const SprintDetail = () => {
                     onClick={() => setShowDeleteModal(false)}
                     className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                   >
-                    Cancel
+                    ยกเลิก
                   </button>
                   <button
                     onClick={handleDelete}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
                   >
                     <Trash2 className="w-4 h-4" />
-                    Delete Sprint
+                    ลบสปรินต์
                   </button>
                 </div>
               </div>
@@ -288,7 +288,7 @@ const SprintDetail = () => {
                         <AlertCircle className="w-6 h-6 text-orange-600" />
                       </div>
                       <h2 className="text-xl font-semibold text-gray-900">
-                        Cannot Edit Sprint
+                        ไม่สามารถแก้ไขสปรินต์ได้
                       </h2>
                     </div>
                     <button
@@ -299,8 +299,8 @@ const SprintDetail = () => {
                     </button>
                   </div>
                   <p className="text-gray-600">
-                    Only the latest sprint can be edited. This sprint cannot be
-                    modified as there are more recent sprints in the project.
+                    สามารถแก้ไขได้เฉพาะสปรินต์ล่าสุดเท่านั้น
+                    สปรินต์นี้ไม่สามารถแก้ไขได้เนื่องจากมีสปรินต์ใหม่กว่าภายในโปรเจกต์
                   </p>
                 </div>
                 <div className="flex justify-end">
@@ -308,7 +308,7 @@ const SprintDetail = () => {
                     onClick={() => setShowEditWarningModal(false)}
                     className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
                   >
-                    Close
+                    ปิด
                   </button>
                 </div>
               </div>
@@ -328,7 +328,7 @@ const SprintDetail = () => {
                         <AlertCircle className="w-6 h-6 text-orange-600" />
                       </div>
                       <h2 className="text-xl font-semibold text-gray-900">
-                        Cannot Delete Sprint
+                        ไม่สามารถลบสปรินต์ได้
                       </h2>
                     </div>
                     <button
@@ -345,7 +345,7 @@ const SprintDetail = () => {
                     onClick={() => setShowDeleteWarningModal(false)}
                     className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
                   >
-                    Close
+                    ปิด
                   </button>
                 </div>
               </div>

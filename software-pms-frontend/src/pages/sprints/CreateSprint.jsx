@@ -4,6 +4,8 @@ import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
 import { ArrowLeft, Plus, Calendar, AlertCircle, Lock, X } from "lucide-react";
 import { DayPicker } from "react-day-picker";
+import { format } from "date-fns";
+import { th } from "date-fns/locale";
 import "react-day-picker/dist/style.css";
 import ExistingSprintsList from "./ExistingSprintsList";
 
@@ -146,6 +148,13 @@ const CreateSprint = () => {
     day_hidden: "invisible",
   };
 
+  // สร้าง formatter สำหรับแสดงปี พ.ศ.
+  const formatCaption = (date, options) => {
+    const year = date.getFullYear() + 543; // แปลงเป็นปี พ.ศ.
+    const month = format(date, "LLLL", { locale: th }); // แสดงชื่อเดือนภาษาไทย
+    return `${month} ${year}`;
+  };
+
   return (
     <div className="bg-gray-50 p-16">
       <div className="w-full max-w-2xl mx-auto">
@@ -154,7 +163,7 @@ const CreateSprint = () => {
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 p-6"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back to Select Sprint</span>
+          <span>กลับไปที่หน้าเลือกสปรินต์</span>
         </button>
 
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
@@ -162,7 +171,7 @@ const CreateSprint = () => {
             <div className="flex items-center space-x-4">
               <Plus className="w-10 h-10 text-blue-600" />
               <h2 className="text-2xl font-bold text-gray-800">
-                Create New Sprint
+                สร้างสปรินต์ใหม่
               </h2>
             </div>
           </div>
@@ -177,7 +186,7 @@ const CreateSprint = () => {
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
-                Sprint Name
+                Sprint (สปรินต์)
               </label>
               <div className="relative">
                 <input
@@ -189,14 +198,14 @@ const CreateSprint = () => {
                 <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               </div>
               <p className="mt-1 text-sm text-gray-500">
-                Sprint names are automatically generated in sequence
+                สปรินต์จะถูกสร้างโดยอัตโนมัติตามลำดับ
               </p>
             </div>
 
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-gray-700">
-                  Sprint Duration
+                  ช่วงวันที่ของสปรินต์
                 </label>
               </div>
 
@@ -209,7 +218,7 @@ const CreateSprint = () => {
                       ? `${dateRange.from.toLocaleDateString(
                           "th-TH"
                         )} - ${dateRange.to.toLocaleDateString("th-TH")}`
-                      : "Select date range"
+                      : "เลือกช่วงวันที่"
                   }
                   onClick={() => setShowDateRanges(true)}
                   readOnly
@@ -224,7 +233,7 @@ const CreateSprint = () => {
                 onClick={handleBack}
                 className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
               >
-                Cancel
+                ยกเลิก
               </button>
               <button
                 type="submit"
@@ -241,9 +250,11 @@ const CreateSprint = () => {
       {/* Date Picker Modal */}
       {showDateRanges && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full mx-4">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4">
             <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold">Select Sprint Dates</h3>
+              <h3 className="text-lg font-semibold">
+                เลือกช่วงวันที่ของสปรินต์
+              </h3>
               <button
                 onClick={() => setShowDateRanges(false)}
                 className="text-gray-500 hover:text-gray-700"
@@ -259,12 +270,32 @@ const CreateSprint = () => {
                 mode="range"
                 selected={dateRange}
                 onSelect={handleRangeSelect}
+                locale={th}
+                numberOfMonths={2}
+                formatters={{
+                  formatCaption: formatCaption,
+                }}
                 disabled={disabledDays}
                 className="border rounded-md p-4"
                 classNames={dayPickerClassNames}
+                styles={{
+                  months: { display: "flex", gap: "1rem" },
+                  caption: { color: "#3B82F6" },
+                  head_cell: { color: "#6B7280" },
+                  day_selected: {
+                    backgroundColor: "#3B82F6 !important",
+                    color: "white !important",
+                    fontWeight: "bold",
+                  },
+                  day_today: {
+                    color: "#3B82F6 !important",
+                    fontWeight: "bold",
+                  },
+                  day: { margin: "0.2rem" },
+                }}
                 footer={
                   <p className="text-sm text-gray-500 mt-4 text-center">
-                    Weekends are disabled
+                    ปิดการเลือกวันหยุดสุดสัปดาห์
                   </p>
                 }
               />
@@ -276,7 +307,7 @@ const CreateSprint = () => {
                 onClick={() => setShowDateRanges(false)}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
               >
-                Cancel
+                ยกเลิก
               </button>
               <button
                 onClick={() => {
@@ -287,7 +318,7 @@ const CreateSprint = () => {
                 disabled={!dateRange.from || !dateRange.to}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
               >
-                Confirm
+                ยืนยัน
               </button>
             </div>
           </div>

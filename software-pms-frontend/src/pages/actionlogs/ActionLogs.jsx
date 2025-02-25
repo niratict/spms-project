@@ -190,7 +190,9 @@ const ActionLogs = () => {
           navigate("/login");
           return;
         }
-        setError(err.response?.data?.message || "Failed to fetch action logs");
+        setError(
+          err.response?.data?.message || "การดึงข้อมูลบันทึกการดำเนินการล้มเหลว"
+        );
         setLogs([]);
         setTotalLogs(0);
       } finally {
@@ -251,7 +253,7 @@ const ActionLogs = () => {
             className="text-3xl font-extrabold text-gray-900"
             data-cy="action-logs-title"
           >
-            Action Logs
+            บันทึกการดำเนินการ
           </h1>
         </div>
 
@@ -270,7 +272,7 @@ const ActionLogs = () => {
                 onChange={handleFilterChange}
                 className="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">All Action Types</option>
+                <option value="">ประเภทการดำเนินการทั้งหมด</option>
                 {actionTypes.map((type) => (
                   <option
                     key={type}
@@ -292,7 +294,7 @@ const ActionLogs = () => {
                 onChange={handleFilterChange}
                 className="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">All Target Tables</option>
+                <option value="">ตารางเป้าหมายทั้งหมด</option>
                 {targetTables.map((table) => (
                   <option
                     key={table}
@@ -363,7 +365,7 @@ const ActionLogs = () => {
                 onClick={clearFilters}
                 className="flex items-center text-sm text-red-600 hover:text-red-800 transition duration-200"
               >
-                <Filter className="h-4 w-4 mr-2" /> Clear All Filters
+                <Filter className="h-4 w-4 mr-2" /> ล้างตัวกรองทั้งหมด
               </button>
             </div>
           )}
@@ -386,17 +388,36 @@ const ActionLogs = () => {
           <table className="w-full">
             <thead className="bg-gray-100 border-b">
               <tr>
-                {["Date", "User", "Action", "Target", "Details"].map(
-                  (header) => (
-                    <th
-                      key={header}
-                      data-cy={`column-header-${header.toLowerCase()}`}
-                      className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                    >
-                      {header}
-                    </th>
-                  )
-                )}
+                <th
+                  className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                  data-cy="column-header-date"
+                >
+                  วันที่
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                  data-cy="column-header-user"
+                >
+                  ผู้ใช้
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                  data-cy="column-header-action"
+                >
+                  การดำเนินการ
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                  data-cy="column-header-target"
+                >
+                  เป้าหมาย
+                </th>
+                <th
+                  className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                  data-cy="column-header-details"
+                >
+                  รายละเอียด
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -461,7 +482,7 @@ const ActionLogs = () => {
               className="text-center py-10 text-gray-500 bg-gray-50"
               data-cy="empty-state"
             >
-              No action logs found
+              ไม่พบบันทึกการดำเนินการ
             </div>
           )}
         </div>
@@ -472,10 +493,9 @@ const ActionLogs = () => {
           data-cy="pagination"
         >
           <div className="text-sm text-gray-700" data-cy="pagination-info">
-            Showing{" "}
-            {logs.length > 0 ? (currentPage - 1) * filters.limit + 1 : 0} to{" "}
-            {Math.min(currentPage * filters.limit, totalLogs)} of {totalLogs}{" "}
-            entries
+            แสดง {logs.length > 0 ? (currentPage - 1) * filters.limit + 1 : 0}{" "}
+            ถึง {Math.min(currentPage * filters.limit, totalLogs)} จาก{" "}
+            {totalLogs} รายการ
           </div>
           <div className="flex space-x-2">
             <button
@@ -484,7 +504,7 @@ const ActionLogs = () => {
               disabled={!canGoToPreviousPage}
               className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Previous
+              ก่อนหน้า
             </button>
             <button
               data-cy="next-page"
@@ -492,7 +512,7 @@ const ActionLogs = () => {
               disabled={!canGoToNextPage}
               className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next
+              ถัดไป
             </button>
           </div>
         </div>

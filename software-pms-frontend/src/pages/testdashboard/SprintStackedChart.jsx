@@ -169,8 +169,8 @@ const SprintStackedChart = ({ sprintResults }) => {
 
           {/* Dates - slightly smaller but still clearly readable */}
           <div className="text-sm text-gray-600 mb-3">
-            <p className="mb-1">Start Date: {sprintData.startDate}</p>
-            <p>End Date: {sprintData.endDate}</p>
+            <p className="mb-1">วันที่เริ่มต้น: {sprintData.startDate}</p>
+            <p>วันที่สิ้นสุด: {sprintData.endDate}</p>
           </div>
 
           {/* Total Tests - emphasized but not overpowering */}
@@ -269,10 +269,10 @@ const SprintStackedChart = ({ sprintResults }) => {
       <div className="bg-white rounded-xl shadow-lg p-6">
         <div className="mb-6">
           <h2 className="text-xl font-bold text-gray-800">
-            Sprint Test Results Over Time
+            ผลการทดสอบของสปรินต์ทั้งหมด
           </h2>
           <p className="text-sm text-gray-500 mt-1">
-            Pass Rate: {summaryMetrics.passRate}% - Failure Rate:{" "}
+            อัตราการผ่าน {summaryMetrics.passRate}% - อัตราการผิดพลาด{" "}
             {summaryMetrics.failureRate}%
           </p>
         </div>
@@ -299,17 +299,20 @@ const SprintStackedChart = ({ sprintResults }) => {
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <MetricCard
-          title="Total Tests"
+          title="จำนวนการทดสอบทั้งหมด"
           value={summaryMetrics.totalTests}
           change={summaryMetrics.testsChange}
         />
         <MetricCard
-          title="Average per Sprint"
+          title="จำนวนการทดสอบเฉลี่ยต่อสปรินต์"
           value={summaryMetrics.averagePerSprint}
           change={summaryMetrics.averageChange}
         />
-        <MetricCard title="Passed Tests" value={summaryMetrics.totalPassed} />
-        <MetricCard title="Failed Tests" value={summaryMetrics.totalFailed} />
+        <MetricCard
+          title="จำนวนที่ผ่านการทดสอบ"
+          value={summaryMetrics.totalPassed}
+        />
+        <MetricCard title="จำนวนที่ผิดพลาด" value={summaryMetrics.totalFailed} />
       </div>
     </div>
   );

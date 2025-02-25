@@ -136,14 +136,14 @@ const TestFileDetail = () => {
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
         >
           <ArrowLeft className="w-5 h-5" />
-          <span>Back to Test Files</span>
+          <span>กลับหน้าเลือกไฟล์ทดสอบ</span>
         </button>
 
         <div className="bg-white shadow-xl rounded-xl overflow-hidden">
           <div className="bg-blue-600 text-white p-6 flex justify-between items-center">
             <div>
               <h1 className="text-3xl font-bold">{testFile.filename}</h1>
-              <p className="text-blue-100">File Details</p>
+              <p className="text-blue-100">รายละเอียดไฟล์ทดสอบ</p>
             </div>
             {getStatusIcon()}
           </div>
@@ -152,31 +152,34 @@ const TestFileDetail = () => {
             <div className="grid md:grid-cols-2 gap-6">
               <div>
                 <h2 className="text-xl font-semibold mb-4 border-b pb-2">
-                  File Information
+                  ข้อมูลไฟล์ทดสอบ
                 </h2>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-gray-500" />
                     <span>
-                      <span className="font-semibold">Original Filename:</span>{" "}
+                      <span className="font-semibold">ชื่อไฟล์</span>{" "}
                       {testFile.original_filename}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Calendar className="w-5 h-5 text-gray-500" />
                     <span>
-                      <span className="font-semibold">Upload Date:</span>{" "}
-                      {new Date(testFile.upload_date).toLocaleDateString("th-TH", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      })}
+                      <span className="font-semibold">วันที่อัพโหลด</span>{" "}
+                      {new Date(testFile.upload_date).toLocaleDateString(
+                        "th-TH",
+                        {
+                          day: "2-digit",
+                          month: "2-digit",
+                          year: "numeric",
+                        }
+                      )}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <Users className="w-5 h-5 text-gray-500" />
                     <span>
-                      <span className="font-semibold">Uploaded by:</span>{" "}
+                      <span className="font-semibold">อัพโหลดโดย</span>{" "}
                       {testFile.last_modified_by}
                     </span>
                   </div>
@@ -185,27 +188,27 @@ const TestFileDetail = () => {
 
               <div>
                 <h2 className="text-xl font-semibold mb-4 border-b pb-2">
-                  Additional Details
+                  รายละเอียดเพิ่มเติม
                 </h2>
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-gray-500" />
                     <span>
-                      <span className="font-semibold">File Size:</span>{" "}
+                      <span className="font-semibold">ขนาดไฟล์</span>{" "}
                       {(testFile.file_size / 1024).toFixed(2)} KB
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-gray-500" />
                     <span>
-                      <span className="font-semibold">Project:</span>{" "}
+                      <span className="font-semibold">โปรเจกต์</span>{" "}
                       {testFile.project_name}
                     </span>
                   </div>
                   <div className="flex items-center gap-3">
                     <FileText className="w-5 h-5 text-gray-500" />
                     <span>
-                      <span className="font-semibold">Sprint:</span>{" "}
+                      <span className="font-semibold">สปรินต์</span>{" "}
                       {testFile.sprint_name}
                     </span>
                   </div>
@@ -219,14 +222,14 @@ const TestFileDetail = () => {
                 className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
               >
                 <Edit className="w-5 h-5" />
-                Edit File
+                แก้ไขไฟล์ทดสอบ
               </button>
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
               >
                 <Trash2 className="w-5 h-5" />
-                Delete File
+                ลบไฟล์ทดสอบ
               </button>
             </div>
           </div>
@@ -241,23 +244,22 @@ const TestFileDetail = () => {
           <div className="bg-white rounded-xl shadow-xl p-6 max-w-md w-full mx-4">
             <div className="text-center">
               <Trash2 className="w-16 h-16 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-bold mb-2">Delete Test File</h2>
+              <h2 className="text-xl font-bold mb-2">ลบไฟล์ทดสอบ</h2>
               <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this test file? This action
-                cannot be undone.
+                คุณแน่ใจหรือไม่ว่าต้องการลบไฟล์ทดสอบนี้?
               </p>
               <div className="flex justify-center space-x-4">
                 <button
                   onClick={() => setShowDeleteModal(false)}
                   className="px-4 py-2 border rounded hover:bg-gray-100 transition-colors"
                 >
-                  Cancel
+                  ยกเลิก
                 </button>
                 <button
                   onClick={handleDelete}
                   className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
                 >
-                  Delete File
+                  ลบไฟล์ทดสอบ
                 </button>
               </div>
             </div>

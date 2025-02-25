@@ -106,7 +106,7 @@ const Sprints = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-extrabold text-gray-800 flex items-center">
             <Layers className="w-10 h-10 mr-4 text-blue-600" />
-            Sprint Management
+            จัดการสปรินต์
           </h1>
         </div>
 
@@ -114,7 +114,7 @@ const Sprints = () => {
         <div className="bg-white shadow-lg rounded-xl p-6 mb-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
             <Target className="w-6 h-6 mr-3 text-blue-500" />
-            Select Project
+            เลือกโปรเจกต์
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
@@ -149,31 +149,31 @@ const Sprints = () => {
           <div className="space-y-6">
             <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-md">
               <h2 className="text-2xl font-bold text-gray-800">
-                Sprints for {selectedProject.name}
+                สปรินต์ในโปรเจกต์ {selectedProject.name}
               </h2>
               <button
                 onClick={handleCreateSprint}
                 className="flex items-center gap-2 bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors"
               >
                 <Plus className="w-5 h-5" />
-                Create Sprint
+                สร้าง Sprint (สปรินต์)
               </button>
             </div>
 
             {loading ? (
               <div className="text-center text-gray-600 py-12">
-                Loading sprints...
+                กำลังโหลดสปรินต์...
               </div>
             ) : sprints.length === 0 ? (
               <div className="bg-white rounded-xl shadow-md p-12 text-center">
                 <p className="text-gray-600 mb-6">
-                  No sprints found for this project
+                  ไม่พบสปรินต์ในโปรเจกต์นี้
                 </p>
                 <button
                   onClick={handleCreateSprint}
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
                 >
-                  Create First Sprint
+                  เริ่มต้นสร้างสปรินต์แรก
                 </button>
               </div>
             ) : (
@@ -225,7 +225,7 @@ const Sprints = () => {
                           }
                           className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
                         >
-                          View Details
+                          ดูรายละเอียดเพิ่มเติม
                         </button>
                       </div>
                     </div>

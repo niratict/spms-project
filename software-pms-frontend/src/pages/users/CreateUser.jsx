@@ -39,7 +39,7 @@ const CreateUser = () => {
 
       navigate("/users");
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to create user");
+      setError(err.response?.data?.message || "ไม่สามารถสร้างผู้ใช้ได้");
     } finally {
       setLoading(false);
     }
@@ -51,7 +51,7 @@ const CreateUser = () => {
         <div className="bg-gradient-to-r from-blue-500 to-blue-600 p-6 text-white flex items-center justify-between">
           <h2 className="text-2xl font-bold flex items-center">
             <User className="mr-3 w-6 h-6" />
-            Create New User
+            สร้างผู้ใช้ใหม่
           </h2>
           <button
             onClick={() => navigate("/users")}
@@ -73,7 +73,7 @@ const CreateUser = () => {
             {/* Name Input */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Full Name
+                ชื่อ-นามสกุล
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -86,7 +86,7 @@ const CreateUser = () => {
                   required
                   value={formData.name}
                   onChange={handleChange}
-                  placeholder="Enter full name"
+                  placeholder="ระบุชื่อ-นามสกุล"
                   className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
               </div>
@@ -95,7 +95,7 @@ const CreateUser = () => {
             {/* Email Input */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Email Address
+                อีเมล
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -108,7 +108,7 @@ const CreateUser = () => {
                   required
                   value={formData.email}
                   onChange={handleChange}
-                  placeholder="Enter email address"
+                  placeholder="ระบุอีเมล"
                   className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
               </div>
@@ -117,7 +117,7 @@ const CreateUser = () => {
             {/* Password Input */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                Password
+                รหัสผ่าน
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -130,7 +130,7 @@ const CreateUser = () => {
                   required
                   value={formData.password}
                   onChange={handleChange}
-                  placeholder="Create a strong password"
+                  placeholder="สร้างรหัสผ่านที่รัดกุม"
                   className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
                 />
               </div>
@@ -139,7 +139,7 @@ const CreateUser = () => {
             {/* Role Selection */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-gray-700">
-                User Role
+                บทบาทผู้ใช้
               </label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -173,9 +173,9 @@ const CreateUser = () => {
                          flex items-center justify-center"
             >
               {loading ? (
-                <span className="animate-pulse">Creating...</span>
+                <span className="animate-pulse">กำลังสร้าง...</span>
               ) : (
-                "Create User"
+                "สร้างผู้ใช้"
               )}
             </button>
             <button
@@ -186,7 +186,7 @@ const CreateUser = () => {
                          focus:ring-gray-300 focus:ring-opacity-50
                          transition-all transform active:scale-95"
             >
-              Cancel
+              ยกเลิก
             </button>
           </div>
         </form>

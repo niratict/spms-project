@@ -157,14 +157,14 @@ const CreateTestFile = () => {
           className="flex items-center text-gray-600 hover:text-gray-800 mb-6 transition-colors"
         >
           <ChevronLeft className="mr-2" />
-          <span className="font-medium">Back to Test Files</span>
+          <span className="font-medium">กลับหน้าเลือกไฟล์ทดสอบ</span>
         </button>
 
         <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
           <div className="bg-blue-50 px-6 py-5 border-b border-blue-100">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center">
               <FileUp className="mr-3 text-blue-600" />
-              {isUpdateMode ? "Update Test File" : "Upload Test File"}
+              {isUpdateMode ? "อัพเดตไฟล์ทดสอบ" : "อัพโหลดไฟล์ทดสอบ"}
             </h2>
           </div>
 
@@ -182,7 +182,7 @@ const CreateTestFile = () => {
                   htmlFor="filename"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  File Name <span className="text-red-500">*</span>
+                  ชื่อไฟล์ <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -190,7 +190,7 @@ const CreateTestFile = () => {
                   value={filename}
                   onChange={(e) => setFilename(e.target.value)}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Enter descriptive file name"
+                  placeholder="ระบุชื่อไฟล์"
                   required
                 />
               </div>
@@ -200,7 +200,7 @@ const CreateTestFile = () => {
                   htmlFor="testFile"
                   className="block text-sm font-medium text-gray-700 mb-2"
                 >
-                  JSON Test File <span className="text-red-500">*</span>
+                  ไฟล์ทดสอบ JSON <span className="text-red-500">*</span>
                 </label>
                 <div className="mt-1">
                   <input
@@ -227,7 +227,7 @@ const CreateTestFile = () => {
                     <span className="text-sm font-medium">
                       {selectedFile
                         ? selectedFile.name
-                        : "Click to upload or drag and drop"}
+                        : "คลิกเพื่ออัพโหลดหรือลากและวางไฟล์"}
                     </span>
                   </label>
 
@@ -238,7 +238,8 @@ const CreateTestFile = () => {
                     </p>
                   )}
                   <p className="mt-2 text-xs text-gray-500">
-                    Only JSON files are allowed (max 5MB)
+                    อนุญาตให้ใช้เฉพาะไฟล์ JSON ที่ได้จากการทดสอบจาก Cypress
+                    เท่านั้น (ขนาดสูงสุด 5MB)
                   </p>
                 </div>
               </div>
@@ -258,10 +259,10 @@ const CreateTestFile = () => {
                 `}
               >
                 {loading
-                  ? "Uploading..."
+                  ? "กำลังอัพโหลด..."
                   : isUpdateMode
-                  ? "Update File"
-                  : "Upload File"}
+                  ? "อัพเดตไฟล์"
+                  : "อัพโหลดไฟล์"}
               </button>
               <button
                 type="button"
@@ -271,7 +272,7 @@ const CreateTestFile = () => {
                   hover:bg-gray-200 font-semibold transition-all duration-300
                 "
               >
-                Cancel
+                ยกเลิก
               </button>
             </div>
           </form>
@@ -284,14 +285,13 @@ const CreateTestFile = () => {
                 <div className="flex items-center mb-4">
                   <AlertTriangle className="text-red-500 mr-2" />
                   <h3 className="text-lg font-semibold text-gray-900">
-                    Cannot Upload File
+                    ไม่สามารถอัพโหลดไฟล์ได้
                   </h3>
                 </div>
-                <p className="text-gray-600">
-                  This test file has already been uploaded to{" "}
-                  {existingSprintName} in project{" "}
-                  <span className="font-medium">{existingProjectName}</span>.
-                  You cannot upload the same file to multiple sprints.
+                <p className="text-gray-600 whitespace-pre-line">
+                  ไฟล์ทดสอบนี้ถูกอัพโหลดแล้วใน {existingSprintName} ในโปรเจกต์{" "}
+                  <span className="font-medium">{existingProjectName}{" "}</span>
+                  ไม่สามารถอัพโหลดไฟล์เดียวกันในหลายสปรินต์ได้
                 </p>
               </div>
               <div className="px-6 py-4 bg-gray-50 flex justify-end">
@@ -299,7 +299,7 @@ const CreateTestFile = () => {
                   onClick={() => setShowErrorDialog(false)}
                   className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
                 >
-                  Understand
+                  เข้าใจแล้ว
                 </button>
               </div>
             </div>
@@ -311,11 +311,11 @@ const CreateTestFile = () => {
             <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
               <div className="px-6 py-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Update Existing Test File?
+                  ต้องการอัพเดตไฟล์ทดสอบที่มีอยู่หรือไม่?
                 </h3>
                 <p className="text-gray-600">
-                  A test file with the same name already exists in this sprint.
-                  Would you like to update it with the new results?
+                  มีไฟล์ทดสอบที่ชื่อเดียวกันอยู่แล้วในสปรินต์นี้
+                  คุณต้องการอัพเดตไฟล์นี้ด้วยผลลัพธ์ใหม่หรือไม่?
                 </p>
               </div>
               <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
@@ -323,13 +323,13 @@ const CreateTestFile = () => {
                   onClick={() => setShowConfirmDialog(false)}
                   className="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
                 >
-                  Cancel
+                  ยกเลิก
                 </button>
                 <button
                   onClick={handleConfirmUpdate}
                   className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
                 >
-                  Update File
+                  อัพเดตไฟล์
                 </button>
               </div>
             </div>

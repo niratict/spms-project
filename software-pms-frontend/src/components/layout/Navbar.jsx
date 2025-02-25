@@ -20,18 +20,18 @@ export default function EnhancedNavbar() {
 
   const getNavigationItems = (role) => {
     const items = [
-      { name: "Dashboard", href: "/dashboard", current: false },
-      { name: "Test Dashboard", href: "/test-dashboard", current: false },
+      { name: "หน้าหลัก", href: "/dashboard", current: false },
+      { name: "ผลการทดสอบ", href: "/test-dashboard", current: false },
     ];
 
     switch (role) {
       case "Admin":
         items.push(
-          { name: "Projects", href: "/projects", current: false },
-          { name: "Sprints", href: "/sprints", current: false },
-          { name: "Test Files", href: "/test-files", current: false },
-          { name: "Users", href: "/users", current: false },
-          { name: "Action Logs", href: "/action-logs", current: false }
+          { name: "โปรเจกต์", href: "/projects", current: false },
+          { name: "สปรินต์", href: "/sprints", current: false },
+          { name: "ไฟล์ทดสอบ", href: "/test-files", current: false },
+          { name: "ผู้ใช้งาน", href: "/users", current: false },
+          { name: "บันทึกการดำเนินการ", href: "/action-logs", current: false }
         );
         break;
       case "Tester":
@@ -139,7 +139,7 @@ export default function EnhancedNavbar() {
                             )}
                           >
                             <UserIcon className="h-5 w-5 mr-2 text-blue-500" />
-                            Profile
+                            โปรไฟล์
                           </Link>
                         )}
                       </Menu.Item>
@@ -155,7 +155,7 @@ export default function EnhancedNavbar() {
                             )}
                           >
                             <ArrowRightOnRectangleIcon className="h-5 w-5 mr-2 text-blue-500" />
-                            Sign out
+                            ออกจากระบบ
                           </button>
                         )}
                       </Menu.Item>

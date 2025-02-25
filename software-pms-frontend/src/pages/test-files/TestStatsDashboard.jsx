@@ -61,32 +61,32 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
     {
       icon: <FileText className="w-8 h-8 text-teal-500" />,
       value: aggregateStats.totalSuites,
-      label: "Test Suites",
+      label: "ชุดทดสอบ",
     },
     {
       icon: <CheckCircle className="w-8 h-8 text-green-500" />,
       value: aggregateStats.totalPasses,
-      label: "Passed Tests",
+      label: "การทดสอบที่ผ่าน",
     },
     {
       icon: <XCircle className="w-8 h-8 text-red-500" />,
       value: aggregateStats.totalFailures,
-      label: "Failed Tests",
+      label: "การทดสอบที่ผิดพลาด",
     },
     {
       icon: <Beaker className="w-8 h-8 text-blue-500" />,
       value: aggregateStats.totalTests,
-      label: "Total Tests",
+      label: "การทดสอบทั้งหมด",
     },
     {
       icon: <BarChart2 className="w-8 h-8 text-green-500" />,
       value: `${passRate}%`,
-      label: "Pass Rate",
+      label: "อัตราการผ่าน",
     },
     {
       icon: <BarChart2 className="w-8 h-8 text-red-500" />,
       value: `${failRate}%`,
-      label: "Fail Rate",
+      label: "อัตราการผิดพลาด",
     },
   ];
 
@@ -98,7 +98,7 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
       >
         <span className="text-2xl font-bold text-gray-700 flex items-center gap-2">
           <BarChart2 className="w-6 h-6 mr-1 text-blue-500" />
-          Test Statistics
+          สถิติการทดสอบ
         </span>
         {isVisible ? (
           <ChevronUp className="w-5 h-5 text-gray-500" />

@@ -33,7 +33,7 @@ const ProjectCard = ({ project }) => (
             {project.name}
           </h3>
           <p className="text-sm text-gray-500 mt-1">
-            Created on{" "}
+            สร้างเมื่อ{" "}
             {new Date(project.created_at).toLocaleDateString("th-TH", {
               day: "2-digit",
               month: "2-digit",
@@ -48,20 +48,20 @@ const ProjectCard = ({ project }) => (
               : "bg-gray-100 text-gray-800"
           }`}
         >
-          {project.status}
+          {project.status === "Active" ? "กำลังดำเนินการ" : "ไม่ได้ใช้งาน"}
         </span>
       </div>
       <div className="grid grid-cols-2 gap-4 mt-4">
         <div className="flex items-center gap-2">
           <Calendar className="w-4 h-4 text-gray-400" />
           <span className="text-sm text-gray-600">
-            {project.sprintCount || 0} Sprints
+            {project.sprintCount || 0} สปรินต์
           </span>
         </div>
         <div className="flex items-center gap-2">
           <FileText className="w-4 h-4 text-gray-400" />
           <span className="text-sm text-gray-600">
-            {project.fileCount  || 0} Test Files
+            {project.fileCount || 0} ไฟล์ทดสอบ
           </span>
         </div>
       </div>
@@ -112,7 +112,7 @@ const Dashboard = () => {
         });
       } catch (err) {
         console.error("Error fetching dashboard data:", err);
-        setError(err.response?.data?.error || "Failed to fetch dashboard data");
+        setError(err.response?.data?.error || "ไม่สามารถดึงข้อมูลแดชบอร์ดได้");
       } finally {
         setLoading(false);
       }
@@ -147,42 +147,41 @@ const Dashboard = () => {
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
-          <p className="mt-2 text-gray-600">
-            Welcome back, {user?.name || "User"}
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">
+            ระบบบริหารจัดการโครงการซอฟต์แวร์
+          </h1>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <StatCard
-            title="Total Projects"
+            title="จำนวนโปรเจกต์ทั้งหมด"
             value={stats.totalProjects}
             icon={Activity}
-            description={`${stats.activeProjects} active projects`}
+            description={`${stats.activeProjects} โปรเจกต์ที่กำลังดำเนินการ`}
           />
           <StatCard
-            title="Total Sprints"
+            title="จำนวนสปรินต์ทั้งหมด"
             value={stats.totalSprints}
             icon={Calendar}
-            description="Across all projects"
+            description="จากทุกโปรเจกต์"
           />
           <StatCard
-            title="Test Files"
+            title="จำนวนไฟล์ทดสอบทั้งหมด"
             value={stats.totalFiles}
             icon={FileText}
-            description="Active test files"
+            description="ไฟล์ทดสอบที่ใช้งานอยู่"
           />
           <StatCard
-            title="Active Projects"
+            title="โปรเจกต์ที่กำลังดำเนินการ"
             value={stats.activeProjects}
             icon={Clock}
-            description={`${percentageActive}% of total`}
+            description={`${percentageActive}% ของทั้งหมด`}
           />
         </div>
 
         <div className="mb-6">
           <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Latest Projects
+            โปรเจกต์ล่าสุด
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {latestProjects.map((project, index) => (

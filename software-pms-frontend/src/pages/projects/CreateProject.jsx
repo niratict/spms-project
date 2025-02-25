@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import { format, setHours } from "date-fns";
+import { th } from "date-fns/locale";
 import "react-day-picker/dist/style.css";
 import axios from "axios";
 import {
@@ -50,6 +51,13 @@ const DateRangePickerModal = ({
     }
   };
 
+  // สร้าง formatter สำหรับแสดงปี พ.ศ.
+  const formatCaption = (date, options) => {
+    const year = date.getFullYear() + 543; // แปลงเป็นปี พ.ศ.
+    const month = format(date, "LLLL", { locale: th }); // แสดงชื่อเดือนภาษาไทย
+    return `${month} ${year}`;
+  };
+
   const handleRangeSelect = (newRange) => {
     // ถ้าคลิกวันเดียวกับ from ที่เลือกไว้ ให้ล้างค่า range
     if (
@@ -82,7 +90,7 @@ const DateRangePickerModal = ({
       <div className="bg-white rounded-xl shadow-xl p-6 max-w-4xl w-full mx-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-800">
-            Select Date Range
+            เลือกช่วงวันที่
           </h2>
           <button
             onClick={onClose}
@@ -97,12 +105,16 @@ const DateRangePickerModal = ({
             mode="range"
             selected={range}
             onSelect={handleRangeSelect}
+            locale={th}
             numberOfMonths={2}
             disabled={[
               { dayOfWeek: [0, 6] }, // Disable weekends
             ]}
             modifiers={{
               disabled: { dayOfWeek: [0, 6] },
+            }}
+            formatters={{
+              formatCaption: formatCaption, // ใช้ formatter ที่สร้างขึ้น
             }}
             styles={{
               months: { display: "flex", gap: "1rem" },
@@ -128,14 +140,14 @@ const DateRangePickerModal = ({
             onClick={onClose}
             className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
           >
-            Cancel
+            ยกเลิก
           </button>
           <button
             onClick={handleConfirm}
             disabled={!range?.from || !range?.to}
             className="px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
           >
-            Confirm
+            ยืนยัน
           </button>
         </div>
       </div>
@@ -162,10 +174,18 @@ const CreateProject = () => {
 
   const displayDateRange = () => {
     if (!formData.start_date || !formData.end_date) return "";
-    return `${format(new Date(formData.start_date), "dd/MM/yyyy")} - ${format(
-      new Date(formData.end_date),
-      "dd/MM/yyyy"
-    )}`;
+
+    // แสดงผลเป็นวันที่ เดือน และปีพุทธศักราช (พ.ศ.)
+    const formatToBuddhistYear = (date) => {
+      const formattedDate = format(new Date(date), "dd/MM/yyyy");
+      const [day, month, year] = formattedDate.split("/");
+      const buddhistYear = parseInt(year) + 543;
+      return `${day}/${month}/${buddhistYear}`;
+    };
+
+    return `${formatToBuddhistYear(
+      formData.start_date
+    )} - ${formatToBuddhistYear(formData.end_date)}`;
   };
 
   const handleChange = (e) => {
@@ -245,14 +265,14 @@ const CreateProject = () => {
         className="group flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
       >
         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-        Back to Projects
+        กลับไปที่หน้าเลือกโปรเจกต์
       </button>
 
       <div className="bg-white shadow-lg rounded-xl overflow-hidden">
         <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100">
           <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
             <Plus className="w-8 h-8 text-blue-500" />
-            Create New Project
+            สร้างโปรเจกต์ใหม่
           </h1>
         </div>
 
@@ -282,7 +302,7 @@ const CreateProject = () => {
             <div className="space-y-2">
               <label className="flex items-center gap-2 font-medium text-gray-700">
                 <Image className="w-5 h-5 text-blue-500" />
-                Project Image
+                รูปภาพโปรเจกต์
               </label>
               <div className="flex items-center justify-center w-full">
                 <div className="w-full">
@@ -306,8 +326,10 @@ const CreateProject = () => {
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <Upload className="w-12 h-12 text-gray-400 mb-3" />
                         <p className="mb-2 text-sm text-gray-500">
-                          <span className="font-semibold">Click to upload</span>{" "}
-                          or drag and drop
+                          <span className="font-semibold">
+                            คลิกเพื่ออัปโหลดรูปภาพ
+                          </span>{" "}
+                          หรือลากและวาง
                         </p>
                         <p className="text-xs text-gray-500">
                           PNG, JPG, GIF up to 5MB
@@ -332,7 +354,7 @@ const CreateProject = () => {
                 className="flex items-center gap-2 font-medium text-gray-700"
               >
                 <FileText className="w-5 h-5 text-blue-500" />
-                Project Name
+                ชื่อโปรเจกต์
               </label>
               <input
                 type="text"
@@ -342,7 +364,7 @@ const CreateProject = () => {
                 value={formData.name}
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
-                placeholder="Enter project name"
+                placeholder="ระบุชื่อโปรเจกต์"
               />
             </div>
 
@@ -353,7 +375,7 @@ const CreateProject = () => {
                 className="flex items-center gap-2 font-medium text-gray-700"
               >
                 <FileText className="w-5 h-5 text-green-500" />
-                Description
+                รายละเอียด
               </label>
               <textarea
                 id="description"
@@ -361,7 +383,7 @@ const CreateProject = () => {
                 value={formData.description}
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-lg h-32 focus:ring-2 focus:ring-blue-200 transition-all"
-                placeholder="Enter project description"
+                placeholder="ระบุรายละเอียดโปรเจกต์"
               />
             </div>
 
@@ -369,7 +391,7 @@ const CreateProject = () => {
             <div className="space-y-2">
               <label className="flex items-center gap-2 font-medium text-gray-700">
                 <Calendar className="w-5 h-5 text-purple-500" />
-                Project Duration
+                ระยะเวลาของโปรเจกต์
               </label>
               <div className="relative">
                 <input
@@ -378,7 +400,7 @@ const CreateProject = () => {
                   value={displayDateRange()}
                   onClick={() => setShowDatePicker(true)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer"
-                  placeholder="Select project duration"
+                  placeholder="เลือกระยะเวลาโปรเจกต์"
                 />
               </div>
             </div>
@@ -415,14 +437,14 @@ const CreateProject = () => {
               ) : (
                 <Plus className="w-5 h-5" />
               )}
-              {loading ? "Creating..." : "Create Project"}
+              {loading ? "Creating..." : "สร้างโปรเจกต์"}
             </button>
             <button
               type="button"
               onClick={() => navigate("/projects")}
               className="flex-1 px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             >
-              Cancel
+              ยกเลิก
             </button>
           </div>
         </form>

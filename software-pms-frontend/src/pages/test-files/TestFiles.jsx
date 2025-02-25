@@ -256,7 +256,7 @@ const TestFiles = () => {
         <div className="flex justify-between items-center mb-8">
           <h1 className="text-4xl font-extrabold text-gray-800 flex items-center">
             <Layers className="w-10 h-10 mr-4 text-blue-600" />
-            Test Files Management
+            การจัดการไฟล์ทดสอบ
           </h1>
         </div>
 
@@ -264,7 +264,7 @@ const TestFiles = () => {
         <div className="bg-white shadow-lg rounded-xl p-6 mb-6">
           <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
             <Folder className="w-6 h-6 mr-3 text-blue-500" />
-            Select Project
+            เลือกโปรเจกต์
           </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {projects.map((project) => (
@@ -299,7 +299,7 @@ const TestFiles = () => {
           <div className="bg-white shadow-lg rounded-xl p-6 mb-6">
             <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
               <Target className="w-6 h-6 mr-3 text-green-500" />
-              Select Sprint for {selectedProject.name}
+              เลือกสปรินต์ในโปรเจกต์ {selectedProject.name}
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {sprints.map((sprint) => (
@@ -354,13 +354,13 @@ const TestFiles = () => {
             {/* Test Files Header */}
             <div className="flex justify-between items-center bg-white p-6 rounded-xl shadow-md">
               <h2 className="text-2xl font-bold text-gray-800">
-                Test Files for {selectedSprint.name}
+                ไฟล์ทดสอบของ {selectedSprint.name}
               </h2>
               <div className="flex items-center space-x-4">
                 <div className="relative">
                   <input
                     type="text"
-                    placeholder="Search test files..."
+                    placeholder="ค้นหาไฟล์ทดสอบ..."
                     value={searchTerm}
                     onChange={handleSearch}
                     className="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
@@ -372,7 +372,7 @@ const TestFiles = () => {
                   className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
                 >
                   <Upload className="w-5 h-5" />
-                  Upload Test File
+                  อัพโหลดไฟล์ทดสอบ
                 </button>
               </div>
             </div>
@@ -380,18 +380,16 @@ const TestFiles = () => {
             {/* Test Files Grid */}
             {loading ? (
               <div className="text-center text-gray-600 py-12">
-                Loading test files...
+                กำลังโหลดไฟล์ทดสอบ...
               </div>
             ) : testFiles.length === 0 ? (
               <div className="bg-white rounded-xl shadow-md p-12 text-center">
-                <p className="text-gray-600 mb-6">
-                  No test files found for this sprint
-                </p>
+                <p className="text-gray-600 mb-6">ไม่พบไฟล์ทดสอบในสปรินต์นี้</p>
                 <button
                   onClick={handleCreateTestFile}
                   className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
                 >
-                  Upload First Test File
+                  อัพโหลดไฟล์ทดสอบไฟล์แรก
                 </button>
               </div>
             ) : (
@@ -431,7 +429,7 @@ const TestFiles = () => {
                         onClick={() => navigate(`/test-files/${file.file_id}`)}
                         className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
                       >
-                        View Details
+                        ดูรายละเอียดเพิ่มเติม
                       </button>
                     </div>
                   </div>
