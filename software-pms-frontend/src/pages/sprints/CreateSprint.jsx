@@ -15,32 +15,19 @@ const CreateSprint = () => {
   const navigate = useNavigate();
   const { projectId } = useParams();
   const { user } = useAuth();
+
+  // สถานะหลักสำหรับการสร้างสปรินต์
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [existingSprints, setExistingSprints] = useState([]);
   const [nextSprintName, setNextSprintName] = useState("");
   const [showDateRanges, setShowDateRanges] = useState(false);
-
   const [dateRange, setDateRange] = useState({
     from: undefined,
     to: undefined,
   });
 
-  const handleRangeSelect = (range) => {
-    if (!range) {
-      setDateRange({
-        from: undefined,
-        to: undefined,
-      });
-      return;
-    }
-
-    setDateRange({
-      from: range.from,
-      to: range.to,
-    });
-  };
-
+  // ดึงข้อมูลสปรินต์ที่มีอยู่และกำหนดชื่อสปรินต์ถัดไป
   useEffect(() => {
     const fetchSprintData = async () => {
       try {
@@ -62,6 +49,30 @@ const CreateSprint = () => {
     fetchSprintData();
   }, [projectId, user.token]);
 
+  // ฟังก์ชันจัดการการเลือกช่วงวันที่
+  const handleRangeSelect = (range) => {
+    if (!range) {
+      setDateRange({
+        from: undefined,
+        to: undefined,
+      });
+      return;
+    }
+
+    setDateRange({
+      from: range.from,
+      to: range.to,
+    });
+  };
+
+  // ฟังก์ชันจัดการการกลับไปยังหน้าก่อนหน้า
+  const handleBack = () => {
+    navigate("/sprints", {
+      state: { selectedProjectId: parseInt(projectId) },
+    });
+  };
+
+  // ฟังก์ชันสำหรับการสร้างสปรินต์ใหม่
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
@@ -74,7 +85,7 @@ const CreateSprint = () => {
     }
 
     try {
-      // Fix timezone offset by setting time to noon (12:00) in local time
+      // แก้ไขปัญหา timezone โดยตั้งเวลาเป็น 12:00 น. ในเวลาท้องถิ่น
       const startDate = new Date(dateRange.from);
       startDate.setHours(12, 0, 0, 0);
 
@@ -103,26 +114,20 @@ const CreateSprint = () => {
     }
   };
 
-  const handleBack = () => {
-    navigate("/sprints", {
-      state: { selectedProjectId: parseInt(projectId) },
-    });
-  };
-
-  // Disable dates that overlap with existing sprints and weekends
+  // กำหนดวันที่ไม่สามารถเลือกได้ (วันหยุดสุดสัปดาห์ และวันที่มีสปรินต์อยู่แล้ว)
   const disabledDays = [
     ...existingSprints.map((sprint) => ({
       from: new Date(sprint.start_date),
       to: new Date(sprint.end_date),
     })),
-    // Disable weekends
+    // ปิดการเลือกวันเสาร์-อาทิตย์
     (date) => {
       const day = date.getDay();
-      return day === 0 || day === 6; // 0 is Sunday, 6 is Saturday
+      return day === 0 || day === 6; // 0 คือวันอาทิตย์, 6 คือวันเสาร์
     },
   ];
 
-  // Custom CSS classes for DayPicker
+  // กำหนด CSS classes สำหรับ DayPicker
   const dayPickerClassNames = {
     months: "flex flex-col sm:flex-row space-y-4 sm:space-x-4 sm:space-y-0",
     month: "space-y-4",
@@ -148,7 +153,7 @@ const CreateSprint = () => {
     day_hidden: "invisible",
   };
 
-  // สร้าง formatter สำหรับแสดงปี พ.ศ.
+  // ฟังก์ชันสำหรับแสดงปี พ.ศ. และชื่อเดือนภาษาไทย
   const formatCaption = (date, options) => {
     const year = date.getFullYear() + 543; // แปลงเป็นปี พ.ศ.
     const month = format(date, "LLLL", { locale: th }); // แสดงชื่อเดือนภาษาไทย
@@ -156,17 +161,20 @@ const CreateSprint = () => {
   };
 
   return (
-    <div className="bg-gray-50 p-16">
+    <div className="bg-gray-50 p-16" data-cy="create-sprint-container">
       <div className="w-full max-w-2xl mx-auto">
+        {/* ปุ่มกลับไปยังหน้าเลือกสปรินต์ */}
         <button
           onClick={handleBack}
           className="flex items-center gap-2 text-gray-600 hover:text-gray-900 p-6"
+          data-cy="back-button"
         >
           <ArrowLeft className="w-5 h-5" />
           <span>กลับไปที่หน้าเลือกสปรินต์</span>
         </button>
 
         <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          {/* ส่วนหัวของฟอร์ม */}
           <div className="bg-blue-50 p-6 flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Plus className="w-10 h-10 text-blue-600" />
@@ -176,14 +184,24 @@ const CreateSprint = () => {
             </div>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-8 space-y-6">
+          {/* ฟอร์มสร้างสปรินต์ */}
+          <form
+            onSubmit={handleSubmit}
+            className="p-8 space-y-6"
+            data-cy="create-sprint-form"
+          >
+            {/* แสดงข้อความผิดพลาด (ถ้ามี) */}
             {error && (
-              <div className="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded-lg">
+              <div
+                className="flex items-center space-x-3 p-4 bg-red-50 border border-red-200 rounded-lg"
+                data-cy="error-message"
+              >
                 <AlertCircle className="w-6 h-6 text-red-500" />
                 <p className="text-red-600">{error}</p>
               </div>
             )}
 
+            {/* ส่วนแสดงชื่อสปรินต์ (ไม่สามารถแก้ไขได้) */}
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Sprint (สปรินต์)
@@ -194,6 +212,7 @@ const CreateSprint = () => {
                   value={nextSprintName}
                   disabled
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                  data-cy="sprint-name-input"
                 />
                 <Lock className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
               </div>
@@ -202,6 +221,7 @@ const CreateSprint = () => {
               </p>
             </div>
 
+            {/* ส่วนเลือกช่วงวันที่ */}
             <div>
               <div className="flex justify-between items-center mb-2">
                 <label className="block text-sm font-medium text-gray-700">
@@ -223,15 +243,18 @@ const CreateSprint = () => {
                   onClick={() => setShowDateRanges(true)}
                   readOnly
                   className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg cursor-pointer"
+                  data-cy="date-range-input"
                 />
               </div>
             </div>
 
+            {/* ปุ่มยกเลิกและสร้างสปรินต์ */}
             <div className="flex justify-end space-x-4 pt-4">
               <button
                 type="button"
                 onClick={handleBack}
                 className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                data-cy="cancel-button"
               >
                 ยกเลิก
               </button>
@@ -239,6 +262,7 @@ const CreateSprint = () => {
                 type="submit"
                 disabled={loading || !dateRange?.from || !dateRange?.to}
                 className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                data-cy="submit-button"
               >
                 <span>{loading ? "Creating..." : "Create Sprint"}</span>
               </button>
@@ -247,10 +271,14 @@ const CreateSprint = () => {
         </div>
       </div>
 
-      {/* Date Picker Modal */}
+      {/* โมดัลสำหรับเลือกช่วงวันที่ */}
       {showDateRanges && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          data-cy="date-picker-modal"
+        >
           <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4">
+            {/* ส่วนหัวของโมดัล */}
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">
                 เลือกช่วงวันที่ของสปรินต์
@@ -258,13 +286,16 @@ const CreateSprint = () => {
               <button
                 onClick={() => setShowDateRanges(false)}
                 className="text-gray-500 hover:text-gray-700"
+                data-cy="close-modal-button"
               >
                 <X className="w-6 h-6" />
               </button>
             </div>
 
+            {/* แสดงรายการสปรินต์ที่มีอยู่แล้ว */}
             <ExistingSprintsList sprints={existingSprints} />
 
+            {/* ตัวเลือกช่วงวันที่ */}
             <div className="flex justify-center">
               <DayPicker
                 mode="range"
@@ -298,14 +329,16 @@ const CreateSprint = () => {
                     ปิดการเลือกวันหยุดสุดสัปดาห์
                   </p>
                 }
+                data-cy="day-picker"
               />
             </div>
 
-            {/* Add buttons */}
+            {/* ปุ่มยกเลิกและยืนยันการเลือกวันที่ */}
             <div className="flex justify-end space-x-4 mt-6">
               <button
                 onClick={() => setShowDateRanges(false)}
                 className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                data-cy="cancel-date-selection"
               >
                 ยกเลิก
               </button>
@@ -317,6 +350,7 @@ const CreateSprint = () => {
                 }}
                 disabled={!dateRange.from || !dateRange.to}
                 className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                data-cy="confirm-date-selection"
               >
                 ยืนยัน
               </button>

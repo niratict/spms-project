@@ -16,11 +16,17 @@ import {
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+// ====== Modal Components ======
+
+// โมดัลยืนยันการลบโปรเจกต์
 const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      data-cy="delete-confirm-modal"
+    >
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-6">
         <div className="text-center">
           <Trash2 className="mx-auto h-16 w-16 text-red-500 mb-4" />
@@ -34,12 +40,14 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
           <button
             onClick={onClose}
             className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            data-cy="cancel-delete-button"
           >
             ยกเลิก
           </button>
           <button
             onClick={onConfirm}
             className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-2 transition-colors"
+            data-cy="confirm-delete-button"
           >
             <Trash2 className="w-5 h-5" />
             ต้องการลบ
@@ -50,11 +58,15 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
   );
 };
 
+// โมดัลแสดงข้อผิดพลาดกรณีไม่สามารถลบโปรเจกต์ที่มีสปรินต์อยู่
 const DeleteErrorModal = ({ isOpen, onClose, sprintCount }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      data-cy="delete-error-modal"
+    >
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-6">
         <div className="text-center">
           <AlertTriangle className="mx-auto h-16 w-16 text-yellow-500 mb-4" />
@@ -71,6 +83,7 @@ const DeleteErrorModal = ({ isOpen, onClose, sprintCount }) => {
           <button
             onClick={onClose}
             className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            data-cy="error-modal-close-button"
           >
             เข้าใจ
           </button>
@@ -80,7 +93,11 @@ const DeleteErrorModal = ({ isOpen, onClose, sprintCount }) => {
   );
 };
 
+// ====== Sprint Item Component ======
+
+// คอมโพเนนต์แสดงข้อมูลสปรินต์แต่ละรายการในโปรเจกต์
 const SprintItem = ({ sprint, onNavigate }) => {
+  // ฟังก์ชันสำหรับแสดงไอคอนตามสถานะของสปรินต์
   const getStatusIcon = (status) => {
     switch (status?.toLowerCase()) {
       case "completed":
@@ -96,6 +113,7 @@ const SprintItem = ({ sprint, onNavigate }) => {
     <div
       onClick={() => onNavigate(sprint.sprint_id)}
       className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+      data-cy={`sprint-item-${sprint.sprint_id}`}
     >
       <div>
         <h3 className="font-semibold">{sprint.name}</h3>
@@ -123,6 +141,7 @@ const SprintItem = ({ sprint, onNavigate }) => {
                 ? "bg-blue-100 text-blue-800"
                 : "bg-gray-100 text-gray-800"
             }`}
+            data-cy="sprint-status"
           >
             {sprint.status}
           </span>
@@ -133,10 +152,14 @@ const SprintItem = ({ sprint, onNavigate }) => {
   );
 };
 
+// ====== Main Component ======
+
 const ProjectDetail = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // สเตทสำหรับเก็บข้อมูลโปรเจกต์และสถานะต่างๆ
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -144,6 +167,7 @@ const ProjectDetail = () => {
   const [showDeleteErrorModal, setShowDeleteErrorModal] = useState(false);
   const [sprintCount, setSprintCount] = useState(0);
 
+  // ดึงข้อมูลโปรเจกต์เมื่อคอมโพเนนต์ถูกโหลด
   useEffect(() => {
     const fetchProject = async () => {
       try {
@@ -163,6 +187,7 @@ const ProjectDetail = () => {
     if (user && id) fetchProject();
   }, [id, user]);
 
+  // ฟังก์ชันสำหรับลบโปรเจกต์
   const handleDelete = async () => {
     try {
       await axios.delete(`${API_BASE_URL}/api/projects/${id}`, {
@@ -183,17 +208,25 @@ const ProjectDetail = () => {
     }
   };
 
+  // แสดง loading indicator ระหว่างโหลดข้อมูล
   if (loading) {
     return (
-      <div className="flex justify-center items-center h-screen">
+      <div
+        className="flex justify-center items-center h-screen"
+        data-cy="loading-indicator"
+      >
         <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
       </div>
     );
   }
 
+  // แสดงข้อความผิดพลาดกรณีเกิด error
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div
+        className="container mx-auto px-4 py-8 max-w-4xl"
+        data-cy="error-container"
+      >
         <div className="bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-lg">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" />
@@ -204,9 +237,13 @@ const ProjectDetail = () => {
     );
   }
 
+  // แสดงข้อความกรณีไม่พบโปรเจกต์
   if (!project) {
     return (
-      <div className="container mx-auto px-4 py-8 max-w-4xl">
+      <div
+        className="container mx-auto px-4 py-8 max-w-4xl"
+        data-cy="project-not-found"
+      >
         <div className="text-center p-6 bg-gray-100 rounded-lg">
           Project not found
         </div>
@@ -214,8 +251,13 @@ const ProjectDetail = () => {
     );
   }
 
+  // แสดงรายละเอียดโปรเจกต์
   return (
-    <div className="container mx-auto px-4 py-8 max-w-4xl">
+    <div
+      className="container mx-auto px-4 py-8 max-w-4xl"
+      data-cy="project-detail-container"
+    >
+      {/* โมดัลต่างๆ */}
       <DeleteConfirmModal
         isOpen={showDeleteModal}
         onClose={() => setShowDeleteModal(false)}
@@ -228,10 +270,12 @@ const ProjectDetail = () => {
         sprintCount={sprintCount}
       />
 
+      {/* ส่วนหัวของหน้า - ปุ่มย้อนกลับและปุ่มจัดการโปรเจกต์ */}
       <div className="flex justify-between items-center mb-6">
         <button
           onClick={() => navigate("/projects")}
           className="group flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+          data-cy="back-to-projects-button"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
           กลับไปที่หน้าเลือกโปรเจกต์
@@ -241,6 +285,7 @@ const ProjectDetail = () => {
           <button
             onClick={() => navigate(`/projects/${id}/edit`)}
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            data-cy="edit-project-button"
           >
             <Edit className="w-5 h-5" />
             แก้ไขโปรเจกต์
@@ -248,6 +293,7 @@ const ProjectDetail = () => {
           <button
             onClick={() => setShowDeleteModal(true)}
             className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            data-cy="delete-project-button"
           >
             <Trash2 className="w-5 h-5" />
             ลบ
@@ -255,11 +301,19 @@ const ProjectDetail = () => {
         </div>
       </div>
 
+      {/* เนื้อหาหลักของหน้า */}
       <div className="bg-white shadow-lg rounded-xl overflow-hidden">
-        <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100">
+        {/* ส่วนหัวของโปรเจกต์ - ชื่อและสถานะ */}
+        <div
+          className="p-6 bg-gradient-to-r from-blue-50 to-blue-100"
+          data-cy="project-header"
+        >
           <div className="flex justify-between items-center">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              <h1
+                className="text-3xl font-bold text-gray-800 mb-2"
+                data-cy="project-name"
+              >
                 โปรเจกต์ {project.name}
               </h1>
               <div className="flex items-center gap-2">
@@ -272,6 +326,7 @@ const ProjectDetail = () => {
                         ? "bg-blue-100 text-blue-800"
                         : "bg-gray-100 text-gray-800"
                     }`}
+                    data-cy="project-status-badge"
                   >
                     สถานะ {project.status}
                   </span>
@@ -282,15 +337,20 @@ const ProjectDetail = () => {
         </div>
 
         <div className="p-6">
-          <div className="mb-8">
+          {/* ส่วนรายละเอียดโปรเจกต์ */}
+          <div className="mb-8" data-cy="project-description-section">
             <h2 className="text-lg font-semibold text-gray-700 mb-3">
               รายละเอียด
             </h2>
-            <p className="text-gray-600">{project.description}</p>
+            <p className="text-gray-600" data-cy="project-description">
+              {project.description}
+            </p>
           </div>
 
+          {/* ส่วนแสดงรูปภาพและข้อมูลสำคัญของโปรเจกต์ */}
           <div className="grid md:grid-cols-2 gap-8 mb-8">
-            <div>
+            {/* ส่วนแสดงรูปภาพโปรเจกต์ */}
+            <div data-cy="project-image-container">
               {project.photo ? (
                 <div className="aspect-video w-full rounded-lg overflow-hidden bg-gray-100 border border-gray-200 shadow-sm">
                   <img
@@ -301,17 +361,28 @@ const ProjectDetail = () => {
                       e.target.onerror = null;
                       e.target.src = "/placeholder-image.png";
                     }}
+                    data-cy="project-image"
                   />
                 </div>
               ) : (
-                <div className="aspect-video w-full rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center">
+                <div
+                  className="aspect-video w-full rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center"
+                  data-cy="project-no-image"
+                >
                   <p className="text-gray-400">No image available</p>
                 </div>
               )}
             </div>
 
-            <div className="grid grid-cols-1 gap-4 content-start">
-              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+            {/* ส่วนแสดงข้อมูลสำคัญของโปรเจกต์ */}
+            <div
+              className="grid grid-cols-1 gap-4 content-start"
+              data-cy="project-info-container"
+            >
+              <div
+                className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"
+                data-cy="project-start-date"
+              >
                 <Calendar className="w-6 h-6 text-blue-500" />
                 <div>
                   <div className="text-sm text-gray-600">วันที่เริ่มต้น</div>
@@ -324,7 +395,10 @@ const ProjectDetail = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+              <div
+                className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"
+                data-cy="project-end-date"
+              >
                 <Calendar className="w-6 h-6 text-blue-500" />
                 <div>
                   <div className="text-sm text-gray-600">วันที่สิ้นสุด</div>
@@ -337,14 +411,20 @@ const ProjectDetail = () => {
                   </div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+              <div
+                className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"
+                data-cy="project-status"
+              >
                 <Activity className="w-6 h-6 text-green-500" />
                 <div>
                   <div className="text-sm text-gray-600">สถานะ</div>
                   <div className="font-semibold">{project.status}</div>
                 </div>
               </div>
-              <div className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg">
+              <div
+                className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"
+                data-cy="project-creator"
+              >
                 <Users className="w-6 h-6 text-purple-500" />
                 <div>
                   <div className="text-sm text-gray-600">ถูกสร้างโดย</div>
@@ -354,13 +434,15 @@ const ProjectDetail = () => {
             </div>
           </div>
 
-          <div className="border-t pt-8">
+          {/* ส่วนแสดงสปรินต์ในโปรเจกต์ */}
+          <div className="border-t pt-8" data-cy="project-sprints-section">
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Sprints (สปรินต์)</h2>
             </div>
 
-            {project.sprints && project.sprints.length > 0 && (
-              <div className="grid gap-4">
+            {/* แสดงรายการสปรินต์หรือข้อความว่างเปล่า */}
+            {project.sprints && project.sprints.length > 0 ? (
+              <div className="grid gap-4" data-cy="sprints-list">
                 {project.sprints.map((sprint) => (
                   <SprintItem
                     key={sprint.sprint_id}
@@ -368,6 +450,18 @@ const ProjectDetail = () => {
                     onNavigate={(sprintId) => navigate(`/sprints/${sprintId}`)}
                   />
                 ))}
+              </div>
+            ) : (
+              <div
+                className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
+                data-cy="empty-sprints"
+              >
+                <h2 className="text-gray-600 mb-4">
+                  ยังไม่มี Sprint ในโปรเจกต์นี้
+                </h2>
+                <p className="text-gray-500">
+                  Sprint จะปรากฏที่นี่เมื่อถูกสร้างขึ้น
+                </p>
               </div>
             )}
           </div>

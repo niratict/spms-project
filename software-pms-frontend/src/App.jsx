@@ -5,70 +5,96 @@ import {
   Route,
   Navigate,
 } from "react-router-dom";
-import { AuthProvider } from "./context/AuthContext";
-import { useAuth } from "./context/AuthContext";
+import { AuthProvider, useAuth } from "./context/AuthContext";
 
-// Pages
+// นำเข้าคอมโพเนนต์หลัก
+import Layout from "./components/layout/Layout";
+
+// นำเข้าหน้าการยืนยันตัวตน
 import Login from "./pages/auth/Login";
+
+// นำเข้าหน้าแดชบอร์ดหลัก
 import Dashboard from "./pages/dashboard/Dashboard";
 import TestDashboard from "./pages/testdashboard/TestDashboard";
+import Profile from "./pages/profile/Profile";
+
+// นำเข้าหน้าจัดการโปรเจกต์
 import Projects from "./pages/projects/Projects";
 import CreateProject from "./pages/projects/CreateProject";
 import ProjectDetail from "./pages/projects/ProjectDetail";
 import ProjectEdit from "./pages/projects/ProjectEdit";
+
+// นำเข้าหน้าจัดการสปรินท์
 import Sprints from "./pages/sprints/Sprints";
 import CreateSprint from "./pages/sprints/CreateSprint";
 import SprintDetail from "./pages/sprints/SprintDetail";
 import SprintEdit from "./pages/sprints/SprintEdit";
+
+// นำเข้าหน้าจัดการไฟล์ทดสอบ
 import TestFiles from "./pages/test-files/TestFiles";
 import TestFileDetail from "./pages/test-files/TestFileDetail";
 import TestFileEdit from "./pages/test-files/TestFileEdit";
 import CreateTestFile from "./pages/test-files/CreateTestFile";
+
+// นำเข้าหน้าจัดการผู้ใช้
 import Users from "./pages/users/Users";
 import UserDetail from "./pages/users/UserDetail";
 import UserEdit from "./pages/users/UserEdit";
 import CreateUser from "./pages/users/CreateUser";
+
+// นำเข้าหน้าบันทึกการทำงาน
 import ActionLogs from "./pages/actionlogs/ActionLogs";
-import Layout from "./components/layout/Layout";
-import Profile from "./pages/profile/Profile";
 
-// Protected Route with Role Check
+// คอมโพเนนต์สำหรับการป้องกันเส้นทาง
+// ตรวจสอบการเข้าถึงตามสิทธิ์ของผู้ใช้
 const ProtectedRoute = ({ children, allowedRoles = [] }) => {
-  const { user } = useAuth();
+  const { user } = useAuth();  // ดึงข้อมูลผู้ใช้จาก Context
 
+  // ถ้าไม่ได้ล็อกอิน ให้ไปหน้าล็อกอิน
   if (!user) {
     return <Navigate to="/login" replace />;
   }
 
-  // If no specific roles are required, or user's role is allowed
+  // ถ้าไม่ได้กำหนดสิทธิ์ หรือผู้ใช้มีสิทธิ์ตามที่กำหนด
   if (allowedRoles.length === 0 || allowedRoles.includes(user.role)) {
     return children;
   }
 
-  // If user's role is not allowed, redirect to dashboard
+  // ถ้าผู้ใช้ไม่มีสิทธิ์ ให้ไปหน้าแดชบอร์ด
   return <Navigate to="/dashboard" replace />;
 };
 
-// Updated Routes section in App.jsx
+// คอมโพเนนต์สำหรับจัดการเส้นทางทั้งหมดในแอพ
 const AppRoutes = () => {
   return (
     <Routes>
+      {/* เส้นทางสำหรับหน้าล็อกอิน */}
       <Route path="/login" element={<Login />} />
+      
+      {/* เส้นทางหลัก ให้ไปยังแดชบอร์ด */}
       <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
+      {/* เส้นทางที่ต้องล็อกอินก่อนเข้าถึง */}
       <Route
         path="/*"
         element={
           <ProtectedRoute>
             <Layout>
               <Routes>
-                {/* Dashboard - accessible by all roles */}
+                {/* --- หน้าที่ทุกคนเข้าถึงได้ --- */}
+                
+                {/* แดชบอร์ดหลัก */}
                 <Route path="/dashboard" element={<Dashboard />} />
-
-                {/* Test Dashboard - accessible by all roles */}
+                
+                {/* แดชบอร์ดสำหรับการทดสอบ */}
                 <Route path="/test-dashboard" element={<TestDashboard />} />
+                
+                {/* หน้าโปรไฟล์ส่วนตัว */}
+                <Route path="/profile" element={<Profile />} />
 
-                {/* Projects - accessible by Admin only */}
+                {/* --- หน้าที่เฉพาะแอดมินเข้าถึงได้ --- */}
+                
+                {/* จัดการโปรเจกต์ - เฉพาะแอดมิน */}
                 <Route
                   path="/projects"
                   element={
@@ -102,7 +128,7 @@ const AppRoutes = () => {
                   }
                 />
 
-                {/* Sprints - accessible by Admin only */}
+                {/* จัดการสปรินท์ - เฉพาะแอดมิน */}
                 <Route
                   path="/sprints"
                   element={
@@ -136,41 +162,7 @@ const AppRoutes = () => {
                   }
                 />
 
-                {/* Test Files - accessible by Admin and Tester */}
-                <Route
-                  path="/test-files"
-                  element={
-                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
-                      <TestFiles />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/test-files/create/:sprintId"
-                  element={
-                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
-                      <CreateTestFile />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/test-files/:id"
-                  element={
-                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
-                      <TestFileDetail />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/test-files/:id/edit"
-                  element={
-                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
-                      <TestFileEdit />
-                    </ProtectedRoute>
-                  }
-                />
-
-                {/* Users - accessible by Admin only */}
+                {/* จัดการผู้ใช้ - เฉพาะแอดมิน */}
                 <Route
                   path="/users"
                   element={
@@ -204,16 +196,7 @@ const AppRoutes = () => {
                   }
                 />
 
-                <Route
-                  path="/profile"
-                  element={
-                    <ProtectedRoute>
-                      <Profile />
-                    </ProtectedRoute>
-                  }
-                />
-
-                {/* Action Logs - accessible by Admin only */}
+                {/* บันทึกการทำงาน - เฉพาะแอดมิน */}
                 <Route
                   path="/action-logs"
                   element={
@@ -223,7 +206,43 @@ const AppRoutes = () => {
                   }
                 />
 
-                {/* Catch all route - redirect to dashboard */}
+                {/* --- หน้าที่แอดมินและผู้ทดสอบเข้าถึงได้ --- */}
+                
+                {/* จัดการไฟล์ทดสอบ - แอดมินและผู้ทดสอบ */}
+                <Route
+                  path="/test-files"
+                  element={
+                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
+                      <TestFiles />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/test-files/create/:sprintId"
+                  element={
+                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
+                      <CreateTestFile />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/test-files/:id"
+                  element={
+                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
+                      <TestFileDetail />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/test-files/:id/edit"
+                  element={
+                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
+                      <TestFileEdit />
+                    </ProtectedRoute>
+                  }
+                />
+
+                {/* จัดการเส้นทางที่ไม่ได้ระบุ */}
                 <Route
                   path="*"
                   element={<Navigate to="/dashboard" replace />}
@@ -237,6 +256,7 @@ const AppRoutes = () => {
   );
 };
 
+// คอมโพเนนต์หลักของแอพพลิเคชัน
 export default function App() {
   return (
     <AuthProvider>

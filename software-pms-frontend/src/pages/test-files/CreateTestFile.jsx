@@ -10,19 +10,26 @@ const CreateTestFile = () => {
   const navigate = useNavigate();
   const { sprintId } = useParams();
   const { user } = useAuth();
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+
+  // สถานะของข้อมูลไฟล์และการอัพโหลด
   const [selectedFile, setSelectedFile] = useState(null);
-  const [fileError, setFileError] = useState(null);
   const [filename, setFilename] = useState("");
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [showErrorDialog, setShowErrorDialog] = useState(false);
+  const [isUpdateMode, setIsUpdateMode] = useState(false);
   const [pendingFileId, setPendingFileId] = useState(null);
+
+  // สถานะของข้อมูลที่มีอยู่
+  const [existingFiles, setExistingFiles] = useState([]);
   const [existingSprintName, setExistingSprintName] = useState(null);
   const [existingProjectName, setExistingProjectName] = useState(null);
-  const [existingFiles, setExistingFiles] = useState([]);
-  const [isUpdateMode, setIsUpdateMode] = useState(false); // เพิ่มสถานะสำหรับโหมดอัปเดต
 
+  // สถานะของการแสดงผล UI
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [fileError, setFileError] = useState(null);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [showErrorDialog, setShowErrorDialog] = useState(false);
+
+  // ดึงข้อมูลไฟล์ที่มีอยู่เมื่อคอมโพเนนต์โหลด
   useEffect(() => {
     const fetchExistingFiles = async () => {
       try {
@@ -37,6 +44,7 @@ const CreateTestFile = () => {
     fetchExistingFiles();
   }, [user.token]);
 
+  // ตรวจสอบว่าไฟล์มีอยู่แล้วหรือไม่
   const checkExistingFile = (file) => {
     const existingFile = existingFiles.find(
       (ef) => ef.original_filename === file.name && ef.status !== "Deleted"
@@ -44,10 +52,12 @@ const CreateTestFile = () => {
 
     if (existingFile) {
       if (existingFile.sprint_id === parseInt(sprintId)) {
+        // ไฟล์มีอยู่แล้วในสปรินต์เดียวกัน - แสดงหน้าต่างยืนยันการอัพเดต
         setPendingFileId(existingFile.file_id);
         setShowConfirmDialog(true);
         return "SAME_SPRINT";
       } else {
+        // ไฟล์มีอยู่แล้วในสปรินต์อื่น - แสดงหน้าต่างแจ้งเตือนข้อผิดพลาด
         setExistingSprintName(existingFile.sprint_name);
         setExistingProjectName(existingFile.project_name);
         setShowErrorDialog(true);
@@ -57,6 +67,7 @@ const CreateTestFile = () => {
     return "NEW_FILE";
   };
 
+  // การจัดการเมื่อเลือกไฟล์
   const handleFileChange = (e) => {
     const file = e.target.files[0];
     setFileError(null);
@@ -67,12 +78,14 @@ const CreateTestFile = () => {
       return;
     }
 
+    // ตรวจสอบประเภทไฟล์
     if (file.type !== "application/json") {
       setFileError("Only JSON files are allowed");
       setSelectedFile(null);
       return;
     }
 
+    // ตรวจสอบขนาดไฟล์
     if (file.size > 5 * 1024 * 1024) {
       setFileError("File size must be less than 5MB");
       setSelectedFile(null);
@@ -93,6 +106,7 @@ const CreateTestFile = () => {
     }
   };
 
+  // จัดการการอัพโหลดไฟล์
   const handleUpload = async () => {
     if (!selectedFile) {
       setFileError("Please select a file");
@@ -113,7 +127,7 @@ const CreateTestFile = () => {
     formData.append("filename", filename);
 
     try {
-      // Use the correct endpoint for update mode
+      // เลือก endpoint ตามโหมดการอัพโหลด (สร้างใหม่หรืออัพเดต)
       const endpoint = isUpdateMode
         ? `${API_BASE_URL}/api/test-files/upload/${pendingFileId}`
         : `${API_BASE_URL}/api/test-files/upload`;
@@ -125,6 +139,7 @@ const CreateTestFile = () => {
         },
       });
 
+      // นำทางไปยังหน้าแสดงรายละเอียดไฟล์หลังอัพโหลดสำเร็จ
       navigate(`/test-files/${response.data.file_id || pendingFileId}`);
     } catch (err) {
       if (err.response?.status === 409 && err.response.data.sameSprint) {
@@ -139,28 +154,41 @@ const CreateTestFile = () => {
     }
   };
 
+  // จัดการการส่งแบบฟอร์ม
   const handleSubmit = async (e) => {
     e.preventDefault();
     handleUpload();
   };
 
+  // จัดการการยืนยันการอัพเดตไฟล์ที่มีอยู่
   const handleConfirmUpdate = () => {
     setShowConfirmDialog(false);
-    setIsUpdateMode(true); // เปิดโหมดอัปเดตเมื่อผู้ใช้ยืนยัน
+    setIsUpdateMode(true);
+  };
+
+  // กลับไปยังหน้าเลือกไฟล์ทดสอบ
+  const handleGoBack = () => {
+    navigate("/test-files");
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div
+      className="min-h-screen bg-gray-50 flex flex-col"
+      data-cy="create-test-file-page"
+    >
       <div className="container mx-auto px-4 py-8 max-w-2xl">
+        {/* ส่วนหัวและปุ่มย้อนกลับ */}
         <button
-          onClick={() => navigate("/test-files")}
+          onClick={handleGoBack}
           className="flex items-center text-gray-600 hover:text-gray-800 mb-6 transition-colors"
+          data-cy="back-button"
         >
           <ChevronLeft className="mr-2" />
           <span className="font-medium">กลับหน้าเลือกไฟล์ทดสอบ</span>
         </button>
 
         <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
+          {/* ส่วนหัวของแบบฟอร์ม */}
           <div className="bg-blue-50 px-6 py-5 border-b border-blue-100">
             <h2 className="text-2xl font-bold text-gray-800 flex items-center">
               <FileUp className="mr-3 text-blue-600" />
@@ -168,15 +196,25 @@ const CreateTestFile = () => {
             </h2>
           </div>
 
-          <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          {/* แบบฟอร์มอัพโหลดไฟล์ */}
+          <form
+            onSubmit={handleSubmit}
+            className="p-6 space-y-6"
+            data-cy="upload-form"
+          >
+            {/* แสดงข้อความแจ้งเตือนข้อผิดพลาด */}
             {error && (
-              <div className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg flex items-center">
+              <div
+                className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg flex items-center"
+                data-cy="error-message"
+              >
                 <AlertTriangle className="mr-3 text-red-500" />
                 <span className="font-medium">{error}</span>
               </div>
             )}
 
             <div className="space-y-4">
+              {/* ส่วนป้อนชื่อไฟล์ */}
               <div>
                 <label
                   htmlFor="filename"
@@ -192,9 +230,11 @@ const CreateTestFile = () => {
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   placeholder="ระบุชื่อไฟล์"
                   required
+                  data-cy="filename-input"
                 />
               </div>
 
+              {/* ส่วนการอัพโหลดไฟล์ */}
               <div>
                 <label
                   htmlFor="testFile"
@@ -209,6 +249,7 @@ const CreateTestFile = () => {
                     accept=".json,application/json"
                     onChange={handleFileChange}
                     className="hidden"
+                    data-cy="file-input"
                   />
                   <label
                     htmlFor="testFile"
@@ -222,6 +263,7 @@ const CreateTestFile = () => {
                           : "border-gray-300 hover:border-blue-500 text-gray-600 hover:text-blue-700"
                       }
                     `}
+                    data-cy="file-drop-area"
                   >
                     <FileUp className="mr-3 w-6 h-6" />
                     <span className="text-sm font-medium">
@@ -231,8 +273,12 @@ const CreateTestFile = () => {
                     </span>
                   </label>
 
+                  {/* แสดงข้อความแจ้งเตือนข้อผิดพลาดของไฟล์ */}
                   {fileError && (
-                    <p className="mt-2 text-sm text-red-500 flex items-center">
+                    <p
+                      className="mt-2 text-sm text-red-500 flex items-center"
+                      data-cy="file-error"
+                    >
                       <AlertTriangle className="mr-2 w-4 h-4" />
                       {fileError}
                     </p>
@@ -245,6 +291,7 @@ const CreateTestFile = () => {
               </div>
             </div>
 
+            {/* ปุ่มการทำงาน */}
             <div className="flex space-x-4 pt-4">
               <button
                 type="submit"
@@ -257,6 +304,7 @@ const CreateTestFile = () => {
                       : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
                   }
                 `}
+                data-cy="submit-button"
               >
                 {loading
                   ? "กำลังอัพโหลด..."
@@ -266,11 +314,12 @@ const CreateTestFile = () => {
               </button>
               <button
                 type="button"
-                onClick={() => navigate("/test-files")}
+                onClick={handleGoBack}
                 className="
                   w-full py-3 rounded-lg text-gray-600 bg-gray-100 
                   hover:bg-gray-200 font-semibold transition-all duration-300
                 "
+                data-cy="cancel-button"
               >
                 ยกเลิก
               </button>
@@ -278,8 +327,12 @@ const CreateTestFile = () => {
           </form>
         </div>
 
+        {/* กล่องข้อความแจ้งเตือนไฟล์ซ้ำในสปรินต์อื่น */}
         {showErrorDialog && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            data-cy="error-dialog"
+          >
             <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
               <div className="px-6 py-4">
                 <div className="flex items-center mb-4">
@@ -290,7 +343,7 @@ const CreateTestFile = () => {
                 </div>
                 <p className="text-gray-600 whitespace-pre-line">
                   ไฟล์ทดสอบนี้ถูกอัพโหลดแล้วใน {existingSprintName} ในโปรเจกต์{" "}
-                  <span className="font-medium">{existingProjectName}{" "}</span>
+                  <span className="font-medium">{existingProjectName} </span>
                   ไม่สามารถอัพโหลดไฟล์เดียวกันในหลายสปรินต์ได้
                 </p>
               </div>
@@ -298,6 +351,7 @@ const CreateTestFile = () => {
                 <button
                   onClick={() => setShowErrorDialog(false)}
                   className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                  data-cy="error-dialog-close"
                 >
                   เข้าใจแล้ว
                 </button>
@@ -306,8 +360,12 @@ const CreateTestFile = () => {
           </div>
         )}
 
+        {/* กล่องข้อความยืนยันการอัพเดตไฟล์ */}
         {showConfirmDialog && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            data-cy="confirm-dialog"
+          >
             <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
               <div className="px-6 py-4">
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -322,12 +380,14 @@ const CreateTestFile = () => {
                 <button
                   onClick={() => setShowConfirmDialog(false)}
                   className="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
+                  data-cy="confirm-dialog-cancel"
                 >
                   ยกเลิก
                 </button>
                 <button
                   onClick={handleConfirmUpdate}
                   className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                  data-cy="confirm-dialog-update"
                 >
                   อัพเดตไฟล์
                 </button>

@@ -18,7 +18,10 @@ import { DayPicker } from "react-day-picker";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
+// =====================================
 // DateRangePickerModal Component
+// =====================================
+
 const DateRangePickerModal = ({
   isOpen,
   onClose,
@@ -26,12 +29,13 @@ const DateRangePickerModal = ({
   startDate,
   endDate,
 }) => {
+  // สถานะสำหรับเก็บค่าช่วงวันที่ได้เลือกไว้
   const [range, setRange] = useState({
     from: startDate ? new Date(startDate) : undefined,
     to: endDate ? new Date(endDate) : undefined,
   });
 
-  // Reset range when modal opens
+  // รีเซ็ตค่าช่วงวันที่เมื่อเปิด modal
   useEffect(() => {
     if (isOpen) {
       setRange({
@@ -41,9 +45,10 @@ const DateRangePickerModal = ({
     }
   }, [isOpen, startDate, endDate]);
 
+  // จัดการการยืนยันการเลือกวันที่และปรับเวลาให้เป็น timezone ของไทย
   const handleConfirm = () => {
     if (range?.from && range?.to) {
-      // Convert to Thailand timezone (UTC+7)
+      // แปลงเป็นเวลาของไทย (UTC+7)
       const adjustedFrom = setHours(range.from, 7);
       const adjustedTo = setHours(range.to, 7);
       onConfirm(adjustedFrom, adjustedTo);
@@ -58,6 +63,7 @@ const DateRangePickerModal = ({
     return `${month} ${year}`;
   };
 
+  // จัดการเมื่อมีการเลือกวันที่
   const handleRangeSelect = (newRange) => {
     // ถ้าคลิกวันเดียวกับ from ที่เลือกไว้ ให้ล้างค่า range
     if (
@@ -86,7 +92,10 @@ const DateRangePickerModal = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      data-cy="date-range-modal"
+    >
       <div className="bg-white rounded-xl shadow-xl p-6 max-w-4xl w-full mx-4">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-800">
@@ -95,6 +104,7 @@ const DateRangePickerModal = ({
           <button
             onClick={onClose}
             className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+            data-cy="close-date-picker"
           >
             <X className="w-5 h-5 text-gray-500" />
           </button>
@@ -108,7 +118,7 @@ const DateRangePickerModal = ({
             locale={th}
             numberOfMonths={2}
             disabled={[
-              { dayOfWeek: [0, 6] }, // Disable weekends
+              { dayOfWeek: [0, 6] }, // ปิดให้เลือกวันเสาร์-อาทิตย์
             ]}
             modifiers={{
               disabled: { dayOfWeek: [0, 6] },
@@ -139,6 +149,7 @@ const DateRangePickerModal = ({
           <button
             onClick={onClose}
             className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            data-cy="cancel-date-select"
           >
             ยกเลิก
           </button>
@@ -146,6 +157,7 @@ const DateRangePickerModal = ({
             onClick={handleConfirm}
             disabled={!range?.from || !range?.to}
             className="px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+            data-cy="confirm-date-select"
           >
             ยืนยัน
           </button>
@@ -155,15 +167,21 @@ const DateRangePickerModal = ({
   );
 };
 
+// =====================================
 // Main CreateProject Component
+// =====================================
+
 const CreateProject = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  // สถานะต่างๆ สำหรับจัดการแบบฟอร์ม
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
+  // ข้อมูลฟอร์มทั้งหมดของโปรเจกต์
   const [formData, setFormData] = useState({
     name: "",
     description: "",
@@ -172,6 +190,7 @@ const CreateProject = () => {
     photo: null,
   });
 
+  // ======== ฟังก์ชันสำหรับแสดงผลช่วงวันที่ ========
   const displayDateRange = () => {
     if (!formData.start_date || !formData.end_date) return "";
 
@@ -188,6 +207,9 @@ const CreateProject = () => {
     )} - ${formatToBuddhistYear(formData.end_date)}`;
   };
 
+  // ======== ฟังก์ชันสำหรับจัดการการกรอกข้อมูล ========
+
+  // อัปเดตข้อมูลในฟอร์มเมื่อมีการเปลี่ยนแปลง
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({
@@ -196,14 +218,17 @@ const CreateProject = () => {
     }));
   };
 
+  // จัดการการอัปโหลดรูปภาพ
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // ตรวจสอบขนาดไฟล์ต้องไม่เกิน 5MB
       if (file.size > 5 * 1024 * 1024) {
         setError("Image size must be less than 5MB");
         return;
       }
 
+      // ตรวจสอบประเภทไฟล์ต้องเป็นรูปภาพเท่านั้น
       if (!file.type.startsWith("image/")) {
         setError("Only image files are allowed");
         return;
@@ -218,6 +243,7 @@ const CreateProject = () => {
     }
   };
 
+  // ลบรูปภาพที่เลือกไว้
   const handleRemoveImage = () => {
     setFormData((prev) => ({
       ...prev,
@@ -226,12 +252,14 @@ const CreateProject = () => {
     setPreviewImage(null);
   };
 
+  // บันทึกข้อมูลโปรเจกต์
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
 
     try {
+      // สร้าง FormData สำหรับส่งข้อมูลพร้อมไฟล์
       const submitData = new FormData();
       Object.keys(formData).forEach((key) => {
         if (formData[key] !== null) {
@@ -239,6 +267,7 @@ const CreateProject = () => {
         }
       });
 
+      // ส่งข้อมูลไปยัง API
       const response = await axios.post(
         `${API_BASE_URL}/api/projects`,
         submitData,
@@ -250,6 +279,7 @@ const CreateProject = () => {
         }
       );
 
+      // นำทางไปยังหน้าโปรเจกต์ที่สร้างขึ้น
       navigate(`/projects/${response.data.project_id}`);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to create project");
@@ -258,27 +288,46 @@ const CreateProject = () => {
     }
   };
 
+  // ======== UI ของคอมโพเนนต์ ========
   return (
-    <div className="container mx-auto px-4 py-8 max-w-2xl">
+    <div
+      className="container mx-auto px-4 py-8 max-w-2xl"
+      data-cy="create-project-container"
+    >
+      {/* ปุ่มย้อนกลับ */}
       <button
         onClick={() => navigate("/projects")}
         className="group flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+        data-cy="back-button"
       >
         <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
         กลับไปที่หน้าเลือกโปรเจกต์
       </button>
 
       <div className="bg-white shadow-lg rounded-xl overflow-hidden">
+        {/* ส่วนหัวของแบบฟอร์ม */}
         <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100">
-          <h1 className="text-3xl font-bold text-gray-800 flex items-center gap-3">
+          <h1
+            className="text-3xl font-bold text-gray-800 flex items-center gap-3"
+            data-cy="form-title"
+          >
             <Plus className="w-8 h-8 text-blue-500" />
             สร้างโปรเจกต์ใหม่
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+        {/* แบบฟอร์มสร้างโปรเจกต์ */}
+        <form
+          onSubmit={handleSubmit}
+          className="p-6 space-y-6"
+          data-cy="create-project-form"
+        >
+          {/* แสดงข้อความผิดพลาด (ถ้ามี) */}
           {error && (
-            <div className="bg-red-50 border border-red-200 p-4 rounded-lg flex items-center gap-3">
+            <div
+              className="bg-red-50 border border-red-200 p-4 rounded-lg flex items-center gap-3"
+              data-cy="error-message"
+            >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
                 className="h-6 w-6 text-red-500"
@@ -298,7 +347,7 @@ const CreateProject = () => {
           )}
 
           <div className="space-y-6">
-            {/* Image Upload Section */}
+            {/* ส่วนอัปโหลดรูปภาพ */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 font-medium text-gray-700">
                 <Image className="w-5 h-5 text-blue-500" />
@@ -307,7 +356,10 @@ const CreateProject = () => {
               <div className="flex items-center justify-center w-full">
                 <div className="w-full">
                   {previewImage ? (
-                    <div className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100">
+                    <div
+                      className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100"
+                      data-cy="image-preview"
+                    >
                       <img
                         src={previewImage}
                         alt="Preview"
@@ -317,12 +369,16 @@ const CreateProject = () => {
                         type="button"
                         onClick={handleRemoveImage}
                         className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                        data-cy="remove-image"
                       >
                         <X className="w-4 h-4" />
                       </button>
                     </div>
                   ) : (
-                    <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors">
+                    <label
+                      className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+                      data-cy="image-upload-area"
+                    >
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
                         <Upload className="w-12 h-12 text-gray-400 mb-3" />
                         <p className="mb-2 text-sm text-gray-500">
@@ -340,6 +396,7 @@ const CreateProject = () => {
                         className="hidden"
                         accept="image/*"
                         onChange={handleImageChange}
+                        data-cy="image-upload-input"
                       />
                     </label>
                   )}
@@ -347,7 +404,7 @@ const CreateProject = () => {
               </div>
             </div>
 
-            {/* Project Name */}
+            {/* ชื่อโปรเจกต์ */}
             <div className="space-y-2">
               <label
                 htmlFor="name"
@@ -365,10 +422,11 @@ const CreateProject = () => {
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
                 placeholder="ระบุชื่อโปรเจกต์"
+                data-cy="project-name-input"
               />
             </div>
 
-            {/* Description */}
+            {/* รายละเอียดโปรเจกต์ */}
             <div className="space-y-2">
               <label
                 htmlFor="description"
@@ -384,10 +442,11 @@ const CreateProject = () => {
                 onChange={handleChange}
                 className="w-full p-3 border border-gray-300 rounded-lg h-32 focus:ring-2 focus:ring-blue-200 transition-all"
                 placeholder="ระบุรายละเอียดโปรเจกต์"
+                data-cy="project-description-input"
               />
             </div>
 
-            {/* Date Range Picker */}
+            {/* ตัวเลือกช่วงเวลาโปรเจกต์ */}
             <div className="space-y-2">
               <label className="flex items-center gap-2 font-medium text-gray-700">
                 <Calendar className="w-5 h-5 text-purple-500" />
@@ -401,17 +460,19 @@ const CreateProject = () => {
                   onClick={() => setShowDatePicker(true)}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer"
                   placeholder="เลือกระยะเวลาโปรเจกต์"
+                  data-cy="date-range-input"
                 />
               </div>
             </div>
           </div>
 
-          {/* Form Buttons */}
+          {/* ปุ่มสร้างและยกเลิก */}
           <div className="flex space-x-4 pt-6">
             <button
               type="submit"
               disabled={loading}
               className="flex-1 flex items-center justify-center gap-2 px-6 py-3 text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 transition-colors"
+              data-cy="submit-button"
             >
               {loading ? (
                 <svg
@@ -443,6 +504,7 @@ const CreateProject = () => {
               type="button"
               onClick={() => navigate("/projects")}
               className="flex-1 px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              data-cy="cancel-button"
             >
               ยกเลิก
             </button>
@@ -450,7 +512,7 @@ const CreateProject = () => {
         </form>
       </div>
 
-      {/* Date Range Picker Modal */}
+      {/* โมดอลเลือกช่วงวันที่ */}
       <DateRangePickerModal
         isOpen={showDatePicker}
         onClose={() => setShowDatePicker(false)}

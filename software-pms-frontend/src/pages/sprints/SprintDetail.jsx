@@ -13,25 +13,32 @@ import {
   X,
 } from "lucide-react";
 
+// กำหนด URL หลักของ API จาก environment variables
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const SprintDetail = () => {
+  // ส่วนของการกำหนดตัวแปรและ state
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  // State หลักสำหรับข้อมูลและสถานะของหน้า
   const [sprint, setSprint] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [isLatestSprint, setIsLatestSprint] = useState(false);
+
+  // State สำหรับ Modal ต่างๆ
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showEditWarningModal, setShowEditWarningModal] = useState(false);
   const [showDeleteWarningModal, setShowDeleteWarningModal] = useState(false);
   const [deleteWarningMessage, setDeleteWarningMessage] = useState("");
-  const [isLatestSprint, setIsLatestSprint] = useState(false);
 
+  // ดึงข้อมูล Sprint เมื่อ Component โหลด
   useEffect(() => {
     const fetchSprintData = async () => {
       try {
-        // Fetch current sprint
+        // ดึงข้อมูล Sprint ปัจจุบัน
         const sprintResponse = await axios.get(
           `${API_BASE_URL}/api/sprints/${id}`,
           {
@@ -41,7 +48,7 @@ const SprintDetail = () => {
         const sprintData = sprintResponse.data;
         setSprint(sprintData);
 
-        // Fetch all sprints for the project to check if this is the latest
+        // ดึงข้อมูล Sprint ทั้งหมดของโปรเจกต์เพื่อตรวจสอบว่าเป็น Sprint ล่าสุดหรือไม่
         const allSprintsResponse = await axios.get(
           `${API_BASE_URL}/api/sprints/date-ranges?project_id=${sprintData.project_id}`,
           {
@@ -51,7 +58,7 @@ const SprintDetail = () => {
 
         const sprints = allSprintsResponse.data;
 
-        // Check if this is the latest sprint
+        // ตรวจสอบว่าเป็น Sprint ล่าสุดหรือไม่โดยเปรียบเทียบหมายเลข Sprint
         const currentSprintNumber = parseInt(sprintData.name.split(" ")[1]);
         const latestSprintNumber = Math.max(
           ...sprints.map((s) => parseInt(s.name.split(" ")[1]))
@@ -67,13 +74,33 @@ const SprintDetail = () => {
     if (user && id) fetchSprintData();
   }, [id, user]);
 
+  // ฟังก์ชันจัดการการนำทาง
+  const handleBackToSprints = () => {
+    navigate("/sprints", {
+      state: {
+        selectedProjectId: sprint.project_id,
+      },
+      replace: true,
+    });
+  };
+
+  // ฟังก์ชันจัดการการแก้ไข Sprint
+  const handleEditClick = () => {
+    if (!isLatestSprint) {
+      setShowEditWarningModal(true);
+    } else {
+      navigate(`/sprints/${id}/edit`);
+    }
+  };
+
+  // ฟังก์ชันจัดการการลบ Sprint
   const handleDelete = async () => {
     try {
       await axios.delete(`${API_BASE_URL}/api/sprints/${id}`, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
-      // Navigate back to sprints page with the project selection preserved
+      // กลับไปยังหน้า Sprints โดยเก็บ project ที่เลือกไว้
       navigate("/sprints", {
         state: {
           selectedProjectId: sprint.project_id,
@@ -89,61 +116,66 @@ const SprintDetail = () => {
     }
   };
 
-  const handleBackToSprints = () => {
-    navigate("/sprints", {
-      state: {
-        selectedProjectId: sprint.project_id,
-      },
-      replace: true,
-    });
-  };
-
-  const handleEditClick = () => {
-    if (!isLatestSprint) {
-      setShowEditWarningModal(true);
-    } else {
-      navigate(`/sprints/${id}/edit`);
-    }
-  };
-
+  // ส่วนแสดงผลกรณีกำลังโหลดข้อมูล
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div
+        className="flex justify-center items-center min-h-screen"
+        data-cy="loading-spinner"
+      >
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-blue-500 border-t-transparent"></div>
       </div>
     );
   }
 
+  // ส่วนแสดงผลกรณีเกิดข้อผิดพลาด
   if (error) {
     return (
-      <div className="flex justify-center items-center min-h-screen p-4">
+      <div
+        className="flex justify-center items-center min-h-screen p-4"
+        data-cy="error-container"
+      >
         <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
           <div className="text-center">
             <AlertCircle className="mx-auto w-12 h-12 text-red-500 mb-4" />
-            <p className="text-red-600 font-medium">{error}</p>
+            <p className="text-red-600 font-medium" data-cy="error-message">
+              {error}
+            </p>
           </div>
         </div>
       </div>
     );
   }
 
+  // ส่วนแสดงผลกรณีไม่พบข้อมูล Sprint
   if (!sprint) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
+      <div
+        className="flex justify-center items-center min-h-screen"
+        data-cy="sprint-not-found"
+      >
         <p className="text-gray-600 font-medium">Sprint not found</p>
       </div>
     );
   }
 
+  // ส่วนแสดงผลหลักเมื่อโหลดข้อมูลสำเร็จ
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6">
+    <div
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 p-4 md:p-6"
+      data-cy="sprint-detail-page"
+    >
       <div className="container mx-auto max-w-5xl">
-        {/* Navigation Bar */}
-        <div className="bg-white rounded-xl shadow-sm mb-6 p-4">
+        {/* แถบนำทาง */}
+        <div
+          className="bg-white rounded-xl shadow-sm mb-6 p-4"
+          data-cy="navigation-bar"
+        >
           <div className="flex justify-between items-center">
             <button
               onClick={handleBackToSprints}
               className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              data-cy="back-button"
             >
               <ArrowLeft className="w-5 h-5" />
               <span className="font-medium">กลับไปที่หน้าเลือกสปรินต์</span>
@@ -152,6 +184,7 @@ const SprintDetail = () => {
               <button
                 onClick={handleEditClick}
                 className="px-4 py-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors flex items-center gap-2"
+                data-cy="edit-sprint-button"
               >
                 <Edit className="w-4 h-4" />
                 <span>แก้ไขสปรินต์</span>
@@ -159,6 +192,7 @@ const SprintDetail = () => {
               <button
                 onClick={() => setShowDeleteModal(true)}
                 className="px-4 py-2 bg-red-50 text-red-600 rounded-lg hover:bg-red-100 transition-colors flex items-center gap-2"
+                data-cy="delete-sprint-button"
               >
                 <Trash2 className="w-4 h-4" />
                 <span>ลบ</span>
@@ -167,30 +201,48 @@ const SprintDetail = () => {
           </div>
         </div>
 
-        {/* Main Content */}
-        <div className="bg-white rounded-xl shadow-lg mb-6">
+        {/* เนื้อหาหลัก */}
+        <div
+          className="bg-white rounded-xl shadow-lg mb-6"
+          data-cy="sprint-details-container"
+        >
           <div className="p-6">
-            {/* Header */}
-            <div className="mb-8">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            {/* ส่วนหัว */}
+            <div className="mb-8" data-cy="sprint-header">
+              <h1
+                className="text-3xl font-bold text-gray-900 mb-2"
+                data-cy="sprint-name"
+              >
                 {sprint.name}
               </h1>
               <div className="flex items-center gap-2 text-gray-600">
                 <FileText className="w-5 h-5" />
-                <span className="text-lg">Project: {sprint.project_name}</span>
+                <span className="text-lg" data-cy="project-name">
+                  Project: {sprint.project_name}
+                </span>
               </div>
             </div>
 
-            {/* Sprint Information Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              <div className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
+            {/* ตารางข้อมูล Sprint */}
+            <div
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+              data-cy="sprint-info-grid"
+            >
+              {/* ข้อมูลวันที่เริ่มต้น */}
+              <div
+                className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300"
+                data-cy="start-date-card"
+              >
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-blue-100 rounded-lg">
                     <Calendar className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">วันที่เริ่มต้น</p>
-                    <p className="font-semibold text-gray-900">
+                    <p
+                      className="font-semibold text-gray-900"
+                      data-cy="sprint-start-date"
+                    >
                       {new Date(sprint.start_date).toLocaleDateString("th-TH", {
                         day: "2-digit",
                         month: "2-digit",
@@ -201,14 +253,21 @@ const SprintDetail = () => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
+              {/* ข้อมูลวันที่สิ้นสุด */}
+              <div
+                className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300"
+                data-cy="end-date-card"
+              >
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-blue-100 rounded-lg">
                     <Calendar className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">วันที่สิ้นสุด</p>
-                    <p className="font-semibold text-gray-900">
+                    <p
+                      className="font-semibold text-gray-900"
+                      data-cy="sprint-end-date"
+                    >
                       {new Date(sprint.end_date).toLocaleDateString("th-TH", {
                         day: "2-digit",
                         month: "2-digit",
@@ -219,14 +278,21 @@ const SprintDetail = () => {
                 </div>
               </div>
 
-              <div className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300">
+              {/* ข้อมูลผู้สร้าง */}
+              <div
+                className="bg-gray-50 rounded-xl p-6 hover:shadow-md transition-shadow duration-300"
+                data-cy="created-by-card"
+              >
                 <div className="flex items-center gap-4">
                   <div className="p-3 bg-green-100 rounded-lg">
                     <Users className="w-6 h-6 text-green-600" />
                   </div>
                   <div>
                     <p className="text-sm text-gray-500">สร้างโดย</p>
-                    <p className="font-semibold text-gray-900">
+                    <p
+                      className="font-semibold text-gray-900"
+                      data-cy="sprint-created-by"
+                    >
                       {sprint.created_by}
                     </p>
                   </div>
@@ -236,9 +302,12 @@ const SprintDetail = () => {
           </div>
         </div>
 
-        {/* Delete Confirmation Modal */}
+        {/* Modal ยืนยันการลบ */}
         {showDeleteModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            data-cy="delete-confirmation-modal"
+          >
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="mb-6">
@@ -250,7 +319,10 @@ const SprintDetail = () => {
                       ลบสปรินต์
                     </h2>
                   </div>
-                  <p className="text-gray-600">
+                  <p
+                    className="text-gray-600"
+                    data-cy="delete-confirmation-message"
+                  >
                     คุณแน่ใจหรือไม่ว่าต้องการลบสปรินต์นี้?
                     การกระทำนี้ไม่สามารถย้อนกลับได้
                     และข้อมูลที่เกี่ยวข้องทั้งหมดจะถูกลบอย่างถาวร
@@ -260,12 +332,14 @@ const SprintDetail = () => {
                   <button
                     onClick={() => setShowDeleteModal(false)}
                     className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+                    data-cy="cancel-delete-button"
                   >
                     ยกเลิก
                   </button>
                   <button
                     onClick={handleDelete}
                     className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                    data-cy="confirm-delete-button"
                   >
                     <Trash2 className="w-4 h-4" />
                     ลบสปรินต์
@@ -276,9 +350,12 @@ const SprintDetail = () => {
           </div>
         )}
 
-        {/* Edit Warning Modal */}
+        {/* Modal แจ้งเตือนการแก้ไข */}
         {showEditWarningModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            data-cy="edit-warning-modal"
+          >
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="mb-6">
@@ -294,11 +371,12 @@ const SprintDetail = () => {
                     <button
                       onClick={() => setShowEditWarningModal(false)}
                       className="text-gray-500 hover:text-gray-700"
+                      data-cy="close-edit-warning-button"
                     >
                       <X className="w-6 h-6" />
                     </button>
                   </div>
-                  <p className="text-gray-600">
+                  <p className="text-gray-600" data-cy="edit-warning-message">
                     สามารถแก้ไขได้เฉพาะสปรินต์ล่าสุดเท่านั้น
                     สปรินต์นี้ไม่สามารถแก้ไขได้เนื่องจากมีสปรินต์ใหม่กว่าภายในโปรเจกต์
                   </p>
@@ -307,6 +385,7 @@ const SprintDetail = () => {
                   <button
                     onClick={() => setShowEditWarningModal(false)}
                     className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                    data-cy="close-edit-warning-modal-button"
                   >
                     ปิด
                   </button>
@@ -316,9 +395,12 @@ const SprintDetail = () => {
           </div>
         )}
 
-        {/* Delete Warning Modal */}
+        {/* Modal แจ้งเตือนเมื่อลบไม่สำเร็จ */}
         {showDeleteWarningModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div
+            className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
+            data-cy="delete-warning-modal"
+          >
             <div className="bg-white rounded-xl shadow-xl max-w-md w-full">
               <div className="p-6">
                 <div className="mb-6">
@@ -334,16 +416,20 @@ const SprintDetail = () => {
                     <button
                       onClick={() => setShowDeleteWarningModal(false)}
                       className="text-gray-500 hover:text-gray-700"
+                      data-cy="close-delete-warning-button"
                     >
                       <X className="w-6 h-6" />
                     </button>
                   </div>
-                  <p className="text-gray-600">{deleteWarningMessage}</p>
+                  <p className="text-gray-600" data-cy="delete-warning-message">
+                    {deleteWarningMessage}
+                  </p>
                 </div>
                 <div className="flex justify-end">
                   <button
                     onClick={() => setShowDeleteWarningModal(false)}
                     className="px-4 py-2 bg-gray-100 text-gray-600 rounded-lg hover:bg-gray-200 transition-colors"
+                    data-cy="close-delete-warning-modal-button"
                   >
                     ปิด
                   </button>

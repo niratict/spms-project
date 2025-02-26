@@ -9,8 +9,9 @@ import {
   ChevronUp,
 } from "lucide-react";
 
+// คอมโพเนนต์สำหรับแสดงสถิติการทดสอบจากไฟล์ JSON
 const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
-  // Aggregate stats from all JSON files
+  // คำนวณสถิติรวมจากไฟล์ทั้งหมด
   const aggregateStats = testFiles.reduce(
     (acc, file) => {
       try {
@@ -40,7 +41,7 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
     }
   );
 
-  // Calculate pass and fail rates
+  // คำนวณอัตราส่วนการผ่านและล้มเหลว
   const passRate =
     aggregateStats.totalTests > 0
       ? (
@@ -57,44 +58,75 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
         ).toFixed(1)
       : 0;
 
+  // กำหนดข้อมูลสถิติที่จะแสดงในการ์ด
   const stats = [
     {
       icon: <FileText className="w-8 h-8 text-teal-500" />,
       value: aggregateStats.totalSuites,
       label: "ชุดทดสอบ",
+      dataCy: "test-suites",
     },
     {
       icon: <CheckCircle className="w-8 h-8 text-green-500" />,
       value: aggregateStats.totalPasses,
       label: "การทดสอบที่ผ่าน",
+      dataCy: "tests-passed",
     },
     {
       icon: <XCircle className="w-8 h-8 text-red-500" />,
       value: aggregateStats.totalFailures,
       label: "การทดสอบที่ผิดพลาด",
+      dataCy: "tests-failed",
     },
     {
       icon: <Beaker className="w-8 h-8 text-blue-500" />,
       value: aggregateStats.totalTests,
       label: "การทดสอบทั้งหมด",
+      dataCy: "tests-total",
     },
     {
       icon: <BarChart2 className="w-8 h-8 text-green-500" />,
       value: `${passRate}%`,
       label: "อัตราการผ่าน",
+      dataCy: "pass-rate",
     },
     {
       icon: <BarChart2 className="w-8 h-8 text-red-500" />,
       value: `${failRate}%`,
       label: "อัตราการผิดพลาด",
+      dataCy: "fail-rate",
     },
   ];
 
+  // คอมโพเนนต์ย่อยสำหรับแสดงการ์ดสถิติแต่ละรายการ
+  const StatCard = ({ icon, value, label, dataCy }) => (
+    <div
+      className="bg-gray-50 rounded-xl p-6 flex items-center space-x-4 hover:shadow-md transition-all"
+      data-cy={`stat-card-${dataCy}`}
+    >
+      {icon}
+      <div>
+        <div
+          className="text-3xl font-bold text-gray-800"
+          data-cy={`stat-value-${dataCy}`}
+        >
+          {value}
+        </div>
+        <div className="text-sm text-gray-500">{label}</div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden">
+    <div
+      className="bg-white rounded-xl shadow-md overflow-hidden"
+      data-cy="test-stats-dashboard"
+    >
+      {/* ส่วนหัวที่มีปุ่มเปิด/ปิดแผงควบคุม */}
       <button
         onClick={onToggle}
         className="w-full p-4 flex items-center justify-between bg-gray-50 hover:bg-gray-100 transition-colors"
+        data-cy="toggle-dashboard"
       >
         <span className="text-2xl font-bold text-gray-700 flex items-center gap-2">
           <BarChart2 className="w-6 h-6 mr-1 text-blue-500" />
@@ -106,21 +138,19 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
           <ChevronDown className="w-5 h-5 text-gray-500" />
         )}
       </button>
-      
+
+      {/* ส่วนแสดงข้อมูลสถิติ */}
       {isVisible && (
-        <div className="p-6">
+        <div className="p-6" data-cy="stats-content">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
             {stats.map((stat, index) => (
-              <div
+              <StatCard
                 key={index}
-                className="bg-gray-50 rounded-xl p-6 flex items-center space-x-4 hover:shadow-md transition-all"
-              >
-                {stat.icon}
-                <div>
-                  <div className="text-3xl font-bold text-gray-800">{stat.value}</div>
-                  <div className="text-sm text-gray-500">{stat.label}</div>
-                </div>
-              </div>
+                icon={stat.icon}
+                value={stat.value}
+                label={stat.label}
+                dataCy={stat.dataCy}
+              />
             ))}
           </div>
         </div>
