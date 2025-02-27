@@ -18,7 +18,7 @@ const ProjectStatusBadge = ({ status }) => {
   return (
     <span
       data-cy="project-status-badge"
-      className={`px-3 py-1 rounded-full text-xs font-medium ${
+      className={`px-2 py-1 text-xs sm:px-3 sm:py-1 rounded-full font-medium ${
         statusColors[status] || "bg-gray-100 text-gray-800"
       }`}
     >
@@ -70,7 +70,7 @@ const Projects = () => {
         className="flex justify-center items-center h-screen"
         data-cy="loading-spinner"
       >
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-10 w-10 sm:h-16 sm:w-16 border-t-4 border-blue-500"></div>
       </div>
     );
   }
@@ -79,7 +79,7 @@ const Projects = () => {
   if (error) {
     return (
       <div
-        className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded relative"
+        className="bg-red-50 border border-red-200 text-red-800 px-3 py-2 sm:px-4 sm:py-3 rounded relative"
         role="alert"
         data-cy="error-message"
       >
@@ -90,42 +90,45 @@ const Projects = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 p-8" data-cy="projects-page">
+    <div
+      className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6 lg:p-8"
+      data-cy="projects-page"
+    >
       <div className="container mx-auto max-w-7xl">
         {/* ส่วนหัวของหน้า */}
-        <div className="flex justify-between items-center mb-8">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-6 sm:mb-8">
           <h1
-            className="text-3xl font-bold text-gray-900 flex items-center"
+            className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center"
             data-cy="page-title"
           >
-            <FolderKanban className="w-10 h-10 mr-4 text-blue-600" />
+            <FolderKanban className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 mr-2 sm:mr-3 md:mr-4 text-blue-600" />
             จัดการโปรเจกต์
           </h1>
           <button
             onClick={handleCreateProject}
-            className="flex items-center bg-green-500 text-white px-4 py-2 rounded-lg hover:bg-green-600 transition-colors"
+            className="w-full sm:w-auto flex items-center justify-center bg-green-500 text-white px-3 py-2 sm:px-4 sm:py-2 rounded-lg hover:bg-green-600 transition-colors text-sm sm:text-base"
             data-cy="create-project-button"
           >
-            <Plus className="mr-2" />
+            <Plus className="mr-1 sm:mr-2 w-4 h-4 sm:w-5 sm:h-5" />
             สร้างโปรเจกต์ใหม่
           </button>
         </div>
 
         {/* แสดงรายการโปรเจกต์ */}
         <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
           data-cy="projects-grid"
         >
           {projects.map((project) => (
             <div
               key={project.project_id}
-              className="bg-white shadow-lg rounded-xl overflow-hidden hover:shadow-xl transition-shadow duration-300"
+              className="bg-white shadow rounded-xl overflow-hidden hover:shadow-lg transition-shadow duration-300"
               data-cy={`project-card-${project.project_id}`}
             >
-              <div className="p-6">
-                <div className="flex justify-between items-start mb-4">
+              <div className="p-4 sm:p-6">
+                <div className="flex justify-between items-start mb-3 sm:mb-4">
                   <h2
-                    className="text-2xl font-bold text-gray-800 line-clamp-1"
+                    className="text-xl sm:text-2xl font-bold text-gray-800 line-clamp-1 break-words pr-2"
                     data-cy="project-name"
                   >
                     {project.name}
@@ -134,7 +137,7 @@ const Projects = () => {
                 </div>
 
                 <p
-                  className="text-gray-600 mb-4 line-clamp-1"
+                  className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 line-clamp-2"
                   data-cy="project-description"
                 >
                   {project.description}
@@ -143,11 +146,11 @@ const Projects = () => {
                 <div className="flex justify-between space-x-2">
                   <button
                     onClick={() => handleViewDetails(project.project_id)}
-                    className="flex-1 flex items-center justify-center bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600 transition-colors"
+                    className="flex-1 flex items-center justify-center bg-blue-500 text-white px-3 py-2 rounded text-sm sm:text-base hover:bg-blue-600 transition-colors"
                     data-cy="view-details-button"
                   >
-                    <Eye className="w-5 h-5 mr-2" />
-                    ดูรายละเอียดเพิ่มเติม
+                    <Eye className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+                    <span className="truncate">ดูรายละเอียดเพิ่มเติม</span>
                   </button>
                 </div>
               </div>
@@ -158,16 +161,18 @@ const Projects = () => {
         {/* แสดงเมื่อไม่มีโปรเจกต์ */}
         {projects.length === 0 && (
           <div
-            className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
+            className="flex flex-col items-center justify-center p-4 sm:p-6 md:p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
             data-cy="empty-projects"
           >
-            <h2 className="text-2xl text-gray-600 mb-4">
+            <h2 className="text-xl sm:text-2xl text-gray-600 mb-2 sm:mb-4 text-center">
               ยังไม่มีการสร้างโปรเจกต์
             </h2>
-            <p className="text-gray-500 mb-6">สร้างโปรเจกต์แรกเพื่อเริ่มต้น</p>
+            <p className="text-gray-500 mb-4 sm:mb-6 text-center text-sm sm:text-base">
+              สร้างโปรเจกต์แรกเพื่อเริ่มต้น
+            </p>
             <button
               onClick={handleCreateProject}
-              className="bg-green-500 text-white px-6 py-3 rounded-lg hover:bg-green-600 transition-colors"
+              className="bg-green-500 text-white px-4 py-2 sm:px-6 sm:py-3 rounded-lg hover:bg-green-600 transition-colors text-sm sm:text-base"
               data-cy="create-first-project-button"
             >
               สร้างโปรเจกต์

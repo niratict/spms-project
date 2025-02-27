@@ -148,11 +148,11 @@ const UserDetail = () => {
   if (!hasPermission) {
     return (
       <div
-        className="text-center p-6 min-h-screen bg-gray-100 flex items-center justify-center"
+        className="text-center p-4 sm:p-6 min-h-screen bg-gray-100 flex items-center justify-center"
         data-cy="access-denied"
       >
-        <div className="bg-white p-8 rounded-xl shadow-lg">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">
+        <div className="bg-white p-4 sm:p-8 rounded-xl shadow-lg w-full max-w-md">
+          <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-4">
             ไม่มีสิทธิ์เข้าถึง
           </h2>
           <p className="text-gray-600">คุณไม่มีสิทธิ์ในการดูโปรไฟล์นี้</p>
@@ -164,19 +164,22 @@ const UserDetail = () => {
   // แสดงสถานะโหลดและข้อผิดพลาด
   if (loading)
     return (
-      <div className="text-center p-6" data-cy="loading-state">
+      <div className="text-center p-4 sm:p-6" data-cy="loading-state">
         กำลังโหลด...
       </div>
     );
   if (error)
     return (
-      <div className="text-center text-red-500 p-6" data-cy="error-state">
+      <div
+        className="text-center text-red-500 p-4 sm:p-6"
+        data-cy="error-state"
+      >
         {error}
       </div>
     );
   if (!userData)
     return (
-      <div className="text-center p-6" data-cy="no-user-state">
+      <div className="text-center p-4 sm:p-6" data-cy="no-user-state">
         ไม่พบผู้ใช้
       </div>
     );
@@ -218,49 +221,55 @@ const UserDetail = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-100 p-6" data-cy="user-detail-page">
-      <div className="container mx-auto max-w-4xl space-y-6">
+    <div
+      className="min-h-screen bg-gray-100 p-3 sm:p-4 md:p-6"
+      data-cy="user-detail-page"
+    >
+      <div className="container mx-auto max-w-4xl space-y-4 sm:space-y-6">
         {/* ปุ่มย้อนกลับ */}
         <button
           onClick={() => navigate("/users/")}
-          className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors mb-4"
+          className="flex items-center gap-1 sm:gap-2 text-gray-600 hover:text-blue-600 transition-colors mb-2 sm:mb-4"
           data-cy="back-button"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
           <span>ย้อนกลับ</span>
         </button>
 
         {/* การ์ดโปรไฟล์ผู้ใช้ */}
         <div
-          className="bg-white rounded-2xl shadow-lg overflow-hidden"
+          className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg overflow-hidden"
           data-cy="user-profile-card"
         >
           {/* ส่วนหัวโปรไฟล์ */}
-          <div className="p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-            <h1 className="text-3xl font-bold" data-cy="user-name">
+          <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <h1
+              className="text-xl sm:text-2xl md:text-3xl font-bold break-words"
+              data-cy="user-name"
+            >
               {userData.name}
             </h1>
           </div>
 
           {/* ส่วนของปุ่มการทำงาน */}
-          <div className="p-6">
-            <div className="flex flex-wrap justify-center md:justify-start gap-4 mb-6">
+          <div className="p-4 sm:p-6">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 mb-4 sm:mb-6">
               {canEdit && (
                 <>
                   <button
                     onClick={() => navigate(`/users/${id}/edit`)}
-                    className="btn-primary flex items-center space-x-2"
+                    className="btn-primary flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base"
                     data-cy="edit-profile-button"
                   >
-                    <Edit className="w-5 h-5" />
+                    <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>แก้ไขโปรไฟล์</span>
                   </button>
                   <button
                     onClick={() => setShowPasswordModal(true)}
-                    className="btn-secondary flex items-center space-x-2"
+                    className="btn-secondary flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base"
                     data-cy="change-password-button"
                   >
-                    <KeyRound className="w-5 h-5" />
+                    <KeyRound className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>เปลี่ยนรหัสผ่าน</span>
                   </button>
                 </>
@@ -268,10 +277,10 @@ const UserDetail = () => {
               {canDelete && (
                 <button
                   onClick={() => setShowDeleteModal(true)}
-                  className="btn-danger flex items-center space-x-2"
+                  className="btn-danger flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base"
                   data-cy="delete-user-button"
                 >
-                  <Trash2 className="w-5 h-5" />
+                  <Trash2 className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span>ลบผู้ใช้</span>
                 </button>
               )}
@@ -279,27 +288,29 @@ const UserDetail = () => {
 
             {/* ส่วนแสดงรายละเอียดผู้ใช้ */}
             <div
-              className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-2xl shadow-lg overflow-hidden"
+              className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg overflow-hidden"
               data-cy="user-details-section"
             >
-              <div className="p-6 bg-white/70 backdrop-blur-sm">
-                <h2 className="text-2xl font-bold text-blue-800 mb-6 flex items-center">
-                  <Shield className="mr-3 text-blue-600" />
+              <div className="p-4 sm:p-6 bg-white/70 backdrop-blur-sm">
+                <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4 sm:mb-6 flex items-center">
+                  <Shield className="mr-2 sm:mr-3 text-blue-600 w-5 h-5 sm:w-6 sm:h-6" />
                   ข้อมูลผู้ใช้
                 </h2>
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
                   {userDetailItems.map((detail, index) => (
                     <div
                       key={index}
-                      className="flex items-center space-x-4 p-4 bg-white rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all"
+                      className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all"
                       data-cy={detail.dataCy}
                     >
-                      <div className="p-3 bg-blue-50 rounded-full">
+                      <div className="p-2 sm:p-3 bg-blue-50 rounded-full flex-shrink-0">
                         {detail.icon}
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-500">{detail.label}</p>
-                        <p className="font-semibold text-gray-800">
+                      <div className="min-w-0 flex-1">
+                        <p className="text-xs sm:text-sm text-gray-500">
+                          {detail.label}
+                        </p>
+                        <p className="font-semibold text-gray-800 text-sm sm:text-base break-words">
                           {detail.value}
                         </p>
                       </div>
@@ -316,33 +327,35 @@ const UserDetail = () => {
         <Modal
           isOpen={showDeleteModal}
           onRequestClose={() => setShowDeleteModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           overlayClassName="fixed inset-0 bg-black/50"
           data-cy="delete-user-modal"
         >
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl max-w-md w-full p-4 sm:p-6 relative">
             <button
               onClick={() => setShowDeleteModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-800"
               data-cy="close-delete-modal"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <h2 className="text-2xl font-bold text-red-600 mb-4">ลบผู้ใช้</h2>
-            <p className="text-gray-600 mb-6">
+            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-3 sm:mb-4">
+              ลบผู้ใช้
+            </h2>
+            <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
               คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?
             </p>
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-end space-x-2 sm:space-x-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
+                className="bg-gray-200 text-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
                 data-cy="cancel-delete"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={handleDelete}
-                className="bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                className="bg-red-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
                 data-cy="confirm-delete"
               >
                 ยืนยันการลบ
@@ -355,35 +368,35 @@ const UserDetail = () => {
         <Modal
           isOpen={showPasswordModal}
           onRequestClose={() => setShowPasswordModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
           overlayClassName="fixed inset-0 bg-black/50"
           data-cy="change-password-modal"
         >
-          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 relative">
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl max-w-md w-full p-4 sm:p-6 relative">
             <button
               onClick={() => setShowPasswordModal(false)}
-              className="absolute top-4 right-4 text-gray-500 hover:text-gray-800"
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-800"
               data-cy="close-password-modal"
             >
-              <X className="w-6 h-6" />
+              <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <h2 className="text-2xl font-bold text-blue-600 mb-4">
+            <h2 className="text-xl sm:text-2xl font-bold text-blue-600 mb-3 sm:mb-4">
               เปลี่ยนรหัสผ่าน
             </h2>
             <form
               onSubmit={handlePasswordChange}
-              className="space-y-4"
+              className="space-y-3 sm:space-y-4"
               data-cy="password-form"
             >
               {/* รหัสผ่านปัจจุบันต้องกรอกเฉพาะผู้ใช้ทั่วไป (Admin ไม่ต้องกรอก) */}
               {user.role !== "Admin" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     รหัสผ่านปัจจุบัน
                   </label>
                   <input
                     type="password"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     required
                     value={passwordData.current_password}
                     onChange={(e) =>
@@ -397,12 +410,12 @@ const UserDetail = () => {
                 </div>
               )}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   รหัสผ่านใหม่
                 </label>
                 <input
                   type="password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                   minLength={6}
                   value={passwordData.new_password}
@@ -416,12 +429,12 @@ const UserDetail = () => {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   ยืนยันรหัสผ่านใหม่
                 </label>
                 <input
                   type="password"
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   required
                   minLength={6}
                   value={passwordData.confirm_password}
@@ -434,7 +447,7 @@ const UserDetail = () => {
                   data-cy="confirm-password-input"
                 />
               </div>
-              <div className="flex justify-end space-x-3 mt-6">
+              <div className="flex justify-end space-x-2 sm:space-x-3 mt-4 sm:mt-6">
                 <button
                   type="button"
                   onClick={() => {
@@ -445,14 +458,14 @@ const UserDetail = () => {
                       confirm_password: "",
                     });
                   }}
-                  className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
+                  className="bg-gray-200 text-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
                   data-cy="cancel-password-change"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                  className="bg-blue-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
                   data-cy="submit-password-change"
                 >
                   เปลี่ยนรหัสผ่าน
@@ -470,19 +483,19 @@ const UserDetail = () => {
 const globalTailwindClasses = `
 @layer components {
   .btn-primary {
-    @apply bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 
+    @apply bg-blue-500 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-blue-600 
            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 
            transform transition-all hover:scale-105;
   }
   
   .btn-secondary {
-    @apply bg-gray-200 text-gray-800 px-4 py-2 rounded-lg hover:bg-gray-300 
+    @apply bg-gray-200 text-gray-800 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-gray-300 
            focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 
            transform transition-all hover:scale-105;
   }
   
   .btn-danger {
-    @apply bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 
+    @apply bg-red-500 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-red-600 
            focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 
            transform transition-all hover:scale-105;
   }

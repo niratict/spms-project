@@ -34,7 +34,7 @@ const TestCase = ({ test }) => {
       data-cy="test-case-item"
       data-test-status={isPassed ? "passed" : "failed"}
       className={`
-      p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200
+      p-3 sm:p-4 rounded-lg shadow-sm hover:shadow-md transition-all duration-200
       transform hover:-translate-y-0.5 
       ${
         isPassed
@@ -43,47 +43,58 @@ const TestCase = ({ test }) => {
       }
     `}
     >
-      <div className="flex items-start gap-3">
+      <div className="flex items-start gap-2 sm:gap-3">
         {isPassed ? (
           <CheckCircle
-            className="text-green-500 h-5 w-5 mt-1"
+            className="text-green-500 h-4 w-4 sm:h-5 sm:w-5 mt-1 flex-shrink-0"
             data-cy="pass-icon"
           />
         ) : (
-          <XCircle className="text-red-500 h-5 w-5 mt-1" data-cy="fail-icon" />
+          <XCircle
+            className="text-red-500 h-4 w-4 sm:h-5 sm:w-5 mt-1 flex-shrink-0"
+            data-cy="fail-icon"
+          />
         )}
-        <div className="flex-1">
-          <h4 className="font-medium text-gray-900 mb-1" data-cy="test-title">
+        <div className="flex-1 min-w-0">
+          <h4
+            className="font-medium text-gray-900 mb-1 text-sm sm:text-base break-words"
+            data-cy="test-title"
+          >
             {test.title}
           </h4>
-          <p className="text-sm text-gray-600" data-cy="test-full-title">
+          <p
+            className="text-xs sm:text-sm text-gray-600 break-words"
+            data-cy="test-full-title"
+          >
             {test.fullTitle || test.title}
           </p>
           {/* แสดงข้อความผิดพลาดเฉพาะกรณีทดสอบที่ไม่ผ่าน */}
           {!isPassed && test.err && (
             <div
-              className="mt-2 p-3 bg-red-50 rounded-lg border border-red-200"
+              className="mt-2 p-2 sm:p-3 bg-red-50 rounded-lg border border-red-200 overflow-x-auto"
               data-cy="error-container"
             >
-              <p className="text-sm text-red-700 font-medium">Error Message:</p>
+              <p className="text-xs sm:text-sm text-red-700 font-medium">
+                Error Message:
+              </p>
               <pre
-                className="mt-1 text-xs text-red-600 whitespace-pre-wrap"
+                className="mt-1 text-xs text-red-600 whitespace-pre-wrap overflow-x-auto max-w-full"
                 data-cy="error-message"
               >
                 {formatError(test.err)}
               </pre>
             </div>
           )}
-          <div className="mt-3 flex items-center gap-2 text-sm text-gray-600">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-600">
             <div
-              className="px-3 py-1 rounded-full bg-white shadow-sm"
+              className="px-2 py-1 sm:px-3 rounded-full bg-white shadow-sm whitespace-nowrap"
               data-cy="test-duration"
             >
               ใช้ระยะเวลา: {duration}s
             </div>
             {test.timedOut && (
               <div
-                className="px-3 py-1 rounded-full bg-yellow-100 text-yellow-800"
+                className="px-2 py-1 sm:px-3 rounded-full bg-yellow-100 text-yellow-800 whitespace-nowrap"
                 data-cy="timeout-badge"
               >
                 หมดเวลา
@@ -91,7 +102,7 @@ const TestCase = ({ test }) => {
             )}
             {test.skipped && (
               <div
-                className="px-3 py-1 rounded-full bg-gray-100 text-gray-800"
+                className="px-2 py-1 sm:px-3 rounded-full bg-gray-100 text-gray-800 whitespace-nowrap"
                 data-cy="skipped-badge"
               >
                 ข้ามกรณีทดสอบ
@@ -137,27 +148,35 @@ const TestSuite = ({ suite, searchTerm, filterStatus, level = 0 }) => {
     <div className="space-y-2" data-cy="test-suite">
       {suite.title && (
         <div
-          className="flex items-center gap-2 py-2 px-4 bg-gray-50 rounded-lg"
-          style={{ marginLeft: `${level * 1.5}rem` }}
+          className="flex items-center gap-2 py-2 px-3 sm:px-4 bg-gray-50 rounded-lg overflow-hidden"
+          style={{ marginLeft: `${level * 0.75}rem` }}
           data-cy="suite-header"
         >
           <button
             onClick={() => setIsExpanded(!isExpanded)}
-            className="flex items-center gap-2 text-gray-700 hover:text-gray-900"
+            className="flex items-center gap-1 sm:gap-2 text-gray-700 hover:text-gray-900 min-w-0"
             data-cy="toggle-suite"
           >
             {isExpanded ? (
-              <FolderOpen className="h-5 w-5" data-cy="folder-open-icon" />
+              <FolderOpen
+                className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0"
+                data-cy="folder-open-icon"
+              />
             ) : (
-              <Folder className="h-5 w-5" data-cy="folder-closed-icon" />
+              <Folder
+                className="h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0"
+                data-cy="folder-closed-icon"
+              />
             )}
-            <span className="font-medium">{suite.title}</span>
+            <span className="font-medium text-sm sm:text-base truncate">
+              {suite.title}
+            </span>
           </button>
         </div>
       )}
 
       {isExpanded && (
-        <div className="space-y-3 ml-4" data-cy="suite-content">
+        <div className="space-y-3 ml-2 sm:ml-4" data-cy="suite-content">
           {/* แสดงกรณีทดสอบในชุดนี้ */}
           {filteredTests.map((test, index) => (
             <TestCase key={index} test={test} />
@@ -219,10 +238,10 @@ const TestResultsList = ({ tests }) => {
   const allPassed = stats.failed === 0;
 
   return (
-    <div className="space-y-4" data-cy="test-results-container">
+    <div className="space-y-4 max-w-full" data-cy="test-results-container">
       <div
         className={`
-        rounded-xl shadow-md p-4
+        rounded-xl shadow-md p-3 sm:p-4
         ${
           allPassed
             ? "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200"
@@ -233,24 +252,24 @@ const TestResultsList = ({ tests }) => {
         data-test-status={allPassed ? "passed" : "failed"}
       >
         {/* ส่วนแสดงสรุปผลการทดสอบ */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
+          <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 sm:gap-4 w-full sm:w-auto">
             <div
-              className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm"
+              className="flex items-center gap-2 bg-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-sm w-full xs:w-auto"
               data-cy="passed-tests-counter"
             >
-              <CheckCircle className="text-green-500 h-5 w-5" />
-              <span className="text-green-700 font-medium">
+              <CheckCircle className="text-green-500 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+              <span className="text-green-700 font-medium text-sm sm:text-base whitespace-nowrap">
                 ผ่านการทดสอบ {stats.passed} กรณีทดสอบ
               </span>
             </div>
             {stats.failed > 0 && (
               <div
-                className="flex items-center gap-3 bg-white px-4 py-2 rounded-lg shadow-sm"
+                className="flex items-center gap-2 bg-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-sm w-full xs:w-auto"
                 data-cy="failed-tests-counter"
               >
-                <XCircle className="text-red-500 h-5 w-5" />
-                <span className="text-red-700 font-medium">
+                <XCircle className="text-red-500 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
+                <span className="text-red-700 font-medium text-sm sm:text-base whitespace-nowrap">
                   ผิดพลาด {stats.failed} กรณีทดสอบ
                 </span>
               </div>
@@ -261,14 +280,15 @@ const TestResultsList = ({ tests }) => {
           <button
             onClick={() => setIsExpanded(!isExpanded)}
             className={`
-              flex items-center justify-center gap-2 px-6 py-2 rounded-lg
-              font-medium transition-all duration-200 
+              flex items-center justify-center gap-2 px-4 sm:px-6 py-1.5 sm:py-2 rounded-lg
+              font-medium transition-all duration-200 text-sm sm:text-base
               ${
                 allPassed
                   ? "bg-green-100 text-green-700 hover:bg-green-200"
                   : "bg-red-100 text-red-700 hover:bg-red-200"
               }
               shadow-sm hover:shadow transform hover:-translate-y-0.5
+              w-full xs:w-auto
             `}
             data-cy="toggle-details"
           >
@@ -290,26 +310,26 @@ const TestResultsList = ({ tests }) => {
         {isExpanded && (
           <>
             {/* ส่วนค้นหาและกรองผลการทดสอบ */}
-            <div className="flex flex-col sm:flex-row gap-4 mb-6">
+            <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 mb-4 sm:mb-6">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <Search className="absolute left-2 sm:left-3 top-2 sm:top-2.5 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 <input
                   type="text"
                   placeholder="ค้นหากรณีทดสอบ..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-white rounded-lg border border-gray-200 
-                    focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full pl-8 sm:pl-10 pr-3 sm:pr-4 py-1.5 sm:py-2 bg-white rounded-lg border border-gray-200 
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   data-cy="search-input"
                 />
               </div>
-              <div className="flex items-center gap-3 min-w-[200px]">
-                <Filter className="h-5 w-5 text-gray-400" />
+              <div className="flex items-center gap-2 min-w-0 sm:min-w-[200px]">
+                <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
                 <select
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="flex-1 px-4 py-2 bg-white rounded-lg border border-gray-200
-                    focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="flex-1 px-2 sm:px-4 py-1.5 sm:py-2 bg-white rounded-lg border border-gray-200
+                    focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   data-cy="filter-select"
                 >
                   <option value="all">ทั้งหมด</option>
@@ -320,11 +340,13 @@ const TestResultsList = ({ tests }) => {
             </div>
 
             {/* แสดงรายการผลการทดสอบทั้งหมด */}
-            <TestSuite
-              suite={{ tests, suites: [] }}
-              searchTerm={searchTerm}
-              filterStatus={filterStatus}
-            />
+            <div className="overflow-x-auto">
+              <TestSuite
+                suite={{ tests, suites: [] }}
+                searchTerm={searchTerm}
+                filterStatus={filterStatus}
+              />
+            </div>
           </>
         )}
       </div>

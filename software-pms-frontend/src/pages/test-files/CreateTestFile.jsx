@@ -176,22 +176,24 @@ const CreateTestFile = () => {
       className="min-h-screen bg-gray-50 flex flex-col"
       data-cy="create-test-file-page"
     >
-      <div className="container mx-auto px-4 py-8 max-w-2xl">
+      <div className="w-full px-4 sm:px-6 py-6 sm:py-8 mx-auto max-w-lg sm:max-w-xl md:max-w-2xl">
         {/* ส่วนหัวและปุ่มย้อนกลับ */}
         <button
           onClick={handleGoBack}
-          className="flex items-center text-gray-600 hover:text-gray-800 mb-6 transition-colors"
+          className="flex items-center text-gray-600 hover:text-gray-800 mb-4 sm:mb-6 transition-colors"
           data-cy="back-button"
         >
-          <ChevronLeft className="mr-2" />
-          <span className="font-medium">กลับหน้าเลือกไฟล์ทดสอบ</span>
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+          <span className="text-sm sm:text-base font-medium">
+            กลับหน้าเลือกไฟล์ทดสอบ
+          </span>
         </button>
 
-        <div className="bg-white shadow-xl rounded-2xl overflow-hidden">
+        <div className="bg-white shadow-md sm:shadow-xl rounded-xl sm:rounded-2xl overflow-hidden">
           {/* ส่วนหัวของแบบฟอร์ม */}
-          <div className="bg-blue-50 px-6 py-5 border-b border-blue-100">
-            <h2 className="text-2xl font-bold text-gray-800 flex items-center">
-              <FileUp className="mr-3 text-blue-600" />
+          <div className="bg-blue-50 px-4 sm:px-6 py-4 sm:py-5 border-b border-blue-100">
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
+              <FileUp className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-blue-600" />
               {isUpdateMode ? "อัพเดตไฟล์ทดสอบ" : "อัพโหลดไฟล์ทดสอบ"}
             </h2>
           </div>
@@ -199,16 +201,16 @@ const CreateTestFile = () => {
           {/* แบบฟอร์มอัพโหลดไฟล์ */}
           <form
             onSubmit={handleSubmit}
-            className="p-6 space-y-6"
+            className="p-4 sm:p-6 space-y-4 sm:space-y-6"
             data-cy="upload-form"
           >
             {/* แสดงข้อความแจ้งเตือนข้อผิดพลาด */}
             {error && (
               <div
-                className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg flex items-center"
+                className="bg-red-50 border border-red-200 text-red-600 p-3 sm:p-4 rounded-lg flex items-center text-sm sm:text-base"
                 data-cy="error-message"
               >
-                <AlertTriangle className="mr-3 text-red-500" />
+                <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 text-red-500 flex-shrink-0" />
                 <span className="font-medium">{error}</span>
               </div>
             )}
@@ -218,7 +220,7 @@ const CreateTestFile = () => {
               <div>
                 <label
                   htmlFor="filename"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2"
                 >
                   ชื่อไฟล์ <span className="text-red-500">*</span>
                 </label>
@@ -227,7 +229,7 @@ const CreateTestFile = () => {
                   id="filename"
                   value={filename}
                   onChange={(e) => setFilename(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
                   placeholder="ระบุชื่อไฟล์"
                   required
                   data-cy="filename-input"
@@ -238,7 +240,7 @@ const CreateTestFile = () => {
               <div>
                 <label
                   htmlFor="testFile"
-                  className="block text-sm font-medium text-gray-700 mb-2"
+                  className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2"
                 >
                   ไฟล์ทดสอบ JSON <span className="text-red-500">*</span>
                 </label>
@@ -254,7 +256,7 @@ const CreateTestFile = () => {
                   <label
                     htmlFor="testFile"
                     className={`
-                      w-full flex items-center justify-center px-6 py-4 
+                      w-full flex items-center justify-center px-3 sm:px-6 py-3 sm:py-4 
                       border-2 border-dashed rounded-lg cursor-pointer 
                       transition-all duration-300
                       ${
@@ -265,8 +267,8 @@ const CreateTestFile = () => {
                     `}
                     data-cy="file-drop-area"
                   >
-                    <FileUp className="mr-3 w-6 h-6" />
-                    <span className="text-sm font-medium">
+                    <FileUp className="mr-2 sm:mr-3 w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium truncate">
                       {selectedFile
                         ? selectedFile.name
                         : "คลิกเพื่ออัพโหลดหรือลากและวางไฟล์"}
@@ -276,10 +278,10 @@ const CreateTestFile = () => {
                   {/* แสดงข้อความแจ้งเตือนข้อผิดพลาดของไฟล์ */}
                   {fileError && (
                     <p
-                      className="mt-2 text-sm text-red-500 flex items-center"
+                      className="mt-2 text-xs sm:text-sm text-red-500 flex items-center"
                       data-cy="file-error"
                     >
-                      <AlertTriangle className="mr-2 w-4 h-4" />
+                      <AlertTriangle className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
                       {fileError}
                     </p>
                   )}
@@ -292,12 +294,12 @@ const CreateTestFile = () => {
             </div>
 
             {/* ปุ่มการทำงาน */}
-            <div className="flex space-x-4 pt-4">
+            <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
               <button
                 type="submit"
                 disabled={loading || !selectedFile}
                 className={`
-                  w-full py-3 rounded-lg text-white font-semibold transition-all duration-300
+                  w-full py-2 sm:py-3 rounded-lg text-white text-sm sm:text-base font-semibold transition-all duration-300
                   ${
                     loading || !selectedFile
                       ? "bg-blue-300 cursor-not-allowed"
@@ -316,8 +318,8 @@ const CreateTestFile = () => {
                 type="button"
                 onClick={handleGoBack}
                 className="
-                  w-full py-3 rounded-lg text-gray-600 bg-gray-100 
-                  hover:bg-gray-200 font-semibold transition-all duration-300
+                  w-full py-2 sm:py-3 rounded-lg text-gray-600 bg-gray-100 
+                  hover:bg-gray-200 text-sm sm:text-base font-semibold transition-all duration-300
                 "
                 data-cy="cancel-button"
               >
@@ -330,27 +332,27 @@ const CreateTestFile = () => {
         {/* กล่องข้อความแจ้งเตือนไฟล์ซ้ำในสปรินต์อื่น */}
         {showErrorDialog && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             data-cy="error-dialog"
           >
-            <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
-              <div className="px-6 py-4">
-                <div className="flex items-center mb-4">
-                  <AlertTriangle className="text-red-500 mr-2" />
-                  <h3 className="text-lg font-semibold text-gray-900">
+            <div className="bg-white rounded-lg w-full max-w-xs sm:max-w-md overflow-hidden">
+              <div className="px-4 sm:px-6 py-4">
+                <div className="flex items-center mb-3 sm:mb-4">
+                  <AlertTriangle className="text-red-500 w-5 h-5 mr-2 flex-shrink-0" />
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                     ไม่สามารถอัพโหลดไฟล์ได้
                   </h3>
                 </div>
-                <p className="text-gray-600 whitespace-pre-line">
+                <p className="text-sm sm:text-base text-gray-600 whitespace-pre-line">
                   ไฟล์ทดสอบนี้ถูกอัพโหลดแล้วใน {existingSprintName} ในโปรเจกต์{" "}
                   <span className="font-medium">{existingProjectName} </span>
                   ไม่สามารถอัพโหลดไฟล์เดียวกันในหลายสปรินต์ได้
                 </p>
               </div>
-              <div className="px-6 py-4 bg-gray-50 flex justify-end">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 flex justify-end">
                 <button
                   onClick={() => setShowErrorDialog(false)}
-                  className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-white text-sm sm:text-base bg-blue-600 hover:bg-blue-700 transition-colors"
                   data-cy="error-dialog-close"
                 >
                   เข้าใจแล้ว
@@ -363,30 +365,30 @@ const CreateTestFile = () => {
         {/* กล่องข้อความยืนยันการอัพเดตไฟล์ */}
         {showConfirmDialog && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             data-cy="confirm-dialog"
           >
-            <div className="bg-white rounded-lg max-w-md w-full mx-4 overflow-hidden">
-              <div className="px-6 py-4">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            <div className="bg-white rounded-lg w-full max-w-xs sm:max-w-md overflow-hidden">
+              <div className="px-4 sm:px-6 py-4">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
                   ต้องการอัพเดตไฟล์ทดสอบที่มีอยู่หรือไม่?
                 </h3>
-                <p className="text-gray-600">
+                <p className="text-sm sm:text-base text-gray-600">
                   มีไฟล์ทดสอบที่ชื่อเดียวกันอยู่แล้วในสปรินต์นี้
                   คุณต้องการอัพเดตไฟล์นี้ด้วยผลลัพธ์ใหม่หรือไม่?
                 </p>
               </div>
-              <div className="px-6 py-4 bg-gray-50 flex justify-end space-x-3">
+              <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 flex justify-end space-x-2 sm:space-x-3">
                 <button
                   onClick={() => setShowConfirmDialog(false)}
-                  className="px-4 py-2 rounded-lg text-gray-700 bg-gray-200 hover:bg-gray-300 transition-colors"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-gray-700 text-sm sm:text-base bg-gray-200 hover:bg-gray-300 transition-colors"
                   data-cy="confirm-dialog-cancel"
                 >
                   ยกเลิก
                 </button>
                 <button
                   onClick={handleConfirmUpdate}
-                  className="px-4 py-2 rounded-lg text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-white text-sm sm:text-base bg-blue-600 hover:bg-blue-700 transition-colors"
                   data-cy="confirm-dialog-update"
                 >
                   อัพเดตไฟล์

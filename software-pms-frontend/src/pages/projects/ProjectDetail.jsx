@@ -24,29 +24,31 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       data-cy="delete-confirm-modal"
     >
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-6">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div className="text-center">
-          <Trash2 className="mx-auto h-16 w-16 text-red-500 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">ลบโปรเจกต์</h2>
-          <p className="text-gray-600 mb-6">
+          <Trash2 className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-red-500 mb-2 sm:mb-4" />
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
+            ลบโปรเจกต์
+          </h2>
+          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
             คุณแน่ใจหรือไม่ว่าต้องการลบโปรเจกต์นี้
             ระบบจะลบข้อมูลที่เกี่ยวข้องทั้งหมดของโปรเจกต์นี้!
           </p>
         </div>
-        <div className="flex justify-center space-x-4">
+        <div className="flex flex-col sm:flex-row justify-center space-y-3 sm:space-y-0 sm:space-x-4">
           <button
             onClick={onClose}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            className="px-4 sm:px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors w-full sm:w-auto"
             data-cy="cancel-delete-button"
           >
             ยกเลิก
           </button>
           <button
             onClick={onConfirm}
-            className="px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center gap-2 transition-colors"
+            className="px-4 sm:px-6 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 flex items-center justify-center gap-2 transition-colors w-full sm:w-auto"
             data-cy="confirm-delete-button"
           >
             <Trash2 className="w-5 h-5" />
@@ -64,16 +66,16 @@ const DeleteErrorModal = ({ isOpen, onClose, sprintCount }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       data-cy="delete-error-modal"
     >
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-6">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 sm:p-6 space-y-4 sm:space-y-6">
         <div className="text-center">
-          <AlertTriangle className="mx-auto h-16 w-16 text-yellow-500 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+          <AlertTriangle className="mx-auto h-12 w-12 sm:h-16 sm:w-16 text-yellow-500 mb-2 sm:mb-4" />
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-2">
             ไม่สามารถลบโปรเจกต์นี้ได้
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
             ไม่สามารถลบโปรเจกต์นี้ได้ เนื่องจากมี {sprintCount}
             {sprintCount === 1 ? "สปรินต์" : "สปรินต์"} ที่กำลังดำเนินการอยู่
             กรุณาลบทุกสปรินต์ก่อนที่จะลบโปรเจกต์นี้
@@ -82,7 +84,7 @@ const DeleteErrorModal = ({ isOpen, onClose, sprintCount }) => {
         <div className="flex justify-center">
           <button
             onClick={onClose}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="px-4 sm:px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors w-full sm:w-auto"
             data-cy="error-modal-close-button"
           >
             เข้าใจ
@@ -112,10 +114,10 @@ const SprintItem = ({ sprint, onNavigate }) => {
   return (
     <div
       onClick={() => onNavigate(sprint.sprint_id)}
-      className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+      className="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
       data-cy={`sprint-item-${sprint.sprint_id}`}
     >
-      <div>
+      <div className="mb-2 sm:mb-0">
         <h3 className="font-semibold">{sprint.name}</h3>
         <div className="text-sm text-gray-600">
           {new Date(sprint.start_date).toLocaleDateString("th-TH", {
@@ -131,7 +133,7 @@ const SprintItem = ({ sprint, onNavigate }) => {
           })}
         </div>
       </div>
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 w-full sm:w-auto justify-end">
         {sprint.status && (
           <span
             className={`px-3 py-1 rounded-full text-sm ${
@@ -215,7 +217,7 @@ const ProjectDetail = () => {
         className="flex justify-center items-center h-screen"
         data-cy="loading-indicator"
       >
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-t-4 border-blue-500"></div>
       </div>
     );
   }
@@ -224,10 +226,10 @@ const ProjectDetail = () => {
   if (error) {
     return (
       <div
-        className="container mx-auto px-4 py-8 max-w-4xl"
+        className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl"
         data-cy="error-container"
       >
-        <div className="bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-lg">
+        <div className="bg-red-50 border border-red-200 text-red-800 px-4 sm:px-6 py-4 rounded-lg">
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5" />
             <span>{error}</span>
@@ -241,10 +243,10 @@ const ProjectDetail = () => {
   if (!project) {
     return (
       <div
-        className="container mx-auto px-4 py-8 max-w-4xl"
+        className="container mx-auto px-4 py-6 sm:py-8 max-w-4xl"
         data-cy="project-not-found"
       >
-        <div className="text-center p-6 bg-gray-100 rounded-lg">
+        <div className="text-center p-4 sm:p-6 bg-gray-100 rounded-lg">
           Project not found
         </div>
       </div>
@@ -254,7 +256,7 @@ const ProjectDetail = () => {
   // แสดงรายละเอียดโปรเจกต์
   return (
     <div
-      className="container mx-auto px-4 py-8 max-w-4xl"
+      className="container mx-auto px-4 py-4 sm:py-8 max-w-4xl"
       data-cy="project-detail-container"
     >
       {/* โมดัลต่างๆ */}
@@ -271,7 +273,7 @@ const ProjectDetail = () => {
       />
 
       {/* ส่วนหัวของหน้า - ปุ่มย้อนกลับและปุ่มจัดการโปรเจกต์ */}
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0 mb-4 sm:mb-6">
         <button
           onClick={() => navigate("/projects")}
           className="group flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
@@ -281,18 +283,19 @@ const ProjectDetail = () => {
           กลับไปที่หน้าเลือกโปรเจกต์
         </button>
 
-        <div className="flex space-x-3">
+        <div className="flex flex-col xs:flex-row w-full sm:w-auto space-y-2 xs:space-y-0 xs:space-x-3">
           <button
             onClick={() => navigate(`/projects/${id}/edit`)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
             data-cy="edit-project-button"
           >
             <Edit className="w-5 h-5" />
-            แก้ไขโปรเจกต์
+            <span className="hidden xs:inline">แก้ไขโปรเจกต์</span>
+            <span className="xs:hidden">แก้ไข</span>
           </button>
           <button
             onClick={() => setShowDeleteModal(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            className="flex items-center justify-center gap-2 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
             data-cy="delete-project-button"
           >
             <Trash2 className="w-5 h-5" />
@@ -305,13 +308,13 @@ const ProjectDetail = () => {
       <div className="bg-white shadow-lg rounded-xl overflow-hidden">
         {/* ส่วนหัวของโปรเจกต์ - ชื่อและสถานะ */}
         <div
-          className="p-6 bg-gradient-to-r from-blue-50 to-blue-100"
+          className="p-4 sm:p-6 bg-gradient-to-r from-blue-50 to-blue-100"
           data-cy="project-header"
         >
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center">
             <div>
               <h1
-                className="text-3xl font-bold text-gray-800 mb-2"
+                className="text-2xl sm:text-3xl font-bold text-gray-800 mb-2"
                 data-cy="project-name"
               >
                 โปรเจกต์ {project.name}
@@ -336,19 +339,22 @@ const ProjectDetail = () => {
           </div>
         </div>
 
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {/* ส่วนรายละเอียดโปรเจกต์ */}
-          <div className="mb-8" data-cy="project-description-section">
-            <h2 className="text-lg font-semibold text-gray-700 mb-3">
+          <div className="mb-6 sm:mb-8" data-cy="project-description-section">
+            <h2 className="text-lg font-semibold text-gray-700 mb-2 sm:mb-3">
               รายละเอียด
             </h2>
-            <p className="text-gray-600" data-cy="project-description">
+            <p
+              className="text-gray-600 text-sm sm:text-base"
+              data-cy="project-description"
+            >
               {project.description}
             </p>
           </div>
 
           {/* ส่วนแสดงรูปภาพและข้อมูลสำคัญของโปรเจกต์ */}
-          <div className="grid md:grid-cols-2 gap-8 mb-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 mb-6 sm:mb-8">
             {/* ส่วนแสดงรูปภาพโปรเจกต์ */}
             <div data-cy="project-image-container">
               {project.photo ? (
@@ -369,24 +375,28 @@ const ProjectDetail = () => {
                   className="aspect-video w-full rounded-lg bg-gray-100 border border-gray-200 flex items-center justify-center"
                   data-cy="project-no-image"
                 >
-                  <p className="text-gray-400">No image available</p>
+                  <p className="text-gray-400 text-sm sm:text-base">
+                    No image available
+                  </p>
                 </div>
               )}
             </div>
 
             {/* ส่วนแสดงข้อมูลสำคัญของโปรเจกต์ */}
             <div
-              className="grid grid-cols-1 gap-4 content-start"
+              className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-1 lg:grid-cols-2 gap-4 content-start"
               data-cy="project-info-container"
             >
               <div
                 className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"
                 data-cy="project-start-date"
               >
-                <Calendar className="w-6 h-6 text-blue-500" />
+                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 flex-shrink-0" />
                 <div>
-                  <div className="text-sm text-gray-600">วันที่เริ่มต้น</div>
-                  <div className="font-semibold">
+                  <div className="text-xs sm:text-sm text-gray-600">
+                    วันที่เริ่มต้น
+                  </div>
+                  <div className="text-sm sm:text-base font-semibold">
                     {new Date(project.start_date).toLocaleDateString("th-TH", {
                       day: "2-digit",
                       month: "2-digit",
@@ -399,10 +409,12 @@ const ProjectDetail = () => {
                 className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"
                 data-cy="project-end-date"
               >
-                <Calendar className="w-6 h-6 text-blue-500" />
+                <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500 flex-shrink-0" />
                 <div>
-                  <div className="text-sm text-gray-600">วันที่สิ้นสุด</div>
-                  <div className="font-semibold">
+                  <div className="text-xs sm:text-sm text-gray-600">
+                    วันที่สิ้นสุด
+                  </div>
+                  <div className="text-sm sm:text-base font-semibold">
                     {new Date(project.end_date).toLocaleDateString("th-TH", {
                       day: "2-digit",
                       month: "2-digit",
@@ -415,29 +427,40 @@ const ProjectDetail = () => {
                 className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"
                 data-cy="project-status"
               >
-                <Activity className="w-6 h-6 text-green-500" />
+                <Activity className="w-5 h-5 sm:w-6 sm:h-6 text-green-500 flex-shrink-0" />
                 <div>
-                  <div className="text-sm text-gray-600">สถานะ</div>
-                  <div className="font-semibold">{project.status}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">สถานะ</div>
+                  <div className="text-sm sm:text-base font-semibold">
+                    {project.status}
+                  </div>
                 </div>
               </div>
               <div
                 className="flex items-center gap-3 bg-gray-50 p-3 rounded-lg"
                 data-cy="project-creator"
               >
-                <Users className="w-6 h-6 text-purple-500" />
+                <Users className="w-5 h-5 sm:w-6 sm:h-6 text-purple-500 flex-shrink-0" />
                 <div>
-                  <div className="text-sm text-gray-600">ถูกสร้างโดย</div>
-                  <div className="font-semibold">{project.created_by}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">
+                    ถูกสร้างโดย
+                  </div>
+                  <div className="text-sm sm:text-base font-semibold">
+                    {project.created_by}
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
           {/* ส่วนแสดงสปรินต์ในโปรเจกต์ */}
-          <div className="border-t pt-8" data-cy="project-sprints-section">
+          <div
+            className="border-t pt-6 sm:pt-8"
+            data-cy="project-sprints-section"
+          >
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-xl font-semibold">Sprints (สปรินต์)</h2>
+              <h2 className="text-lg sm:text-xl font-semibold">
+                Sprints (สปรินต์)
+              </h2>
             </div>
 
             {/* แสดงรายการสปรินต์หรือข้อความว่างเปล่า */}
@@ -453,13 +476,13 @@ const ProjectDetail = () => {
               </div>
             ) : (
               <div
-                className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
+                className="flex flex-col items-center justify-center p-4 sm:p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
                 data-cy="empty-sprints"
               >
-                <h2 className="text-gray-600 mb-4">
+                <h2 className="text-gray-600 mb-2 sm:mb-4 text-center">
                   ยังไม่มี Sprint ในโปรเจกต์นี้
                 </h2>
-                <p className="text-gray-500">
+                <p className="text-gray-500 text-sm sm:text-base text-center">
                   Sprint จะปรากฏที่นี่เมื่อถูกสร้างขึ้น
                 </p>
               </div>

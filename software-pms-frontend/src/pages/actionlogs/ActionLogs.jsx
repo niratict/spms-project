@@ -57,20 +57,56 @@ const ActionLogs = () => {
         delete displayDetails.json_content;
       }
 
+      // ลบข้อมูล password ไม่ให้แสดง
+      if (displayDetails.password) {
+        delete displayDetails.password;
+      }
+
       return Object.entries(displayDetails)
-        .filter(([_, value]) => value !== null && value !== undefined)
-        .map(([key, value]) => (
-          <div
-            key={key}
-            className="whitespace-normal"
-            data-cy={`detail-item-${key}`}
-          >
-            <span className="font-medium">{key}:</span>{" "}
-            {typeof value === "object"
-              ? JSON.stringify(value)
-              : value.toString()}
-          </div>
-        ));
+        .filter(([key, value]) => value !== null && value !== undefined)
+        .map(([key, value]) => {
+          // ตรวจสอบว่าชื่อ field เป็นฟิลด์วันที่หรือไม่
+          const isDateField =
+            [
+              "created_at",
+              "updated_at",
+              "start_date",
+              "end_date",
+              "action_date",
+              "upload_date",
+              "changed_at",
+            ].includes(key) && typeof value === "string";
+
+          // ตรวจสอบรูปแบบวันที่แบบ ISO date (YYYY-MM-DDThh:mm:ss...)
+          const isISODateFormat =
+            isDateField && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value);
+
+          // ตรวจสอบรูปแบบวันที่แบบ YYYY-MM-DD
+          const isSimpleDateFormat =
+            isDateField && /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+          // แปลงค่าตามรูปแบบที่พบ
+          let displayValue;
+          if (isISODateFormat) {
+            displayValue = formatThaiDate(new Date(value));
+          } else if (isSimpleDateFormat) {
+            displayValue = formatThaiDate(new Date(value));
+          } else if (typeof value === "object") {
+            displayValue = JSON.stringify(value);
+          } else {
+            displayValue = value.toString();
+          }
+
+          return (
+            <div
+              key={key}
+              className="whitespace-normal break-words"
+              data-cy={`detail-item-${key}`}
+            >
+              <span className="font-medium">{key}:</span> {displayValue}
+            </div>
+          );
+        });
     }
 
     return details;
@@ -172,7 +208,7 @@ const ActionLogs = () => {
   };
 
   // --------- ดึงข้อมูลบันทึกการดำเนินการตามตัวกรอง ---------
-  // ดึงบันทึกการดำเนินการจาก API พร้อมตัวกรอง
+  // ดึกบันทึกการดำเนินการจาก API พร้อมตัวกรอง
   useEffect(() => {
     const fetchLogs = async () => {
       try {
@@ -273,22 +309,25 @@ const ActionLogs = () => {
 
   // --------- การแสดงผลหลัก ---------
   return (
-    <div className="min-h-screen bg-gray-50 p-8" data-cy="action-logs-page">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div
+      className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8"
+      data-cy="action-logs-page"
+    >
+      <div className="max-w-7xl mx-auto space-y-4 sm:space-y-6">
         {/* --------- ส่วนหัว --------- */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <ClipboardList className="w-10 h-10 mr-4 text-blue-600" />
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center mb-4 sm:mb-0">
+            <ClipboardList className="w-7 h-7 sm:w-10 sm:h-10 mr-2 sm:mr-4 text-blue-600" />
             บันทึกการดำเนินการ
           </h1>
         </div>
 
         {/* --------- ส่วนตัวกรอง --------- */}
         <div
-          className="bg-white shadow-md rounded-lg p-6 border border-gray-200"
+          className="bg-white shadow-md rounded-lg p-4 sm:p-6 border border-gray-200"
           data-cy="filters-section"
         >
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* ตัวกรองประเภทการดำเนินการ */}
             <div className="relative" data-cy="action-type-filter-container">
               <select
@@ -342,33 +381,40 @@ const ActionLogs = () => {
                   className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   data-cy="date-range-picker"
                 >
-                  <span className="text-gray-700">{formatDateRange()}</span>
-                  <Calendar className="h-4 w-4 text-gray-400" />
+                  <span className="text-gray-700 truncate">
+                    {formatDateRange()}
+                  </span>
+                  <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
                 </button>
 
                 {isDatePickerOpen && (
                   <div
-                    className="absolute z-10 mt-1 bg-white rounded-md shadow-lg p-4 border border-gray-200"
+                    className="absolute z-10 mt-1 bg-white rounded-md shadow-lg p-2 sm:p-4 border border-gray-200 left-0 right-0 sm:right-auto"
                     data-cy="date-picker-popup"
                   >
-                    <DayPicker
-                      mode="range"
-                      selected={selectedRange}
-                      onSelect={handleDateRangeSelect}
-                      locale={th}
-                      formatters={{
-                        formatYear: (year) => `${year + 543}`,
-                      }}
-                      modifiers={{
-                        selected: [selectedRange.from, selectedRange.to],
-                      }}
-                      modifiersStyles={{
-                        selected: {
-                          backgroundColor: "#3b82f6",
-                          color: "white",
-                        },
-                      }}
-                    />
+                    <div
+                      className="overflow-x-auto"
+                      style={{ maxWidth: "100%" }}
+                    >
+                      <DayPicker
+                        mode="range"
+                        selected={selectedRange}
+                        onSelect={handleDateRangeSelect}
+                        locale={th}
+                        formatters={{
+                          formatYear: (year) => `${year + 543}`,
+                        }}
+                        modifiers={{
+                          selected: [selectedRange.from, selectedRange.to],
+                        }}
+                        modifiersStyles={{
+                          selected: {
+                            backgroundColor: "#3b82f6",
+                            color: "white",
+                          },
+                        }}
+                      />
+                    </div>
                     <div className="mt-4 flex justify-end">
                       <button
                         onClick={() => setIsDatePickerOpen(false)}
@@ -412,119 +458,121 @@ const ActionLogs = () => {
           </div>
         )}
 
-        {/* --------- ตารางบันทึกการดำเนินการ --------- */}
+        {/* --------- ตารางบันทึกการดำเนินการ (แบบ responsive) --------- */}
         <div
           className="bg-white shadow-md rounded-lg overflow-hidden border border-gray-200"
           data-cy="logs-table-container"
         >
-          <table className="w-full" data-cy="logs-table">
-            <thead className="bg-gray-100 border-b">
-              <tr>
-                <th
-                  className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                  data-cy="column-header-date"
-                >
-                  วันที่
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                  data-cy="column-header-user"
-                >
-                  ผู้ใช้
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                  data-cy="column-header-action"
-                >
-                  การดำเนินการ
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                  data-cy="column-header-target"
-                >
-                  เป้าหมาย
-                </th>
-                <th
-                  className="px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
-                  data-cy="column-header-details"
-                >
-                  รายละเอียด
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {logs.map((log) => (
-                <tr
-                  key={log.log_id}
-                  data-cy={`log-row-${log.log_id}`}
-                  className="hover:bg-gray-50 transition-colors duration-100 border-b last:border-b-0"
-                >
-                  <td
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-600"
-                    data-cy={`log-date-${log.log_id}`}
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-full" data-cy="logs-table">
+              <thead className="bg-gray-100 border-b">
+                <tr>
+                  <th
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                    data-cy="column-header-date"
                   >
-                    {formatThaiDate(new Date(log.action_date))}
-                  </td>
-                  <td
-                    className="px-6 py-4 whitespace-nowrap"
-                    data-cy={`log-user-${log.log_id}`}
+                    วันที่
+                  </th>
+                  <th
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                    data-cy="column-header-user"
                   >
-                    <div
-                      className="text-sm font-medium text-gray-900"
-                      data-cy={`user-name-${log.log_id}`}
-                    >
-                      {log.user_name}
-                    </div>
-                    <div
-                      className="text-sm text-gray-500"
-                      data-cy={`user-role-${log.log_id}`}
-                    >
-                      {log.user_role}
-                    </div>
-                  </td>
-                  <td
-                    className="px-6 py-4 whitespace-nowrap"
-                    data-cy={`log-action-${log.log_id}`}
+                    ผู้ใช้
+                  </th>
+                  <th
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                    data-cy="column-header-action"
                   >
-                    <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                      {log.action_type}
-                    </span>
-                  </td>
-                  <td
-                    className="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                    data-cy={`log-target-${log.log_id}`}
+                    การดำเนินการ
+                  </th>
+                  <th
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider w-32 sm:w-auto"
+                    data-cy="column-header-target"
                   >
-                    <span data-cy={`target-info-${log.log_id}`}>
-                      {log.target_table} #{log.target_id}
-                    </span>
-                    {log.target_name && (
-                      <div
-                        className="text-sm font-medium text-gray-900"
-                        data-cy={`target-name-${log.log_id}`}
-                      >
-                        {log.target_name}
-                      </div>
-                    )}
-                  </td>
-                  <td
-                    className="px-6 py-4 text-sm text-gray-500"
-                    data-cy={`log-details-${log.log_id}`}
+                    เป้าหมาย
+                  </th>
+                  <th
+                    className="px-3 sm:px-6 py-3 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider"
+                    data-cy="column-header-details"
                   >
-                    {formatDetails(
-                      log.details,
-                      log.target_table,
-                      log.action_type
-                    )}
-                  </td>
+                    รายละเอียด
+                  </th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {logs.map((log) => (
+                  <tr
+                    key={log.log_id}
+                    data-cy={`log-row-${log.log_id}`}
+                    className="hover:bg-gray-50 transition-colors duration-100 border-b last:border-b-0"
+                  >
+                    <td
+                      className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-600"
+                      data-cy={`log-date-${log.log_id}`}
+                    >
+                      {formatThaiDate(new Date(log.action_date))}
+                    </td>
+                    <td
+                      className="px-3 sm:px-6 py-2 sm:py-4"
+                      data-cy={`log-user-${log.log_id}`}
+                    >
+                      <div
+                        className="text-xs sm:text-sm font-medium text-gray-900"
+                        data-cy={`user-name-${log.log_id}`}
+                      >
+                        {log.user_name}
+                      </div>
+                      <div
+                        className="text-xs sm:text-sm text-gray-500"
+                        data-cy={`user-role-${log.log_id}`}
+                      >
+                        {log.user_role}
+                      </div>
+                    </td>
+                    <td
+                      className="px-3 sm:px-6 py-2 sm:py-4"
+                      data-cy={`log-action-${log.log_id}`}
+                    >
+                      <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
+                        {log.action_type}
+                      </span>
+                    </td>
+                    <td
+                      className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-500 break-words"
+                      data-cy={`log-target-${log.log_id}`}
+                    >
+                      <span data-cy={`target-info-${log.log_id}`}>
+                        {log.target_table} #{log.target_id}
+                      </span>
+                      {log.target_name && (
+                        <div
+                          className="text-xs sm:text-sm font-medium text-gray-900"
+                          data-cy={`target-name-${log.log_id}`}
+                        >
+                          {log.target_name}
+                        </div>
+                      )}
+                    </td>
+                    <td
+                      className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-500 max-w-xs sm:max-w-sm md:max-w-md"
+                      data-cy={`log-details-${log.log_id}`}
+                    >
+                      {formatDetails(
+                        log.details,
+                        log.target_table,
+                        log.action_type
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
 
           {/* --------- สถานะว่างเปล่า --------- */}
           {logs.length === 0 && (
             <div
-              className="text-center py-10 text-gray-500 bg-gray-50"
+              className="text-center py-8 sm:py-10 text-gray-500 bg-gray-50"
               data-cy="empty-state"
             >
               ไม่พบบันทึกการดำเนินการ
@@ -534,20 +582,23 @@ const ActionLogs = () => {
 
         {/* --------- การแบ่งหน้า --------- */}
         <div
-          className="flex justify-between items-center mt-4"
+          className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4"
           data-cy="pagination-container"
         >
-          <div className="text-sm text-gray-700" data-cy="pagination-info">
+          <div
+            className="text-xs sm:text-sm text-gray-700 text-center sm:text-left w-full sm:w-auto"
+            data-cy="pagination-info"
+          >
             แสดง {logs.length > 0 ? (currentPage - 1) * filters.limit + 1 : 0}{" "}
             ถึง {Math.min(currentPage * filters.limit, totalLogs)} จาก{" "}
             {totalLogs} รายการ
           </div>
-          <div className="flex space-x-2">
+          <div className="flex space-x-2 w-full sm:w-auto justify-center">
             <button
               data-cy="previous-page"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={!canGoToPreviousPage}
-              className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 sm:px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
             >
               ก่อนหน้า
             </button>
@@ -555,7 +606,7 @@ const ActionLogs = () => {
               data-cy="next-page"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={!canGoToNextPage}
-              className="px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-3 sm:px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
             >
               ถัดไป
             </button>

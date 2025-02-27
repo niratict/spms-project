@@ -10,11 +10,11 @@ import {
   X,
   Clock,
   Search,
-  Layers,
   Target,
   FolderX,
-  BarChart2,
-  Folder,
+  Menu,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import TestStatsDashboard from "./TestStatsDashboard";
 
@@ -46,6 +46,13 @@ const TestFiles = () => {
   const [stats, setStats] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [isDashboardVisible, setIsDashboardVisible] = useState(true);
+
+  // สถานะสำหรับการแสดงผลแบบ Responsive
+  const [isProjectSectionCollapsed, setIsProjectSectionCollapsed] =
+    useState(false);
+  const [isSprintSectionCollapsed, setIsSprintSectionCollapsed] =
+    useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // ฟังก์ชั่นลบข้อมูลที่เก็บใน localStorage
   const clearStoredSelections = () => {
@@ -199,7 +206,7 @@ const TestFiles = () => {
         clearStoredSelections();
       }
     };
-  }, []); // ลบ location.pathname dependency
+  }, []);
 
   // ฟังก์ชันนำทางที่จะล้าง localStorage เมื่อออกจาก test-files
   const navigateWithCleanup = (path) => {
@@ -221,6 +228,9 @@ const TestFiles = () => {
       replace: true,
       state: { selectedProjectId: project.project_id },
     });
+
+    // ปิดเมนูบนมือถือหลังจากเลือกโปรเจกต์
+    setIsMobileMenuOpen(false);
   };
 
   // จัดการการเลือกสปรินต์
@@ -235,6 +245,9 @@ const TestFiles = () => {
         selectedSprintId: sprint.sprint_id,
       },
     });
+
+    // ปิดเมนูบนมือถือหลังจากเลือกสปรินต์
+    setIsMobileMenuOpen(false);
   };
 
   // จัดการการค้นหาไฟล์ทดสอบ
@@ -267,141 +280,237 @@ const TestFiles = () => {
   );
 
   return (
-    <div className="bg-gray-50 min-h-screen p-8" data-cy="test-files-page">
+    <div
+      className="bg-gray-50 min-h-screen p-3 sm:p-5 md:p-8"
+      data-cy="test-files-page"
+    >
       <div className="container mx-auto max-w-7xl">
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <FileText  className="w-10 h-10 mr-4 text-blue-600" />
+        {/* Header section with mobile menu */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center mb-4 sm:mb-0">
+            <FileText className="w-8 h-8 sm:w-10 sm:h-10 mr-3 sm:mr-4 text-blue-600" />
             การจัดการไฟล์ทดสอบ
           </h1>
+
+          {/* Mobile Menu Toggle */}
+          <button
+            className="sm:hidden px-4 py-2 bg-blue-600 text-white rounded-lg flex items-center"
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+            data-cy="mobile-menu-toggle"
+          >
+            <Menu className="w-5 h-5 mr-2" />
+            {isMobileMenuOpen ? "ปิดเมนู" : "เมนู"}
+          </button>
+        </div>
+
+        {/* Mobile Menu */}
+        <div
+          className={`sm:hidden transition-all duration-300 overflow-hidden ${
+            isMobileMenuOpen
+              ? "max-h-screen opacity-100 mb-6"
+              : "max-h-0 opacity-0"
+          }`}
+        >
+          {selectedProject && (
+            <div className="bg-blue-50 p-4 rounded-lg mb-3 border border-blue-200">
+              <p className="font-medium">
+                โปรเจกต์ที่เลือก: {selectedProject.name}
+              </p>
+            </div>
+          )}
+          {selectedSprint && (
+            <div className="bg-green-50 p-4 rounded-lg mb-3 border border-green-200">
+              <p className="font-medium">
+                สปรินต์ที่เลือก: {selectedSprint.name}
+              </p>
+            </div>
+          )}
+          {selectedSprint && (
+            <button
+              onClick={handleCreateTestFile}
+              data-cy="mobile-create-test-file-button"
+              className="w-full flex items-center justify-center gap-2 bg-blue-600 text-white px-4 py-3 rounded-lg hover:bg-blue-700 transition-colors mb-3"
+            >
+              <Upload className="w-5 h-5" />
+              อัพโหลดไฟล์ทดสอบ
+            </button>
+          )}
         </div>
 
         {/* ส่วนเลือกโปรเจกต์ */}
         <div
-          className="bg-white shadow-lg rounded-xl p-6 mb-6"
+          className="bg-white shadow-lg rounded-xl p-4 sm:p-6 mb-4 sm:mb-6"
           data-cy="project-selection-section"
         >
-          <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-            <Target className="w-6 h-6 mr-3 text-blue-500" />
-            เลือกโปรเจกต์
-          </h2>
-
-          {projects.length > 0 ? (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {projects.map((project) => (
-                <div
-                  key={project.project_id}
-                  onClick={() => handleProjectSelect(project)}
-                  data-cy={`project-card-${project.project_id}`}
-                  className={`
-            cursor-pointer 
-            border-2 rounded-lg p-5 
-            transition-all duration-300 
-            hover:shadow-lg
-            ${
-              selectedProject?.project_id === project.project_id
-                ? "border-blue-500 bg-blue-50 shadow-md"
-                : "border-gray-200 hover:border-blue-300"
+          <div
+            className="flex justify-between items-center cursor-pointer"
+            onClick={() =>
+              setIsProjectSectionCollapsed(!isProjectSectionCollapsed)
             }
-          `}
+          >
+            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
+              <Target className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-blue-500" />
+              เลือกโปรเจกต์
+            </h2>
+            {isProjectSectionCollapsed ? (
+              <ChevronDown className="w-5 h-5 text-gray-500" />
+            ) : (
+              <ChevronUp className="w-5 h-5 text-gray-500" />
+            )}
+          </div>
+
+          <div
+            className={`transition-all duration-300 overflow-hidden ${
+              isProjectSectionCollapsed
+                ? "max-h-0 opacity-0 mt-0"
+                : "max-h-screen opacity-100 mt-6"
+            }`}
+          >
+            {projects.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                {projects.map((project) => (
+                  <div
+                    key={project.project_id}
+                    onClick={() => handleProjectSelect(project)}
+                    data-cy={`project-card-${project.project_id}`}
+                    className={`
+                      cursor-pointer 
+                      border-2 rounded-lg p-3 sm:p-5 
+                      transition-all duration-300 
+                      hover:shadow-lg
+                      ${
+                        selectedProject?.project_id === project.project_id
+                          ? "border-blue-500 bg-blue-50 shadow-md"
+                          : "border-gray-200 hover:border-blue-300"
+                      }
+                    `}
+                  >
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-1 sm:mb-2">
+                      {project.name}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-gray-600 line-clamp-1">
+                      {project.description}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center p-4 sm:p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                <FolderX className="w-8 h-8 sm:w-12 sm:h-12 text-gray-400 mb-2 sm:mb-3" />
+                <p
+                  className="text-base sm:text-lg font-medium text-gray-700 mb-1"
+                  data-cy="project-notfound-1"
                 >
-                  <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                    {project.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 line-clamp-1">
-                    {project.description}
-                  </p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-              <FolderX className="w-12 h-12 text-gray-400 mb-3" />
-              <p
-                className="text-lg font-medium text-gray-700 mb-1"
-                data-cy="project-notfound-1"
-              >
-                ไม่พบโปรเจกต์
-              </p>
-              <p
-                className="text-sm text-gray-500 text-center mb-4"
-                data-cy="project-notfound-2"
-              >
-                คุณยังไม่ได้ทำการสร้างโปรเจกต์
-              </p>
-            </div>
-          )}
+                  ไม่พบโปรเจกต์
+                </p>
+                <p
+                  className="text-xs sm:text-sm text-gray-500 text-center mb-2 sm:mb-4"
+                  data-cy="project-notfound-2"
+                >
+                  คุณยังไม่ได้ทำการสร้างโปรเจกต์
+                </p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* ส่วนแสดงสปรินต์ */}
         {selectedProject && (
           <div
-            className="bg-white shadow-lg rounded-xl p-6 mb-6"
+            className="bg-white shadow-lg rounded-xl p-4 sm:p-6 mb-4 sm:mb-6"
             data-cy="sprints-section"
           >
-            <h2 className="text-2xl font-bold text-gray-800 mb-6 flex items-center">
-              <Target className="w-6 h-6 mr-3 text-green-500" />
-              เลือกสปรินต์ในโปรเจกต์ {selectedProject.name}
-            </h2>
+            <div
+              className="flex justify-between items-center cursor-pointer"
+              onClick={() =>
+                setIsSprintSectionCollapsed(!isSprintSectionCollapsed)
+              }
+            >
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
+                <Target className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-green-500" />
+                เลือกสปรินต์ในโปรเจกต์ {selectedProject.name}
+              </h2>
+              {isSprintSectionCollapsed ? (
+                <ChevronDown className="w-5 h-5 text-gray-500" />
+              ) : (
+                <ChevronUp className="w-5 h-5 text-gray-500" />
+              )}
+            </div>
 
-            {sprints.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {sprints.map((sprint) => (
-                  <div
-                    key={sprint.sprint_id}
-                    onClick={() => handleSprintSelect(sprint)}
-                    data-cy={`sprint-item-${sprint.sprint_id}`}
-                    className={`
-                 cursor-pointer 
-                 border-2 rounded-lg p-5 
-                 transition-all duration-300 
-                 hover:shadow-lg
-                 ${
-                   selectedSprint?.sprint_id === sprint.sprint_id
-                     ? "border-green-500 bg-green-50 shadow-md"
-                     : "border-gray-200 hover:border-green-300"
-                 }
-               `}
-                  >
-                    <h3 className="text-lg font-semibold text-gray-800 mb-2">
-                      {sprint.name}
-                    </h3>
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="w-4 h-4 mr-2 text-gray-500" />
-                      {new Date(sprint.start_date).toLocaleDateString("th-TH", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      })}{" "}
-                      -{" "}
-                      {new Date(sprint.end_date).toLocaleDateString("th-TH", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      })}
+            <div
+              className={`transition-all duration-300 overflow-hidden ${
+                isSprintSectionCollapsed
+                  ? "max-h-0 opacity-0 mt-0"
+                  : "max-h-screen opacity-100 mt-6"
+              }`}
+            >
+              {sprints.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
+                  {sprints.map((sprint) => (
+                    <div
+                      key={sprint.sprint_id}
+                      onClick={() => handleSprintSelect(sprint)}
+                      data-cy={`sprint-item-${sprint.sprint_id}`}
+                      className={`
+                        cursor-pointer 
+                        border-2 rounded-lg p-3 sm:p-5 
+                        transition-all duration-300 
+                        hover:shadow-lg
+                        ${
+                          selectedSprint?.sprint_id === sprint.sprint_id
+                            ? "border-green-500 bg-green-50 shadow-md"
+                            : "border-gray-200 hover:border-green-300"
+                        }
+                      `}
+                    >
+                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-1 sm:mb-2">
+                        {sprint.name}
+                      </h3>
+                      <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-gray-500" />
+                        <span className="text-xs sm:text-sm">
+                          {new Date(sprint.start_date).toLocaleDateString(
+                            "th-TH",
+                            {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            }
+                          )}{" "}
+                          -{" "}
+                          {new Date(sprint.end_date).toLocaleDateString(
+                            "th-TH",
+                            {
+                              day: "2-digit",
+                              month: "2-digit",
+                              year: "numeric",
+                            }
+                          )}
+                        </span>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div
-                className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
-                data-cy="empty-sprints"
-              >
-                <h2 className=" text-gray-600 mb-4">
-                  ยังไม่มีสปรินต์ในโปรเจกต์นี้
-                </h2>
-                <p className="text-gray-500">
-                  สปรินต์จะปรากฏที่นี่เมื่อถูกสร้างขึ้น
-                </p>
-              </div>
-            )}
+                  ))}
+                </div>
+              ) : (
+                <div
+                  className="flex flex-col items-center justify-center p-4 sm:p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
+                  data-cy="empty-sprints"
+                >
+                  <h2 className="text-sm sm:text-base text-gray-600 mb-2 sm:mb-4">
+                    ยังไม่มีสปรินต์ในโปรเจกต์นี้
+                  </h2>
+                  <p className="text-xs sm:text-sm text-gray-500">
+                    สปรินต์จะปรากฏที่นี่เมื่อถูกสร้างขึ้น
+                  </p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
         {/* ส่วนแสดงไฟล์ทดสอบและสถิติ */}
         {selectedSprint && (
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6">
             {/* แดชบอร์ดแสดงสถิติ */}
             <TestStatsDashboard
               testFiles={testFiles}
@@ -412,28 +521,28 @@ const TestFiles = () => {
 
             {/* ส่วนหัวของรายการไฟล์ทดสอบ */}
             <div
-              className="flex justify-between items-center bg-white p-6 rounded-xl shadow-md"
+              className="flex flex-col sm:flex-row justify-between sm:items-center bg-white p-4 sm:p-6 rounded-xl shadow-md gap-4"
               data-cy="test-files-header"
             >
-              <h2 className="text-2xl font-bold text-gray-800">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800">
                 ไฟล์ทดสอบของ {selectedSprint.name}
               </h2>
-              <div className="flex items-center space-x-4">
-                <div className="relative">
+              <div className="flex flex-col sm:flex-row items-center sm:space-x-4 gap-3 sm:gap-0 w-full sm:w-auto">
+                <div className="relative w-full sm:w-auto">
                   <input
                     type="text"
                     placeholder="ค้นหาไฟล์ทดสอบ..."
                     value={searchTerm}
                     onChange={handleSearch}
                     data-cy="search-test-files"
-                    className="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                    className="w-full sm:w-auto pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                   />
                   <Search className="absolute left-3 top-3 text-gray-400" />
                 </div>
                 <button
                   onClick={handleCreateTestFile}
                   data-cy="create-test-file-button"
-                  className="flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                  className="hidden sm:flex items-center gap-2 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto justify-center"
                 >
                   <Upload className="w-5 h-5" />
                   อัพโหลดไฟล์ทดสอบ
@@ -444,28 +553,30 @@ const TestFiles = () => {
             {/* แสดงรายการไฟล์ทดสอบ */}
             {loading ? (
               <div
-                className="text-center text-gray-600 py-12"
+                className="text-center text-gray-600 py-8 sm:py-12"
                 data-cy="loading-test-files"
               >
                 กำลังโหลดไฟล์ทดสอบ...
               </div>
             ) : testFiles.length === 0 ? (
               <div
-                className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
+                className="flex flex-col items-center justify-center p-4 sm:p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
                 data-cy="empty-test-files"
               >
-                <p className="text-gray-600 mb-6">ไม่พบไฟล์ทดสอบในสปรินต์นี้</p>
+                <p className="text-sm sm:text-base text-gray-600 mb-4 sm:mb-6">
+                  ไม่พบไฟล์ทดสอบในสปรินต์นี้
+                </p>
                 <button
                   onClick={handleCreateTestFile}
                   data-cy="upload-first-test-file-button"
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700"
+                  className="bg-blue-600 text-white px-4 sm:px-6 py-2 sm:py-3 text-sm sm:text-base rounded-lg hover:bg-blue-700"
                 >
                   อัพโหลดไฟล์ทดสอบไฟล์แรก
                 </button>
               </div>
             ) : (
               <div
-                className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
                 data-cy="test-files-grid"
               >
                 {filteredTestFiles.map((file) => (
@@ -474,25 +585,26 @@ const TestFiles = () => {
                     data-cy={`test-file-${file.file_id}`}
                     className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-all"
                   >
-                    <div className="p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <h3 className="text-lg font-semibold text-gray-800">
+                    <div className="p-4 sm:p-6">
+                      <div className="flex justify-between items-start mb-3 sm:mb-4">
+                        <h3 className="text-base sm:text-lg font-semibold text-gray-800 break-words pr-2">
                           {file.filename}
                         </h3>
                         <div
                           data-cy={`test-status-${file.status.toLowerCase()}`}
+                          className="flex-shrink-0"
                         >
                           {getStatusIcon(file.status)}
                         </div>
                       </div>
-                      <div className="space-y-3 text-sm text-gray-600">
+                      <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-gray-600">
                         <div className="flex items-center gap-2">
-                          <FileText className="w-4 h-4" />
+                          <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
                           <span>{(file.file_size / 1024).toFixed(2)} KB</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Calendar className="w-4 h-4" />
-                          <span>
+                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
+                          <span className="text-xs sm:text-sm">
                             {new Date(file.upload_date).toLocaleDateString(
                               "th-TH",
                               {
@@ -507,7 +619,7 @@ const TestFiles = () => {
                       <button
                         onClick={() => navigate(`/test-files/${file.file_id}`)}
                         data-cy={`view-test-file-${file.file_id}`}
-                        className="mt-4 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors"
+                        className="mt-3 sm:mt-4 w-full bg-blue-600 text-white py-2 text-sm sm:text-base rounded-lg hover:bg-blue-700 transition-colors"
                       >
                         ดูรายละเอียดเพิ่มเติม
                       </button>

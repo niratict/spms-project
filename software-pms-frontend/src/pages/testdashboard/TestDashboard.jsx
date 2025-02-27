@@ -444,11 +444,11 @@ export default function TestDashboard() {
       className="min-h-screen bg-gray-50 text-gray-900 p-4 sm:p-8"
       data-cy="test-dashboard"
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* หัวข้อแดชบอร์ด */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg mb-8">
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg mb-4 sm:mb-8">
           <h1
-            className="text-3xl sm:text-4xl font-bold text-center text-white py-6 px-4"
+            className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-white py-4 sm:py-6 px-2 sm:px-4"
             data-cy="dashboard-title"
           >
             แดชบอร์ดแสดงผลการทดสอบ
@@ -456,9 +456,9 @@ export default function TestDashboard() {
         </div>
 
         {/* ตัวเลือกโปรเจกต์และ Sprint */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
           <select
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
+            className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
             value={selectedProject}
             onChange={(e) => {
               setSelectedProject(e.target.value);
@@ -480,7 +480,7 @@ export default function TestDashboard() {
           </select>
 
           <select
-            className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
+            className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
             value={selectedSprint}
             onChange={(e) => setSelectedSprint(e.target.value)}
             disabled={selectedProject === "all"}
@@ -500,24 +500,24 @@ export default function TestDashboard() {
         </div>
 
         {testResults && (
-          <div className="space-y-4 sm:space-y-6">
+          <div className="space-y-4">
             {/* แสดงสถิติเมื่อเลือก Sprint เฉพาะ */}
             {selectedSprint !== "all" && (
               <div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
                 data-cy="sprint-statistics"
               >
                 {/* สรุปสถิติ */}
-                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="p-4 sm:p-6">
+                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 sm:hover:-translate-y-2">
+                  <div className="p-3 sm:p-4 md:p-6">
                     <h2
-                      className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center"
+                      className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 flex items-center"
                       data-cy="summary-stats-title"
                     >
-                      <ActivityIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-blue-500" />
-                      Summary Statistics
+                      <ActivityIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2 text-blue-500" />
+                      สถิติสรุป
                     </h2>
-                    <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                       {/* สถิติ 4 ประเภท: Total, Passed, Failed, และ Duration */}
                       {[
                         {
@@ -555,20 +555,20 @@ export default function TestDashboard() {
                       ].map(({ label, value, color, Icon, dataCy }) => (
                         <div
                           key={label}
-                          className={`p-3 sm:p-4 bg-${color}-50 rounded-lg flex items-center space-x-2 sm:space-x-3 shadow-sm hover:shadow-md transition-all duration-300`}
+                          className={`p-2 sm:p-3 bg-${color}-50 rounded-lg flex items-center space-x-2 shadow-sm hover:shadow-md transition-all duration-300`}
                           data-cy={dataCy}
                         >
                           <Icon
-                            className={`h-5 w-5 sm:h-6 sm:w-6 text-${color}-500`}
+                            className={`h-4 w-4 sm:h-5 sm:w-5 text-${color}-500`}
                           />
                           <div>
                             <p
-                              className={`text-xs uppercase tracking-wider text-${color}-600 mb-1`}
+                              className={`text-xs uppercase tracking-wider text-${color}-600 mb-0.5`}
                             >
                               {label}
                             </p>
                             <p
-                              className={`text-base sm:text-xl font-bold text-${color}-700`}
+                              className={`text-sm sm:text-base md:text-lg font-bold text-${color}-700`}
                             >
                               {value}
                             </p>
@@ -580,181 +580,207 @@ export default function TestDashboard() {
                 </div>
 
                 {/* แผนภูมิวงกลมแสดงการกระจายผลลัพธ์ */}
-                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="p-4 sm:p-6">
+                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 sm:hover:-translate-y-2">
+                  <div className="p-3 sm:p-4 md:p-6">
                     <h2
-                      className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center"
+                      className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 flex items-center"
                       data-cy="pie-chart-title"
                     >
-                      <PieChartIcon className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-green-500" />
-                      Results Distribution
+                      <PieChartIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2 text-green-500" />
+                      การกระจายผลลัพธ์
                     </h2>
-                    <ResponsiveContainer
-                      width="100%"
-                      height={250}
-                      data-cy="pie-chart-container"
-                    >
-                      <PieChart>
-                        <Pie
-                          data={pieData}
-                          dataKey="value"
-                          nameKey="name"
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={90}
-                          paddingAngle={1}
-                          labelLine={false}
-                          label={({
-                            cx,
-                            cy,
-                            midAngle,
-                            innerRadius,
-                            outerRadius,
-                            percent,
-                            name,
-                            index,
-                          }) => {
-                            const RADIAN = Math.PI / 180;
-                            // คำนวณตำแหน่งป้ายกำกับ
-                            const radius =
-                              innerRadius + (outerRadius - innerRadius) * 0.5;
-                            const x =
-                              cx + radius * Math.cos(-midAngle * RADIAN);
-                            const y =
-                              cy + radius * Math.sin(-midAngle * RADIAN);
+                    <div className="w-full h-48 sm:h-56 md:h-64">
+                      <ResponsiveContainer
+                        width="100%"
+                        height="100%"
+                        data-cy="pie-chart-container"
+                      >
+                        <PieChart>
+                          <Pie
+                            data={pieData}
+                            dataKey="value"
+                            nameKey="name"
+                            cx="50%"
+                            cy="50%"
+                            innerRadius={window.innerWidth < 640 ? 40 : 60}
+                            outerRadius={window.innerWidth < 640 ? 70 : 90}
+                            paddingAngle={1}
+                            labelLine={false}
+                            label={({
+                              cx,
+                              cy,
+                              midAngle,
+                              innerRadius,
+                              outerRadius,
+                              percent,
+                              name,
+                              index,
+                            }) => {
+                              const RADIAN = Math.PI / 180;
+                              // คำนวณตำแหน่งป้ายกำกับ
+                              const radius =
+                                innerRadius + (outerRadius - innerRadius) * 0.5;
+                              const x =
+                                cx + radius * Math.cos(-midAngle * RADIAN);
+                              const y =
+                                cy + radius * Math.sin(-midAngle * RADIAN);
 
-                            // กำหนดสไตล์ตามสถานะ passed/failed
-                            const bgColor =
-                              name === "Passed"
-                                ? "rgba(74, 222, 128, 0.9)"
-                                : "rgba(248, 113, 113, 0.9)";
-                            const textColor = "white";
+                              // กำหนดสไตล์ตามสถานะ passed/failed
+                              const bgColor =
+                                name === "Passed"
+                                  ? "rgba(74, 222, 128, 0.9)"
+                                  : "rgba(248, 113, 113, 0.9)";
+                              const textColor = "white";
 
-                            const content = `${name} ${(percent * 100).toFixed(
-                              0
-                            )}%`;
+                              const content = `${name} ${(
+                                percent * 100
+                              ).toFixed(0)}%`;
+                              const labelWidth =
+                                window.innerWidth < 640 ? 70 : 80;
+                              const labelHeight =
+                                window.innerWidth < 640 ? 18 : 20;
+                              const fontSize =
+                                window.innerWidth < 640 ? "0.65rem" : "0.75rem";
 
-                            return (
-                              <>
-                                {/* สี่เหลี่ยมพื้นหลัง */}
-                                <rect
-                                  x={x - 40}
-                                  y={y - 10}
-                                  width="80"
-                                  height="20"
-                                  rx="4"
-                                  fill={bgColor}
-                                  stroke="white"
-                                  strokeWidth="0.5"
-                                  className="text-label-bg"
-                                  data-cy={`pie-label-${name.toLowerCase()}`}
-                                />
-                                {/* ข้อความ */}
-                                <text
-                                  x={x}
-                                  y={y}
-                                  fill={textColor}
-                                  textAnchor="middle"
-                                  dominantBaseline="central"
-                                  className="text-xs font-medium"
-                                >
-                                  {content}
-                                </text>
-                              </>
-                            );
-                          }}
-                        >
-                          <Cell fill="#4ADE80" data-cy="pie-cell-passed" />
-                          <Cell fill="#F87171" data-cy="pie-cell-failed" />
-                        </Pie>
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "rgba(255,255,255,0.9)",
-                            borderRadius: "12px",
-                            padding: "10px",
-                          }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
+                              return (
+                                <>
+                                  {/* สี่เหลี่ยมพื้นหลัง */}
+                                  <rect
+                                    x={x - labelWidth / 2}
+                                    y={y - labelHeight / 2}
+                                    width={labelWidth}
+                                    height={labelHeight}
+                                    rx="4"
+                                    fill={bgColor}
+                                    stroke="white"
+                                    strokeWidth="0.5"
+                                    className="text-label-bg"
+                                    data-cy={`pie-label-${name.toLowerCase()}`}
+                                  />
+                                  {/* ข้อความ */}
+                                  <text
+                                    x={x}
+                                    y={y}
+                                    fill={textColor}
+                                    textAnchor="middle"
+                                    dominantBaseline="central"
+                                    style={{ fontSize }}
+                                    className="font-medium"
+                                  >
+                                    {content}
+                                  </text>
+                                </>
+                              );
+                            }}
+                          >
+                            <Cell fill="#4ADE80" data-cy="pie-cell-passed" />
+                            <Cell fill="#F87171" data-cy="pie-cell-failed" />
+                          </Pie>
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "rgba(255,255,255,0.9)",
+                              borderRadius: "12px",
+                              padding: "10px",
+                            }}
+                          />
+                        </PieChart>
+                      </ResponsiveContainer>
+                    </div>
                   </div>
                 </div>
 
                 {/* แผนภูมิแท่งแสดงภาพรวมผลการทดสอบ */}
-                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="p-4 sm:p-6">
+                <div className="bg-white rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 sm:hover:-translate-y-2 sm:col-span-2 lg:col-span-1">
+                  <div className="p-3 sm:p-4 md:p-6">
                     <h2
-                      className="text-xl sm:text-2xl font-bold mb-4 text-gray-800 flex items-center"
+                      className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 flex items-center"
                       data-cy="bar-chart-title"
                     >
-                      <BarChart2 className="h-5 w-5 sm:h-6 sm:w-6 mr-2 sm:mr-3 text-indigo-500" />
-                      Test Results Overview
+                      <BarChart2 className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2 text-indigo-500" />
+                      ภาพรวมผลการทดสอบ
                     </h2>
-                    <ResponsiveContainer
-                      width="100%"
-                      height={250}
-                      data-cy="bar-chart-container"
-                    >
-                      <BarChart data={barChartData}>
-                        <CartesianGrid
-                          strokeDasharray="3 3"
-                          className="stroke-gray-200"
-                        />
-                        <XAxis
-                          dataKey="name"
-                          className="text-xs sm:text-sm"
-                          tick={{ fill: "rgb(55, 65, 81)" }}
-                        />
-                        <YAxis
-                          className="text-xs sm:text-sm"
-                          tick={{ fill: "rgb(55, 65, 81)" }}
-                        />
-                        <Tooltip
-                          contentStyle={{
-                            backgroundColor: "rgba(255,255,255,0.9)",
-                            borderRadius: "12px",
-                            padding: "10px",
-                          }}
-                        />
-                        <Bar
-                          dataKey="value"
-                          fill="#6366F1"
-                          radius={[8, 8, 0, 0]}
-                          barSize={40}
-                          data-cy="bar-chart-bars"
-                        >
-                          {barChartData.map((entry, index) => {
-                            const color =
-                              entry.name === "Passed"
-                                ? "#4ADE80"
-                                : entry.name === "Failed"
-                                ? "#F87171"
-                                : entry.name === "Total Tests"
-                                ? "#3B82F6"
-                                : "#8B5CF6";
+                    <div className="w-full h-48 sm:h-56 md:h-64">
+                      <ResponsiveContainer
+                        width="100%"
+                        height="100%"
+                        data-cy="bar-chart-container"
+                      >
+                        <BarChart data={barChartData}>
+                          <CartesianGrid
+                            strokeDasharray="3 3"
+                            className="stroke-gray-200"
+                          />
+                          <XAxis
+                            dataKey="name"
+                            className="text-xs"
+                            tick={{ fill: "rgb(55, 65, 81)" }}
+                            tickSize={8}
+                            height={40}
+                            angle={window.innerWidth < 400 ? -45 : 0}
+                            textAnchor={
+                              window.innerWidth < 400 ? "end" : "middle"
+                            }
+                            fontSize={window.innerWidth < 640 ? 10 : 12}
+                          />
+                          <YAxis
+                            className="text-xs"
+                            tick={{ fill: "rgb(55, 65, 81)" }}
+                            fontSize={window.innerWidth < 640 ? 10 : 12}
+                            width={window.innerWidth < 350 ? 25 : 30}
+                          />
+                          <Tooltip
+                            contentStyle={{
+                              backgroundColor: "rgba(255,255,255,0.9)",
+                              borderRadius: "12px",
+                              padding: "10px",
+                              fontSize:
+                                window.innerWidth < 640 ? "12px" : "14px",
+                            }}
+                          />
+                          <Bar
+                            dataKey="value"
+                            fill="#6366F1"
+                            radius={[8, 8, 0, 0]}
+                            barSize={
+                              window.innerWidth < 400
+                                ? 25
+                                : window.innerWidth < 640
+                                ? 30
+                                : 40
+                            }
+                            data-cy="bar-chart-bars"
+                          >
+                            {barChartData.map((entry, index) => {
+                              const color =
+                                entry.name === "Passed"
+                                  ? "#4ADE80"
+                                  : entry.name === "Failed"
+                                  ? "#F87171"
+                                  : entry.name === "Total Tests"
+                                  ? "#3B82F6"
+                                  : "#8B5CF6";
 
-                            return (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={color}
-                                data-cy={`bar-cell-${entry.name
-                                  .toLowerCase()
-                                  .replace(/\s+/g, "-")}`}
-                              />
-                            );
-                          })}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
+                              return (
+                                <Cell
+                                  key={`cell-${index}`}
+                                  fill={color}
+                                  data-cy={`bar-cell-${entry.name
+                                    .toLowerCase()
+                                    .replace(/\s+/g, "-")}`}
+                                />
+                              );
+                            })}
+                          </Bar>
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
                     <div
-                      className="mt-2 sm:mt-4 text-center text-xs sm:text-sm text-gray-600"
+                      className="mt-2 sm:mt-3 text-center text-xs sm:text-sm text-gray-600"
                       data-cy="bar-chart-summary"
                     >
-                      Breakdown of {totalTests} tests:
-                      {` ${passedTests} passed (${passedPercent.toFixed(1)}%), 
-            ${failedTests} failed, total duration ${(
-                        testDuration / 1000
-                      ).toFixed(2)}s`}
+                      รายละเอียดของ {totalTests} การทดสอบ:
+                      {` ${passedTests} ผ่าน (${passedPercent.toFixed(1)}%), 
+${failedTests} ผิดพลาด, ระยะเวลารวม ${(testDuration / 1000).toFixed(2)} วินาที`}
                     </div>
                   </div>
                 </div>
@@ -797,27 +823,27 @@ export default function TestDashboard() {
 
             {/* ส่วนค้นหาและกรองผลการทดสอบ */}
             <div
-              className="bg-white rounded-xl shadow-md p-6"
+              className="bg-white rounded-xl shadow-md p-4 sm:p-5 md:p-6"
               data-cy="search-filter-container"
             >
-              <div className="flex flex-col md:flex-row gap-4 mb-4">
+              <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
                 {/* ช่องค้นหาผลการทดสอบ */}
                 <div className="relative flex-grow">
-                  <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                   <input
                     type="text"
                     placeholder="ค้นหาไฟล์ทดสอบ..."
-                    className="w-full pl-10 p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
+                    className="w-full pl-9 sm:pl-10 p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     data-cy="search-input"
                   />
                 </div>
                 {/* ตัวกรองสถานะการทดสอบ */}
-                <div className="flex items-center gap-2">
-                  <Filter className="h-5 w-5 text-gray-400" />
+                <div className="flex items-center gap-2 sm:min-w-[140px]">
+                  <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
                   <select
-                    className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
+                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
                     data-cy="status-filter"
@@ -838,23 +864,23 @@ export default function TestDashboard() {
 
             {/* แสดงรายการผลการทดสอบ */}
             <div
-              className="bg-white rounded-xl shadow-md p-6"
+              className="bg-white rounded-xl shadow-md p-4 sm:p-5 md:p-6 mt-4"
               data-cy="test-results-container"
             >
               {/* แสดงจำนวนผลลัพธ์ที่พบ */}
               <div
-                className="text-sm text-gray-600 mb-4"
+                className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4"
                 data-cy="results-summary"
               >
                 พบผลการทดสอบทั้งหมด {filteredTests.length} รายการ
               </div>
 
               {/* รายการผลการทดสอบ */}
-              <div className="space-y-4">
+              <div className="space-y-3 sm:space-y-4">
                 {currentTests.length === 0 ? (
                   // แสดงเมื่อไม่พบข้อมูล
                   <div
-                    className="p-6 text-center text-gray-500"
+                    className="p-4 sm:p-6 text-center text-gray-500 text-sm sm:text-base"
                     data-cy="no-results-message"
                   >
                     ไม่พบผลการทดสอบที่ตรงกับเงื่อนไข
@@ -875,7 +901,7 @@ export default function TestDashboard() {
                     return (
                       <div
                         key={index}
-                        className={`border-l-4 p-4 rounded-lg ${
+                        className={`border-l-4 p-3 sm:p-4 rounded-lg ${
                           allPassed
                             ? "border-green-500 bg-green-50"
                             : "border-red-500 bg-red-50"
@@ -883,33 +909,35 @@ export default function TestDashboard() {
                         data-cy={`test-result-item-${index}`}
                       >
                         {/* หัวข้อผลการทดสอบ */}
-                        <div className="flex flex-col sm:flex-row justify-between items-start gap-4 mb-4">
-                          <div>
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                          <div className="w-full sm:w-auto">
                             <h3
-                              className="text-lg font-semibold text-gray-800"
+                              className="text-base sm:text-lg font-semibold text-gray-800 break-words"
                               data-cy={`test-result-title-${index}`}
                             >
                               {result.projectName} - {result.sprintName}
                             </h3>
                             <p
-                              className="text-sm text-gray-600"
+                              className="text-xs sm:text-sm text-gray-600 break-words"
                               data-cy={`test-result-filename-${index}`}
                             >
                               ชื่อไฟล์ทดสอบ: {result.filename}
                             </p>
                           </div>
                           {/* แสดงสถิติการทดสอบ */}
-                          <div className="flex flex-wrap items-center gap-4">
+                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
                             <span
-                              className="text-gray-700 flex items-center bg-white px-3 py-1 rounded-full shadow-sm"
+                              className="text-xs sm:text-sm text-gray-700 flex items-center bg-white px-2 sm:px-3 py-1 rounded-full shadow-sm"
                               data-cy={`test-count-${index}`}
                             >
-                              <FileCode className="mr-2 h-4 w-4" />
-                              {totalTests} กรณีทดสอบ
+                              <FileCode className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                              <span className="whitespace-nowrap">
+                                {totalTests} กรณีทดสอบ
+                              </span>
                             </span>
                             {/* แสดงสถานะการทดสอบ */}
                             <span
-                              className={`flex items-center px-3 py-1 rounded-full shadow-sm ${
+                              className={`text-xs sm:text-sm flex items-center px-2 sm:px-3 py-1 rounded-full shadow-sm ${
                                 allPassed
                                   ? "bg-green-100 text-green-800"
                                   : "bg-red-100 text-red-800"
@@ -918,23 +946,29 @@ export default function TestDashboard() {
                             >
                               {allPassed ? (
                                 <>
-                                  <CheckCircle2 className="mr-2 h-4 w-4" />
-                                  ผ่านทั้งหมด
+                                  <CheckCircle2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                  <span className="whitespace-nowrap">
+                                    ผ่านทั้งหมด
+                                  </span>
                                 </>
                               ) : (
                                 <>
-                                  <XCircle className="mr-2 h-4 w-4" />
-                                  ล้มเหลว {failCount} กรณี
+                                  <XCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                  <span className="whitespace-nowrap">
+                                    ล้มเหลว {failCount} กรณี
+                                  </span>
                                 </>
                               )}
                             </span>
                             {/* แสดงเวลาที่ใช้ในการทดสอบ */}
                             <span
-                              className="text-gray-700 flex items-center bg-white px-3 py-1 rounded-full shadow-sm"
+                              className="text-xs sm:text-sm text-gray-700 flex items-center bg-white px-2 sm:px-3 py-1 rounded-full shadow-sm"
                               data-cy={`test-duration-${index}`}
                             >
-                              <Clock className="mr-2 h-4 w-4" />
-                              {(duration / 1000).toFixed(2)}s
+                              <Clock className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                              <span className="whitespace-nowrap">
+                                {(duration / 1000).toFixed(2)}s
+                              </span>
                             </span>
                           </div>
                         </div>
@@ -953,33 +987,33 @@ export default function TestDashboard() {
               {/* ส่วนการแบ่งหน้า (Pagination) */}
               {totalPages > 0 && (
                 <div
-                  className="mt-6 flex justify-center items-center gap-2"
+                  className="mt-4 sm:mt-6 flex justify-center items-center gap-1 sm:gap-2 flex-wrap"
                   data-cy="pagination-container"
                 >
                   {/* ปุ่มไปหน้าแรก */}
                   <button
                     onClick={() => goToPage(1)}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="หน้าแรก"
                     data-cy="pagination-first"
                   >
-                    <ChevronFirst className="h-5 w-5" />
+                    <ChevronFirst className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
 
                   {/* ปุ่มย้อนกลับ */}
                   <button
                     onClick={() => goToPage(currentPage - 1)}
                     disabled={currentPage === 1}
-                    className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="หน้าก่อนหน้า"
                     data-cy="pagination-prev"
                   >
-                    <ChevronLeft className="h-5 w-5" />
+                    <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
 
                   {/* แสดงหมายเลขหน้า */}
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-1 flex-wrap">
                     {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
                       // คำนวณหมายเลขหน้าที่จะแสดง
                       let pageNum =
@@ -995,7 +1029,7 @@ export default function TestDashboard() {
                         <button
                           key={i}
                           onClick={() => goToPage(pageNum)}
-                          className={`w-8 h-8 rounded-md ${
+                          className={`w-6 h-6 sm:w-8 sm:h-8 text-xs sm:text-sm rounded-md ${
                             currentPage === pageNum
                               ? "bg-blue-500 text-white"
                               : "hover:bg-gray-100"
@@ -1012,22 +1046,22 @@ export default function TestDashboard() {
                   <button
                     onClick={() => goToPage(currentPage + 1)}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="หน้าถัดไป"
                     data-cy="pagination-next"
                   >
-                    <ChevronRight className="h-5 w-5" />
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
 
                   {/* ปุ่มไปหน้าสุดท้าย */}
                   <button
                     onClick={() => goToPage(totalPages)}
                     disabled={currentPage === totalPages}
-                    className="p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                    className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
                     title="หน้าสุดท้าย"
                     data-cy="pagination-last"
                   >
-                    <ChevronLast className="h-5 w-5" />
+                    <ChevronLast className="h-4 w-4 sm:h-5 sm:w-5" />
                   </button>
                 </div>
               )}
@@ -1035,7 +1069,7 @@ export default function TestDashboard() {
               {/* แสดงข้อมูลการแบ่งหน้า */}
               {totalPages > 0 && (
                 <div
-                  className="mt-2 text-center text-sm text-gray-600"
+                  className="mt-2 text-center text-xs sm:text-sm text-gray-600"
                   data-cy="pagination-info"
                 >
                   หน้า {currentPage} จาก {totalPages} ({filteredTests.length}{" "}

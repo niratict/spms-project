@@ -20,7 +20,7 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 Modal.setAppElement("#root");
 
-// กำหนดสไตล์สำหรับ Modal ปกติ
+// กำหนดสไตล์สำหรับ Modal ปกติ - ปรับให้ responsive
 const modalStyles = {
   content: {
     top: "50%",
@@ -29,8 +29,9 @@ const modalStyles = {
     bottom: "auto",
     marginRight: "-50%",
     transform: "translate(-50%, -50%)",
-    width: "400px",
-    padding: "24px",
+    width: "90%",
+    maxWidth: "400px",
+    padding: "20px",
     borderRadius: "12px",
     border: "none",
     boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1)",
@@ -40,14 +41,14 @@ const modalStyles = {
   },
 };
 
-// กำหนดสไตล์สำหรับ Modal แสดงรูปภาพ
+// กำหนดสไตล์สำหรับ Modal แสดงรูปภาพ - ปรับให้ responsive
 const imagePreviewModalStyles = {
   ...modalStyles,
   content: {
     ...modalStyles.content,
     width: "auto",
-    maxWidth: "90vw",
-    maxHeight: "90vh",
+    maxWidth: "min(800px, 70vw)", // จำกัดความกว้างสูงสุดเป็น 800px หรือ 70% ของความกว้างหน้าจอ (แล้วแต่ว่าค่าไหนน้อยกว่า)
+    maxHeight: "70vh",
     padding: "16px",
   },
 };
@@ -271,35 +272,39 @@ const Profile = () => {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-12"
+      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 sm:py-12"
       data-cy="profile-page"
     >
-      <div className="max-w-4xl mx-auto px-4">
+      <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* ส่วนหัวของหน้าโปรไฟล์ */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-8 py-6">
-            <div className="flex items-center justify-between">
-              <h1 className="text-3xl font-bold text-white">ตั้งค่าโปรไฟล์</h1>
+          <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-4 sm:px-8 py-4 sm:py-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-white">
+                ตั้งค่าโปรไฟล์
+              </h1>
               <div
-                className="px-4 py-2 bg-white rounded-lg"
+                className="px-3 py-1 sm:px-4 sm:py-2 bg-white rounded-lg self-start"
                 data-cy="profile-role"
               >
-                <span className="text-black font-medium capitalize">
+                <span className="text-sm sm:text-base text-black font-medium capitalize">
                   {profile?.role || "User"}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="p-8">
+          <div className="p-4 sm:p-6 md:p-8">
             {/* แสดงข้อความแจ้งเตือนความผิดพลาด */}
             {error && (
               <div
-                className="mb-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-2"
+                className="mb-4 sm:mb-6 bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 flex items-center gap-2"
                 data-cy="profile-error"
               >
-                <AlertCircle className="h-5 w-5 text-red-500" />
-                <span className="text-red-700">{error}</span>
+                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0" />
+                <span className="text-sm sm:text-base text-red-700">
+                  {error}
+                </span>
                 <button
                   onClick={() => setError(null)}
                   className="ml-auto hover:bg-red-100 p-1 rounded-full transition-colors"
@@ -310,12 +315,13 @@ const Profile = () => {
               </div>
             )}
 
-            {/* ส่วนรูปภาพโปรไฟล์ */}
-            <div className="flex flex-col md:flex-row md:items-start gap-8 mb-8">
+            {/* ส่วนรูปภาพโปรไฟล์และข้อมูลพื้นฐาน */}
+            <div className="flex flex-col items-center md:flex-row md:items-start gap-6 mb-6 sm:mb-8">
+              {/* ส่วนรูปภาพโปรไฟล์ */}
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative">
                   <div
-                    className="w-40 h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg cursor-pointer"
+                    className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg cursor-pointer"
                     onClick={() =>
                       imagePreview && setShowImagePreviewModal(true)
                     }
@@ -329,7 +335,7 @@ const Profile = () => {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                        <UserCircle className="w-20 h-20 text-gray-400" />
+                        <UserCircle className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 text-gray-400" />
                       </div>
                     )}
                   </div>
@@ -338,10 +344,10 @@ const Profile = () => {
                 {/* ปุ่มจัดการรูปภาพโปรไฟล์ */}
                 <div className="flex gap-2">
                   <label
-                    className="bg-blue-500 p-3 rounded-full cursor-pointer hover:bg-blue-600 transition-colors shadow-lg"
+                    className="bg-blue-500 p-2 sm:p-3 rounded-full cursor-pointer hover:bg-blue-600 transition-colors shadow-lg"
                     data-cy="upload-image-btn"
                   >
-                    <Upload className="w-5 h-5 text-white" />
+                    <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     <input
                       type="file"
                       className="hidden"
@@ -361,10 +367,10 @@ const Profile = () => {
                   {imagePreview && (
                     <button
                       onClick={handleDeleteImage}
-                      className="bg-red-500 p-3 rounded-full hover:bg-red-600 transition-colors shadow-lg"
+                      className="bg-red-500 p-2 sm:p-3 rounded-full hover:bg-red-600 transition-colors shadow-lg"
                       data-cy="delete-image-btn"
                     >
-                      <Trash2 className="w-5 h-5 text-white" />
+                      <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                     </button>
                   )}
                 </div>
@@ -374,7 +380,7 @@ const Profile = () => {
                   <button
                     onClick={handleImageUpload}
                     disabled={actionLoading}
-                    className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 shadow-md w-full max-w-[200px]"
+                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 shadow-md w-full max-w-[200px]"
                     data-cy="confirm-upload-btn"
                   >
                     {actionLoading ? "Uploading..." : "Upload New Image"}
@@ -383,33 +389,37 @@ const Profile = () => {
               </div>
 
               {/* ข้อมูลพื้นฐานของผู้ใช้ */}
-              <div className="flex flex-col space-y-3 md:pt-2">
+              <div className="flex flex-col space-y-2 sm:space-y-3 text-center md:text-left md:pt-2">
                 <h2
-                  className="text-2xl font-semibold text-gray-800"
+                  className="text-xl sm:text-2xl font-semibold text-gray-800"
                   data-cy="profile-name"
                 >
                   {profile?.name}
                 </h2>
                 <div
-                  className="flex items-center space-x-2 text-gray-600"
+                  className="flex items-center justify-center md:justify-start space-x-2 text-gray-600"
                   data-cy="profile-email"
                 >
                   <Mail className="w-4 h-4" />
-                  <span>{profile?.email}</span>
+                  <span className="text-sm sm:text-base break-all">
+                    {profile?.email}
+                  </span>
                 </div>
                 <div
-                  className="flex items-center space-x-2 text-gray-600"
+                  className="flex items-center justify-center md:justify-start space-x-2 text-gray-600"
                   data-cy="profile-created-at"
                 >
                   <Calendar className="w-4 h-4" />
-                  <span>เริ่มใช้งาน {formatDate(profile?.created_at)}</span>
+                  <span className="text-sm sm:text-base">
+                    เริ่มใช้งาน {formatDate(profile?.created_at)}
+                  </span>
                 </div>
               </div>
             </div>
 
             {/* ส่วนฟอร์มแก้ไขข้อมูล */}
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4 sm:space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
                 {/* ช่องกรอกชื่อ */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -425,16 +435,16 @@ const Profile = () => {
                           setFormErrors({ ...formErrors, name: "" });
                       }}
                       disabled={!editMode}
-                      className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 ${
+                      className={`w-full px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 ${
                         formErrors.name ? "border-red-500" : ""
                       }`}
                       data-cy="name-input"
                     />
-                    <User className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <User className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                   </div>
                   {formErrors.name && (
                     <p
-                      className="mt-1 text-sm text-red-500"
+                      className="mt-1 text-xs sm:text-sm text-red-500"
                       data-cy="name-error"
                     >
                       {formErrors.name}
@@ -452,20 +462,20 @@ const Profile = () => {
                       type="email"
                       value={formData.email}
                       disabled={true}
-                      className="w-full px-4 py-2 border rounded-lg bg-gray-50 text-gray-500"
+                      className="w-full px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base border rounded-lg bg-gray-50 text-gray-500"
                       data-cy="email-input"
                     />
-                    <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                   </div>
                 </div>
               </div>
 
               {/* ปุ่มดำเนินการต่างๆ */}
-              <div className="flex gap-4 pt-6">
+              <div className="flex flex-wrap sm:flex-nowrap gap-3 sm:gap-4 pt-4 sm:pt-6">
                 {!editMode ? (
                   <button
                     onClick={() => setEditMode(true)}
-                    className="flex items-center gap-2 px-6 py-2.5 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md"
+                    className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md w-full sm:w-auto"
                     data-cy="edit-profile-btn"
                   >
                     แก้ไขโปรไฟล์
@@ -475,7 +485,7 @@ const Profile = () => {
                     <button
                       onClick={handleSubmit}
                       disabled={actionLoading}
-                      className="px-6 py-2.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-md disabled:opacity-50"
+                      className="px-4 py-2 sm:px-6 sm:py-2.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-md disabled:opacity-50 w-full sm:w-auto"
                       data-cy="save-profile-btn"
                     >
                       {actionLoading ? "Saving..." : "บันทึก"}
@@ -489,7 +499,7 @@ const Profile = () => {
                         });
                         setFormErrors({});
                       }}
-                      className="px-6 py-2.5 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors shadow-md"
+                      className="px-4 py-2 sm:px-6 sm:py-2.5 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors shadow-md w-full sm:w-auto"
                       data-cy="cancel-edit-btn"
                     >
                       ยกเลิก
@@ -498,7 +508,7 @@ const Profile = () => {
                 )}
                 <button
                   onClick={() => setShowPasswordModal(true)}
-                  className="flex items-center gap-2 px-6 py-2.5 bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors shadow-md ml-auto"
+                  className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors shadow-md w-full sm:w-auto sm:ml-auto"
                   data-cy="change-password-btn"
                 >
                   <Lock className="h-4 w-4" />
@@ -520,10 +530,10 @@ const Profile = () => {
         <div className="relative">
           <button
             onClick={() => setShowImagePreviewModal(false)}
-            className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors"
+            className="absolute top-2 right-2 p-2 bg-white rounded-full shadow-lg hover:bg-gray-100 transition-colors z-10"
             data-cy="close-preview-btn"
           >
-            <X className="h-6 w-6" />
+            <X className="h-5 w-5 sm:h-6 sm:w-6" />
           </button>
           <img
             src={imagePreview}
@@ -550,7 +560,9 @@ const Profile = () => {
       >
         <div className="space-y-4">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800">เปลี่ยนรหัสผ่าน</h2>
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+              เปลี่ยนรหัสผ่าน
+            </h2>
             <button
               onClick={() => {
                 setShowPasswordModal(false);
@@ -589,7 +601,7 @@ const Profile = () => {
                     });
                   }
                 }}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full px-3 py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   passwordErrors.current_password ? "border-red-500" : ""
                 }`}
                 data-cy="current-password-input"
@@ -606,15 +618,15 @@ const Profile = () => {
                 data-cy="toggle-current-password"
               >
                 {showPassword.current ? (
-                  <EyeOff className="h-5 w-5 text-gray-400" />
+                  <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 ) : (
-                  <Eye className="h-5 w-5 text-gray-400" />
+                  <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 )}
               </button>
             </div>
             {passwordErrors.current_password && (
               <p
-                className="mt-1 text-sm text-red-500"
+                className="mt-1 text-xs sm:text-sm text-red-500"
                 data-cy="current-password-error"
               >
                 {passwordErrors.current_password}
@@ -643,7 +655,7 @@ const Profile = () => {
                     });
                   }
                 }}
-                className={`w-full px-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                className={`w-full px-3 py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                   passwordErrors.new_password ? "border-red-500" : ""
                 }`}
                 data-cy="new-password-input"
@@ -657,15 +669,15 @@ const Profile = () => {
                 data-cy="toggle-new-password"
               >
                 {showPassword.new ? (
-                  <EyeOff className="h-5 w-5 text-gray-400" />
+                  <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 ) : (
-                  <Eye className="h-5 w-5 text-gray-400" />
+                  <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                 )}
               </button>
             </div>
             {passwordErrors.new_password && (
               <p
-                className="mt-1 text-sm text-red-500"
+                className="mt-1 text-xs sm:text-sm text-red-500"
                 data-cy="new-password-error"
               >
                 {passwordErrors.new_password}

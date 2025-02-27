@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import {
   BarChart,
   Bar,
@@ -9,7 +9,12 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, TrendingDown } from "lucide-react";
+import {
+  TrendingUp,
+  TrendingDown,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 
 // ฟังก์ชันช่วยสำหรับจัดการกับวันที่ในรูปแบบไทย
 const dateHelpers = {
@@ -52,26 +57,29 @@ const dateHelpers = {
 
 // คอมโพเนนต์ย่อยสำหรับแสดงการ์ดสรุปข้อมูล
 const MetricCard = ({ title, value, change }) => (
-  <div className="bg-white rounded-lg shadow p-6" data-cy="metric-card">
-    <p className="text-sm text-gray-500">{title}</p>
-    <div className="mt-2 flex items-baseline gap-2">
+  <div
+    className="bg-white rounded-lg shadow p-3 sm:p-4 lg:p-6"
+    data-cy="metric-card"
+  >
+    <p className="text-xs sm:text-sm text-gray-500 truncate">{title}</p>
+    <div className="mt-1 sm:mt-2 flex items-baseline gap-1 sm:gap-2">
       <p
-        className="text-2xl font-semibold text-gray-900"
+        className="text-lg sm:text-xl lg:text-2xl font-semibold text-gray-900"
         data-cy="metric-value"
       >
         {value}
       </p>
       {change !== undefined && (
         <span
-          className={`flex items-center text-sm ${
+          className={`flex items-center text-xs sm:text-sm ${
             change > 0 ? "text-green-600" : "text-red-600"
           }`}
           data-cy="metric-change"
         >
           {change > 0 ? (
-            <TrendingUp className="h-4 w-4" />
+            <TrendingUp className="h-3 w-3 sm:h-4 sm:w-4" />
           ) : (
-            <TrendingDown className="h-4 w-4" />
+            <TrendingDown className="h-3 w-3 sm:h-4 sm:w-4" />
           )}
           {Math.abs(change)}%
         </span>
@@ -88,38 +96,42 @@ const CustomTooltip = ({ active, payload, label, chartData }) => {
 
     return (
       <div
-        className="bg-white p-4 rounded-lg shadow-lg border border-gray-200"
+        className="bg-white p-2 sm:p-4 rounded-lg shadow-lg border border-gray-200 max-w-xs sm:max-w-sm"
         data-cy="chart-tooltip"
       >
         {/* ชื่อสปรินต์ */}
-        <p className="text-lg font-semibold text-gray-800 mb-3">{label}</p>
+        <p className="text-base sm:text-lg font-semibold text-gray-800 mb-2 sm:mb-3 truncate">
+          {label}
+        </p>
 
         {/* วันที่ของสปรินต์ */}
-        <div className="text-sm text-gray-600 mb-3">
+        <div className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-3">
           <p className="mb-1">วันที่เริ่มต้น: {sprintData.startDate}</p>
           <p>วันที่สิ้นสุด: {sprintData.endDate}</p>
         </div>
 
         {/* จำนวนการทดสอบทั้งหมด */}
-        <div className="flex items-center gap-2 mb-3">
-          <div className="w-3 h-3 rounded-full bg-gray-400" />
-          <span className="text-sm font-medium text-gray-700">
+        <div className="flex items-center gap-2 mb-2 sm:mb-3">
+          <div className="w-2 h-2 sm:w-3 sm:h-3 rounded-full bg-gray-400" />
+          <span className="text-xs sm:text-sm font-medium text-gray-700">
             Total Tests: {totalTests}
           </span>
         </div>
 
         {/* รายละเอียดแต่ละประเภทการทดสอบ */}
-        {payload.map((entry, index) => (
-          <div key={index} className="flex items-center gap-2 mb-1 last:mb-0">
-            <div
-              className="w-3 h-3 rounded-full"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-sm font-medium text-gray-700">
-              {entry.name}: {entry.value} tests
-            </span>
-          </div>
-        ))}
+        <div className="space-y-1">
+          {payload.map((entry, index) => (
+            <div key={index} className="flex items-center gap-2">
+              <div
+                className="w-2 h-2 sm:w-3 sm:h-3 rounded-full"
+                style={{ backgroundColor: entry.color }}
+              />
+              <span className="text-xs sm:text-sm font-medium text-gray-700">
+                {entry.name}: {entry.value} tests
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -128,7 +140,7 @@ const CustomTooltip = ({ active, payload, label, chartData }) => {
 
 // คอมโพเนนต์ย่อยสำหรับกำหนดการแสดงผลของแกน X
 const CustomXAxisTick = (props) => {
-  const { x, y, payload, index, chartData } = props;
+  const { x, y, payload, index, chartData, isMobile } = props;
   const currentSprintData = chartData[index];
   const previousSprintData = index > 0 ? chartData[index - 1] : null;
 
@@ -140,21 +152,41 @@ const CustomXAxisTick = (props) => {
   // ถ้าแสดงเดือน ให้เลื่อนตำแหน่งเพื่อให้อยู่ตรงกลางระหว่างสปรินต์
   const offsetX = inSameMonth ? -50 : 0;
 
+  // ปรับขนาดและการแสดงผลตามขนาดหน้าจอ
+  const fontSize = isMobile ? "8px" : "12px";
+  const yOffset = isMobile ? 12 : 20;
+  const monthYOffset = isMobile ? 30 : 60;
+
+  // ปรับความยาวของชื่อสปรินต์บนมือถือ
+  let displayName = payload.value;
+  if (isMobile && displayName.length > 8) {
+    displayName = displayName.substring(0, 7) + "...";
+  }
+
   return (
     <g transform={`translate(${x},${y})`} data-cy="x-axis-tick">
       {/* ชื่อสปรินต์ */}
-      <text x={0} y={20} textAnchor="middle" fill="#4B5563" className="text-sm">
-        {payload.value}
+      <text
+        x={0}
+        y={yOffset}
+        textAnchor="middle"
+        fill="#4B5563"
+        style={{ fontSize }}
+        transform={isMobile ? "rotate(-45, 0, 0)" : ""}
+        dominantBaseline={isMobile ? "hanging" : "auto"}
+      >
+        {displayName}
       </text>
 
       {/* แสดงเดือน */}
-      {currentSprintData.isLastInMonth && inSameMonth && (
+      {currentSprintData.isLastInMonth && inSameMonth && !isMobile && (
         <text
           x={offsetX}
-          y={60}
+          y={monthYOffset}
           textAnchor="middle"
           fill="#4B5563"
-          className="text-xs font-medium"
+          style={{ fontSize }}
+          fontWeight="medium"
           data-cy="month-label"
         >
           {currentSprintData.monthDisplay}
@@ -165,6 +197,47 @@ const CustomXAxisTick = (props) => {
 };
 
 const SprintStackedChart = ({ sprintResults }) => {
+  // State สำหรับจัดการการเลื่อนดูข้อมูล
+  const [currentPage, setCurrentPage] = useState(0);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
+  const [isMobile, setIsMobile] = useState(false);
+  const [chartHeight, setChartHeight] = useState(400);
+
+  // ปรับขนาดกราฟตามขนาดหน้าจอ
+  useEffect(() => {
+    const handleResize = () => {
+      const screenWidth = window.innerWidth;
+
+      // ตั้งค่าจำนวนรายการต่อหน้าตามขนาดจอ
+      if (screenWidth < 640) {
+        setItemsPerPage(3); // แสดง 3 Sprint บนมือถือ
+        setIsMobile(true);
+        setChartHeight(300); // ลดความสูงบนมือถือ
+      } else if (screenWidth < 1024) {
+        setItemsPerPage(6); // แสดง 6 Sprint บนแท็บเล็ต
+        setIsMobile(false);
+        setChartHeight(350);
+      } else {
+        setItemsPerPage(10); // แสดง 10 Sprint บนเดสก์ท็อป
+        setIsMobile(false);
+        setChartHeight(400);
+      }
+
+      // รีเซ็ตหน้าเป็นหน้าแรกถ้าจำนวนหน้าเปลี่ยน
+      const totalPages = Math.ceil(sprintResults.length / itemsPerPage);
+      if (currentPage >= totalPages) {
+        setCurrentPage(0);
+      }
+    };
+
+    handleResize(); // เรียกใช้ในครั้งแรก
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, [sprintResults.length, currentPage, itemsPerPage]);
+
   // คำนวณข้อมูลสรุปและการเปลี่ยนแปลง
   const summaryMetrics = useMemo(() => {
     // นับจำนวนการทดสอบทั้งหมด
@@ -284,43 +357,143 @@ const SprintStackedChart = ({ sprintResults }) => {
     });
   }, [sprintResults]);
 
+  // ข้อมูลที่จะแสดงในหน้าปัจจุบัน
+  const paginatedData = useMemo(() => {
+    const startIndex = currentPage * itemsPerPage;
+    return chartData.slice(startIndex, startIndex + itemsPerPage);
+  }, [chartData, currentPage, itemsPerPage]);
+
+  // คำนวณจำนวนหน้าทั้งหมด
+  const totalPages = Math.ceil(chartData.length / itemsPerPage);
+
+  // ฟังก์ชันสำหรับการนำทางระหว่างหน้า
+  const handleNextPage = () => {
+    if (currentPage < totalPages - 1) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+
+  const handlePrevPage = () => {
+    if (currentPage > 0) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
+
   return (
-    <div className="space-y-6" data-cy="sprint-chart-container">
+    <div className="space-y-4 sm:space-y-6" data-cy="sprint-chart-container">
       {/* ส่วนแสดงกราฟ */}
-      <div className="bg-white rounded-xl shadow-lg p-6" data-cy="sprint-chart">
-        <div className="mb-6">
-          <h2 className="text-xl font-bold text-gray-800" data-cy="chart-title">
+      <div
+        className="bg-white rounded-xl shadow-lg p-3 sm:p-4 lg:p-6"
+        data-cy="sprint-chart"
+      >
+        <div className="mb-3 sm:mb-6">
+          <h2
+            className="text-lg sm:text-xl font-bold text-gray-800"
+            data-cy="chart-title"
+          >
             ผลการทดสอบของสปรินต์ทั้งหมด
           </h2>
-          <p className="text-sm text-gray-500 mt-1" data-cy="chart-subtitle">
+          <p
+            className="text-xs sm:text-sm text-gray-500 mt-1"
+            data-cy="chart-subtitle"
+          >
             อัตราการผ่าน {summaryMetrics.passRate}% - อัตราการผิดพลาด{" "}
             {summaryMetrics.failureRate}%
           </p>
         </div>
-        <div className="h-[400px] w-full">
+
+        {/* ปุ่มนำทางและตัวแสดงหน้า */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mb-2 sm:mb-4">
+            <button
+              onClick={handlePrevPage}
+              disabled={currentPage === 0}
+              className={`flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 rounded-md text-xs sm:text-sm ${
+                currentPage === 0
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-blue-600 hover:bg-blue-50"
+              }`}
+              data-cy="prev-page-button"
+            >
+              <ChevronLeft className="w-3 h-3 sm:w-4 sm:h-4" />
+              <span className="hidden sm:inline">ก่อนหน้า</span>
+            </button>
+
+            <div
+              className="text-xs sm:text-sm text-gray-600"
+              data-cy="pagination-info"
+            >
+              หน้า {currentPage + 1} จาก {totalPages}
+            </div>
+
+            <button
+              onClick={handleNextPage}
+              disabled={currentPage >= totalPages - 1}
+              className={`flex items-center gap-1 px-2 py-1 sm:px-3 sm:py-2 rounded-md text-xs sm:text-sm ${
+                currentPage >= totalPages - 1
+                  ? "text-gray-400 cursor-not-allowed"
+                  : "text-blue-600 hover:bg-blue-50"
+              }`}
+              data-cy="next-page-button"
+            >
+              <span className="hidden sm:inline">ถัดไป</span>
+              <ChevronRight className="w-3 h-3 sm:w-4 sm:h-4" />
+            </button>
+          </div>
+        )}
+
+        <div
+          className={`h-[${chartHeight}px] w-full`}
+          style={{ height: `${chartHeight}px` }}
+        >
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
-              data={chartData}
-              margin={{ top: 20, right: 30, left: 20, bottom: 100 }}
+              data={paginatedData}
+              margin={{
+                top: 20,
+                right: isMobile ? 10 : 30,
+                left: isMobile ? 0 : 20,
+                bottom: isMobile ? 60 : 10,
+              }}
               data-cy="stacked-bar-chart"
             >
               <CartesianGrid
                 strokeDasharray="3 3"
                 className="stroke-gray-200"
+                vertical={!isMobile}
               />
               <XAxis
                 dataKey="sprint"
-                height={100}
-                tick={<CustomXAxisTick chartData={chartData} />}
+                height={isMobile ? 60 : 100}
+                tick={
+                  <CustomXAxisTick
+                    chartData={paginatedData}
+                    isMobile={isMobile}
+                  />
+                }
+                tickLine={!isMobile}
+                axisLine={!isMobile}
+                interval={0}
                 data-cy="x-axis"
               />
               <YAxis
-                tick={{ fill: "rgb(55, 65, 81)" }}
-                className="text-sm"
+                tick={{ fill: "rgb(55, 65, 81)", fontSize: isMobile ? 10 : 12 }}
+                tickFormatter={(value) =>
+                  isMobile
+                    ? value > 999
+                      ? `${(value / 1000).toFixed(1)}k`
+                      : value
+                    : value
+                }
+                width={isMobile ? 30 : 40}
                 data-cy="y-axis"
               />
               <Tooltip content={<CustomTooltip chartData={chartData} />} />
-              <Legend data-cy="chart-legend" />
+              <Legend
+                data-cy="chart-legend"
+                verticalAlign={isMobile ? "top" : "bottom"}
+                wrapperStyle={{ fontSize: isMobile ? "10px" : "12px" }}
+              />
               <Bar
                 dataKey="Passed"
                 stackId="a"
@@ -340,7 +513,7 @@ const SprintStackedChart = ({ sprintResults }) => {
 
       {/* ส่วนแสดงการ์ดข้อมูลสรุป */}
       <div
-        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"
+        className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4"
         data-cy="metrics-grid"
       >
         <MetricCard

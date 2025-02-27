@@ -19,21 +19,28 @@ const API_BASE_URL = import.meta.env.VITE_API_URL;
  */
 const StatCard = ({ title, value, icon: Icon, description }) => (
   <div
-    className="bg-white rounded-lg shadow-sm border border-gray-200"
+    className="bg-white rounded-lg shadow-sm border border-gray-200 transition-all hover:shadow-md"
     data-cy="stat-card"
   >
-    <div className="p-6">
-      <div className="flex items-center gap-4">
-        <div className="p-3 bg-blue-50 rounded-lg">
-          <Icon className="w-6 h-6 text-blue-500" />
+    <div className="p-4 sm:p-6">
+      <div className="flex items-center gap-3 sm:gap-4">
+        <div className="p-2 sm:p-3 bg-blue-50 rounded-lg flex-shrink-0">
+          <Icon className="w-5 h-5 sm:w-6 sm:h-6 text-blue-500" />
         </div>
         <div>
-          <p className="text-sm font-medium text-gray-500">{title}</p>
-          <h3 className="text-2xl font-bold text-gray-900" data-cy="stat-value">
+          <p className="text-xs sm:text-sm font-medium text-gray-500">
+            {title}
+          </p>
+          <h3
+            className="text-xl sm:text-2xl font-bold text-gray-900"
+            data-cy="stat-value"
+          >
             {value || 0}
           </h3>
           {description && (
-            <p className="text-sm text-gray-600 mt-1">{description}</p>
+            <p className="text-xs sm:text-sm text-gray-600 mt-1">
+              {description}
+            </p>
           )}
         </div>
       </div>
@@ -47,19 +54,19 @@ const StatCard = ({ title, value, icon: Icon, description }) => (
  */
 const ProjectCard = ({ project }) => (
   <div
-    className="bg-white rounded-lg shadow-sm border border-gray-200"
+    className="bg-white rounded-lg shadow-sm border border-gray-200 transition-all hover:shadow-md"
     data-cy="project-card"
   >
-    <div className="p-6">
-      <div className="flex justify-between items-start">
+    <div className="p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 sm:gap-0">
         <div>
           <h3
-            className="font-semibold text-lg text-gray-900 line-clamp-1"
+            className="font-semibold text-base sm:text-lg text-gray-900 line-clamp-1"
             data-cy="project-name"
           >
             {project.name}
           </h3>
-          <p className="text-sm text-gray-500 mt-1">
+          <p className="text-xs sm:text-sm text-gray-500 mt-1">
             สร้างเมื่อ{" "}
             {new Date(project.created_at).toLocaleDateString("th-TH", {
               day: "2-digit",
@@ -69,29 +76,32 @@ const ProjectCard = ({ project }) => (
           </p>
         </div>
         <span
-          className={`px-3 py-1 rounded-full text-sm ${
+          className={`px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-xs ${
             project.status === "Active"
               ? "bg-green-100 text-green-800"
               : "bg-gray-100 text-gray-800"
-          }`}
+          } self-start sm:self-auto`}
           data-cy="project-status"
         >
           {project.status === "Active" ? "กำลังดำเนินการ" : "ไม่ได้ใช้งาน"}
         </span>
       </div>
-      <div className="grid grid-cols-2 gap-4 mt-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-gray-400" />
+      <div className="grid grid-cols-2 gap-2 sm:gap-4 mt-3 sm:mt-4">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <Calendar className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
           <span
-            className="text-sm text-gray-600"
+            className="text-xs sm:text-sm text-gray-600"
             data-cy="project-sprint-count"
           >
             {project.sprintCount || 0} สปรินต์
           </span>
         </div>
-        <div className="flex items-center gap-2">
-          <FileText className="w-4 h-4 text-gray-400" />
-          <span className="text-sm text-gray-600" data-cy="project-file-count">
+        <div className="flex items-center gap-1 sm:gap-2">
+          <FileText className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" />
+          <span
+            className="text-xs sm:text-sm text-gray-600"
+            data-cy="project-file-count"
+          >
             {project.fileCount || 0} ไฟล์ทดสอบ
           </span>
         </div>
@@ -180,7 +190,7 @@ const Dashboard = () => {
         className="flex justify-center items-center min-h-screen"
         data-cy="loading-spinner"
       >
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500" />
+        <div className="animate-spin rounded-full h-8 w-8 sm:h-12 sm:w-12 border-b-2 border-blue-500" />
       </div>
     );
   }
@@ -189,7 +199,7 @@ const Dashboard = () => {
   if (error) {
     return (
       <div
-        className="p-4 bg-red-50 border border-red-200 rounded-lg text-red-800"
+        className="mx-4 sm:mx-auto max-w-2xl p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg text-red-800 text-sm sm:text-base"
         data-cy="error-message"
       >
         {error}
@@ -210,19 +220,22 @@ const Dashboard = () => {
   // การแสดงผลหน้า Dashboard
   // ===============================================
   return (
-    <div className="min-h-screen bg-gray-50 p-8" data-cy="dashboard-container">
+    <div
+      className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8"
+      data-cy="dashboard-container"
+    >
       <div className="max-w-7xl mx-auto">
         {/* ส่วนหัวของหน้า Dashboard */}
-        <div className="flex justify-between items-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <Layers className="w-10 h-10 mr-4 text-blue-600" />
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 sm:mb-8 gap-4">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center">
+            <Layers className="w-7 h-7 sm:w-10 sm:h-10 mr-2 sm:mr-4 text-blue-600" />
             การจัดการไฟล์ทดสอบ
           </h1>
         </div>
 
         {/* ส่วนแสดงสถิติ */}
         <div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6 mb-6 sm:mb-8"
           data-cy="stats-container"
         >
           <StatCard
@@ -252,20 +265,26 @@ const Dashboard = () => {
         </div>
 
         {/* ส่วนแสดงโปรเจกต์ล่าสุด */}
-        <div className="mb-6" data-cy="latest-projects-section">
+        <div className="mb-4 sm:mb-6" data-cy="latest-projects-section">
           <h2
-            className="text-xl font-semibold text-gray-900 mb-4"
+            className="text-lg sm:text-xl font-semibold text-gray-900 mb-3 sm:mb-4"
             data-cy="latest-projects-title"
           >
             โปรเจกต์ล่าสุด
           </h2>
           <div
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6"
             data-cy="latest-projects-grid"
           >
-            {latestProjects.map((project, index) => (
-              <ProjectCard key={index} project={project} />
-            ))}
+            {latestProjects.length > 0 ? (
+              latestProjects.map((project, index) => (
+                <ProjectCard key={index} project={project} />
+              ))
+            ) : (
+              <div className="col-span-full text-center p-8 bg-white rounded-lg border border-gray-200 text-gray-500">
+                ยังไม่มีโปรเจกต์ล่าสุด
+              </div>
+            )}
           </div>
         </div>
       </div>

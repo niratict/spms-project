@@ -134,8 +134,10 @@ const TestFileEdit = () => {
         data-cy="loading-spinner"
       >
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">กำลังโหลดรายละเอียดไฟล์...</p>
+          <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-t-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600 text-sm sm:text-base">
+            กำลังโหลดรายละเอียดไฟล์...
+          </p>
         </div>
       </div>
     );
@@ -145,12 +147,12 @@ const TestFileEdit = () => {
   if (!testFile) {
     return (
       <div
-        className="min-h-screen bg-gray-50 flex items-center justify-center"
+        className="min-h-screen bg-gray-50 flex items-center justify-center px-4"
         data-cy="file-not-found"
       >
-        <div className="bg-white p-8 rounded-xl shadow-lg text-center">
-          <FileText className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-          <p className="text-gray-600 text-lg">ไม่พบไฟล์ทดสอบ</p>
+        <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg text-center w-full max-w-md">
+          <FileText className="w-12 h-12 sm:w-16 sm:h-16 text-gray-500 mx-auto mb-4" />
+          <p className="text-gray-600 text-base sm:text-lg">ไม่พบไฟล์ทดสอบ</p>
         </div>
       </div>
     );
@@ -160,36 +162,36 @@ const TestFileEdit = () => {
     <>
       {/* หน้าแก้ไขไฟล์ทดสอบ */}
       <div
-        className="min-h-screen bg-gray-50 py-12"
+        className="min-h-screen bg-gray-50 py-6 sm:py-8 md:py-12"
         data-cy="test-file-edit-page"
       >
         <div className="container mx-auto max-w-2xl px-4">
           {/* ส่วนหัวและปุ่มกลับ */}
-          <div className="flex items-center justify-between mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
             <button
               onClick={() => navigate(`/test-files/${id}`)}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors"
+              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors text-sm sm:text-base"
               data-cy="back-button"
             >
-              <ArrowLeft className="w-5 h-5" />
+              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
               <span>กลับไปหน้ารายละเอียด</span>
             </button>
 
             {/* แสดงสถานะไฟล์ทดสอบ */}
             {testFile.status === "Pass" ? (
               <div
-                className="flex items-center gap-2 text-green-600"
+                className="flex items-center gap-2 text-green-600 text-sm sm:text-base"
                 data-cy="status-pass"
               >
-                <CheckCircle className="w-6 h-6" />
+                <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span>Passed</span>
               </div>
             ) : testFile.status === "Fail" ? (
               <div
-                className="flex items-center gap-2 text-red-600"
+                className="flex items-center gap-2 text-red-600 text-sm sm:text-base"
                 data-cy="status-fail"
               >
-                <AlertCircle className="w-6 h-6" />
+                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span>Failed</span>
               </div>
             ) : null}
@@ -198,36 +200,42 @@ const TestFileEdit = () => {
           {/* แบบฟอร์มแก้ไขไฟล์ */}
           <div className="bg-white shadow-xl rounded-xl overflow-hidden">
             {/* ส่วนหัวแบบฟอร์ม */}
-            <div className="bg-blue-600 text-white p-6">
-              <h1 className="text-2xl font-bold" data-cy="edit-form-title">
+            <div className="bg-blue-600 text-white p-4 sm:p-6">
+              <h1
+                className="text-xl sm:text-2xl font-bold"
+                data-cy="edit-form-title"
+              >
                 แก้ไขไฟล์ทดสอบ
               </h1>
-              <p className="text-blue-100 mt-1" data-cy="edit-file-name">
+              <p
+                className="text-blue-100 mt-1 text-sm sm:text-base break-words"
+                data-cy="edit-file-name"
+              >
                 กำลังแก้ไข {testFile.original_filename}
               </p>
             </div>
 
             {/* เนื้อหาแบบฟอร์ม */}
-            <div className="p-6 space-y-6">
+            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
               {/* ข้อความแสดงข้อผิดพลาด */}
               {error && (
                 <div
-                  className="bg-red-50 border border-red-200 text-red-600 p-4 rounded-lg flex items-center gap-3"
+                  className="bg-red-50 border border-red-200 text-red-600 p-3 sm:p-4 rounded-lg flex items-center gap-2 sm:gap-3 text-sm sm:text-base"
                   data-cy="error-message"
                 >
-                  <AlertCircle className="w-6 h-6" />
+                  <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
                   <span>{error}</span>
                 </div>
               )}
 
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* ส่วนอัพโหลดไฟล์ */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     อัพโหลดไฟล์ใหม่ (เลือกได้)
                   </label>
-                  <div className="flex items-center gap-4">
-                    <label className="relative cursor-pointer">
+                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
+                    <label className="relative cursor-pointer inline-block">
                       <input
                         type="file"
                         accept="application/json"
@@ -236,16 +244,16 @@ const TestFileEdit = () => {
                         data-cy="file-upload-input"
                       />
                       <div
-                        className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                        className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm sm:text-base"
                         data-cy="file-upload-button"
                       >
-                        <Upload className="w-5 h-5" />
+                        <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
                         <span>เลือกไฟล์</span>
                       </div>
                     </label>
                     {selectedFile && (
                       <span
-                        className="text-sm text-gray-600 truncate max-w-xs"
+                        className="text-xs sm:text-sm text-gray-600 truncate max-w-full"
                         data-cy="selected-file-name"
                       >
                         {selectedFile.name}
@@ -255,7 +263,7 @@ const TestFileEdit = () => {
                   {/* ข้อผิดพลาดของไฟล์ */}
                   {fileError && (
                     <p
-                      className="mt-2 text-sm text-red-500"
+                      className="mt-2 text-xs sm:text-sm text-red-500"
                       data-cy="file-error-message"
                     >
                       {fileError}
@@ -265,7 +273,7 @@ const TestFileEdit = () => {
 
                 {/* ช่องกรอกชื่อไฟล์ */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     ชื่อไฟล์
                   </label>
                   <input
@@ -277,14 +285,14 @@ const TestFileEdit = () => {
                         filename: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                     data-cy="filename-input"
                   />
                 </div>
 
                 {/* เลือกสถานะ */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
                     สถานะ
                   </label>
                   <div className="relative">
@@ -296,7 +304,7 @@ const TestFileEdit = () => {
                           status: e.target.value,
                         }))
                       }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
                       data-cy="status-select"
                     >
                       <option value="Pending">Pending</option>
@@ -317,10 +325,10 @@ const TestFileEdit = () => {
               </div>
 
               {/* ปุ่มดำเนินการ */}
-              <div className="flex justify-end space-x-4 pt-6">
+              <div className="flex flex-col-reverse sm:flex-row sm:justify-end space-y-reverse space-y-2 sm:space-y-0 sm:space-x-4 pt-4 sm:pt-6">
                 <button
                   onClick={() => navigate(`/test-files/${id}`)}
-                  className="px-4 py-2 text-gray-600 rounded-lg hover:bg-gray-100 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2 text-center text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm sm:text-base border border-gray-300"
                   data-cy="cancel-button"
                 >
                   ยกเลิก
@@ -328,7 +336,7 @@ const TestFileEdit = () => {
                 <button
                   onClick={handleSubmitConfirm}
                   disabled={saving}
-                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                  className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                   data-cy="save-button"
                 >
                   {saving ? (
@@ -349,27 +357,33 @@ const TestFileEdit = () => {
       {/* หน้าต่างยืนยันการบันทึก */}
       {showConfirmModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
           data-cy="confirm-modal"
+          onClick={(e) => {
+            // Close modal when clicking backdrop
+            if (e.target === e.currentTarget) {
+              setShowConfirmModal(false);
+            }
+          }}
         >
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-auto overflow-hidden transform transition-all">
             {/* ส่วนหัวหน้าต่างยืนยัน */}
-            <div className="bg-blue-50 px-6 py-4 border-b border-blue-100">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-6 h-6 text-blue-600" />
-                <h3 className="text-lg font-semibold text-gray-900">
+            <div className="bg-blue-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-blue-100">
+              <div className="flex items-center gap-2 sm:gap-3">
+                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
                   ยืนยันการเปลี่ยนแปลง
                 </h3>
               </div>
             </div>
 
             {/* เนื้อหาหน้าต่างยืนยัน */}
-            <div className="px-6 py-4">
-              <p className="text-gray-600">
+            <div className="px-4 sm:px-6 py-3 sm:py-4">
+              <p className="text-gray-600 text-sm sm:text-base">
                 คุณแน่ใจหรือไม่ว่าต้องการบันทึกการเปลี่ยนแปลงนี้ในไฟล์ทดสอบ?
                 {selectedFile && (
                   <span
-                    className="block mt-2 font-medium"
+                    className="block mt-2 font-medium text-sm sm:text-base break-words"
                     data-cy="confirm-new-file"
                   >
                     คุณกำลังจะอัพโหลดไฟล์ใหม่: {selectedFile.name}
@@ -377,12 +391,12 @@ const TestFileEdit = () => {
                 )}
               </p>
 
-              <div className="mt-4 text-sm text-gray-500">
+              <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500 space-y-1">
                 <p data-cy="confirm-status">
                   • สถานะจะถูกเปลี่ยนเป็น:{" "}
                   <span className="font-medium">{formData.status}</span>
                 </p>
-                <p data-cy="confirm-filename">
+                <p data-cy="confirm-filename" className="break-words">
                   • ชื่อไฟล์จะเป็น:{" "}
                   <span className="font-medium">{formData.filename}</span>
                 </p>
@@ -390,10 +404,10 @@ const TestFileEdit = () => {
             </div>
 
             {/* ปุ่มในหน้าต่างยืนยัน */}
-            <div className="px-6 py-4 bg-gray-50 flex justify-end gap-3">
+            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="px-4 py-2 text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
+                className="w-full sm:w-auto px-4 py-2 text-center text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm sm:text-base"
                 data-cy="confirm-cancel"
               >
                 ยกเลิก
@@ -401,7 +415,7 @@ const TestFileEdit = () => {
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+                className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
                 data-cy="confirm-submit"
               >
                 {saving ? (

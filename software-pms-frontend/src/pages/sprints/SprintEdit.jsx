@@ -198,17 +198,17 @@ const SprintEdit = () => {
   if (!isLatestSprint)
     return (
       <div
-        className="flex justify-center items-center min-h-screen bg-red-50"
+        className="flex justify-center items-center min-h-screen bg-red-50 px-4"
         data-cy="not-latest-sprint-error"
       >
-        <div className="bg-white p-8 rounded-xl shadow-lg text-center">
-          <AlertCircle className="mx-auto w-16 h-16 text-red-500 mb-4" />
-          <p className="text-red-600 text-lg">
+        <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg text-center max-w-md w-full">
+          <AlertCircle className="mx-auto w-12 sm:w-16 h-12 sm:h-16 text-red-500 mb-4" />
+          <p className="text-red-600 text-base sm:text-lg">
             สามารถแก้ไขได้เฉพาะสปรินต์ล่าสุดเท่านั้น
           </p>
           <button
             onClick={() => navigate(`/sprints/${id}`)}
-            className="mt-4 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
+            className="mt-4 px-4 py-2 sm:px-6 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 w-full sm:w-auto"
             data-cy="back-to-sprint-details-btn"
           >
             กลับสู่รายละเอียดสปรินต์
@@ -221,12 +221,12 @@ const SprintEdit = () => {
   if (error)
     return (
       <div
-        className="flex justify-center items-center min-h-screen bg-red-50"
+        className="flex justify-center items-center min-h-screen bg-red-50 px-4"
         data-cy="error-message"
       >
-        <div className="bg-white p-8 rounded-xl shadow-lg text-center">
-          <AlertCircle className="mx-auto w-16 h-16 text-red-500 mb-4" />
-          <p className="text-red-600 text-lg">{error}</p>
+        <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg text-center max-w-md w-full">
+          <AlertCircle className="mx-auto w-12 sm:w-16 h-12 sm:h-16 text-red-500 mb-4" />
+          <p className="text-red-600 text-base sm:text-lg">{error}</p>
         </div>
       </div>
     );
@@ -235,7 +235,7 @@ const SprintEdit = () => {
   if (!sprint)
     return (
       <div
-        className="flex justify-center items-center min-h-screen"
+        className="flex justify-center items-center min-h-screen px-4"
         data-cy="sprint-not-found"
       >
         <p className="text-gray-600">ไม่พบสปรินต์</p>
@@ -245,50 +245,52 @@ const SprintEdit = () => {
   // ------------- การแสดงผลหลักของหน้าแก้ไขสปรินต์ -------------
   return (
     <div
-      className="bg-gray mt-16 flex items-center justify-center"
+      className="bg-gray-50 p-4 sm:p-8 md:p-16"
       data-cy="sprint-edit-container"
     >
-      <div className="w-full max-w-2xl">
+      <div className="w-full max-w-2xl mx-auto">
         {/* ------------- ส่วนแสดงฟอร์มแก้ไขสปรินต์ ------------- */}
-        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl overflow-hidden">
           {/* ส่วนหัวฟอร์ม */}
-          <div className="bg-blue-50 p-6 flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <Edit className="w-10 h-10 text-blue-600" />
-              <h2 className="text-2xl font-bold text-gray-800">แก้ไขสปรินต์</h2>
+          <div className="bg-blue-50 p-4 sm:p-6 flex items-center justify-between">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <Edit className="w-6 h-6 sm:w-10 sm:h-10 text-blue-600" />
+              <h2 className="text-lg sm:text-2xl font-bold text-gray-800">
+                แก้ไขสปรินต์
+              </h2>
             </div>
             <button
               onClick={() => navigate(`/sprints/${id}`)}
               className="text-gray-500 hover:text-gray-700 transition-colors"
               data-cy="close-edit-form-btn"
             >
-              <X className="w-8 h-8" />
+              <X className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
           </div>
 
           {/* ฟอร์มแก้ไขสปรินต์ */}
-          <form className="p-8 space-y-6">
+          <form className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">
             {/* ฟิลด์ชื่อสปรินต์ (แสดงแต่แก้ไขไม่ได้) */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 Sprint (สปรินต์)
               </label>
               <input
                 type="text"
                 value={sprint.name}
                 disabled
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                className="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
                 data-cy="sprint-name-input"
               />
             </div>
 
             {/* ฟิลด์ช่วงวันที่สปรินต์ */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                 ช่วงวันที่ของสปรินต์
               </label>
               <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+                <Calendar className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <input
                   type="text"
                   value={
@@ -300,18 +302,18 @@ const SprintEdit = () => {
                   }
                   onClick={() => setShowDatePicker(true)}
                   readOnly
-                  className="w-full px-4 py-3 pl-12 border border-gray-300 rounded-lg cursor-pointer"
+                  className="w-full px-3 sm:px-4 py-2 sm:py-3 pl-10 sm:pl-12 border border-gray-300 rounded-lg cursor-pointer"
                   data-cy="date-range-input"
                 />
               </div>
             </div>
 
             {/* ปุ่มการจัดการ */}
-            <div className="flex justify-end space-x-4 pt-4">
+            <div className="flex justify-end space-x-2 sm:space-x-4 pt-2 sm:pt-4">
               <button
                 type="button"
                 onClick={() => navigate(`/sprints/${id}`)}
-                className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                className="px-3 sm:px-6 py-2 sm:py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors text-sm sm:text-base"
                 data-cy="cancel-edit-btn"
               >
                 ยกเลิก
@@ -320,10 +322,10 @@ const SprintEdit = () => {
                 type="button"
                 onClick={() => setShowConfirmModal(true)}
                 disabled={!dateRange.from || !dateRange.to}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2 disabled:bg-blue-300"
+                className="px-3 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1 sm:space-x-2 disabled:bg-blue-300 text-sm sm:text-base"
                 data-cy="save-sprint-btn"
               >
-                <Save className="w-5 h-5" />
+                <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                 <span>บันทึก</span>
               </button>
             </div>
@@ -333,13 +335,13 @@ const SprintEdit = () => {
         {/* ------------- โมดัลแสดงปฏิทินเลือกวันที่ ------------- */}
         {showDatePicker && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             data-cy="date-picker-modal"
           >
-            <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4">
+            <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-full sm:max-w-4xl max-h-full sm:max-h-[90vh] overflow-y-auto">
               {/* ส่วนหัวโมดัล */}
               <div className="flex justify-between items-center mb-4">
-                <h3 className="text-lg font-semibold">
+                <h3 className="text-base sm:text-lg font-semibold">
                   เลือกช่วงวันที่ของสปรินต์
                 </h3>
                 <button
@@ -347,29 +349,31 @@ const SprintEdit = () => {
                   className="text-gray-500 hover:text-gray-700"
                   data-cy="close-date-picker-btn"
                 >
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5 sm:w-6 sm:h-6" />
                 </button>
               </div>
 
               {/* แสดงรายการสปรินต์ที่มีอยู่แล้ว เพื่อให้เห็นช่วงวันที่ที่มีการใช้งานแล้ว */}
-              <ExistingSprintsList sprints={existingSprints} />
+              <div className="mb-4">
+                <ExistingSprintsList sprints={existingSprints} />
+              </div>
 
               {/* ปฏิทินเลือกช่วงวันที่ */}
-              <div className="flex justify-center">
+              <div className="flex justify-center overflow-x-auto pb-2">
                 <DayPicker
                   mode="range"
                   selected={dateRange}
                   onSelect={handleRangeSelect}
                   locale={th}
-                  numberOfMonths={2}
+                  numberOfMonths={window.innerWidth < 640 ? 1 : 2}
                   formatters={{
                     formatCaption: formatCaption,
                   }}
                   disabled={disabledDays}
-                  className="border rounded-md p-4"
+                  className="border rounded-md p-2 sm:p-4"
                   classNames={dayPickerClassNames}
                   footer={
-                    <p className="text-sm text-gray-500 mt-4 text-center">
+                    <p className="text-xs sm:text-sm text-gray-500 mt-2 sm:mt-4 text-center">
                       ปิดการเลือกวันหยุดสุดสัปดาห์
                     </p>
                   }
@@ -378,10 +382,10 @@ const SprintEdit = () => {
               </div>
 
               {/* ปุ่มการทำงาน */}
-              <div className="flex justify-end space-x-4 mt-6">
+              <div className="flex justify-end space-x-3 sm:space-x-4 mt-4 sm:mt-6">
                 <button
                   onClick={() => setShowDatePicker(false)}
-                  className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 text-sm sm:text-base"
                   data-cy="cancel-date-selection-btn"
                 >
                   ยกเลิก
@@ -393,7 +397,7 @@ const SprintEdit = () => {
                     }
                   }}
                   disabled={!dateRange.from || !dateRange.to}
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300"
+                  className="px-3 sm:px-4 py-1.5 sm:py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:bg-blue-300 text-sm sm:text-base"
                   data-cy="confirm-date-selection-btn"
                 >
                   ยืนยัน
@@ -409,28 +413,30 @@ const SprintEdit = () => {
             className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
             data-cy="confirm-modal"
           >
-            <div className="bg-white rounded-2xl max-w-md w-full p-8 shadow-2xl">
+            <div className="bg-white rounded-xl sm:rounded-2xl max-w-xs sm:max-w-md w-full p-6 sm:p-8 shadow-xl sm:shadow-2xl">
               <div className="text-center">
-                <AlertCircle className="mx-auto w-16 h-16 text-blue-500 mb-4" />
-                <h2 className="text-2xl font-bold mb-4">ยืนยันการแก้ไข</h2>
-                <p className="text-gray-600 mb-6">
+                <AlertCircle className="mx-auto w-12 sm:w-16 h-12 sm:h-16 text-blue-500 mb-3 sm:mb-4" />
+                <h2 className="text-xl sm:text-2xl font-bold mb-2 sm:mb-4">
+                  ยืนยันการแก้ไข
+                </h2>
+                <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
                   แน่ใจหรือไม่ว่าต้องการบันทึกการเปลี่ยนแปลงนี้ในสปรินต์?
                 </p>
               </div>
-              <div className="flex justify-center space-x-4">
+              <div className="flex justify-center space-x-3 sm:space-x-4">
                 <button
                   onClick={() => setShowConfirmModal(false)}
-                  className="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="px-4 sm:px-6 py-2 sm:py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors text-sm sm:text-base"
                   data-cy="cancel-confirm-btn"
                 >
                   ยกเลิก
                 </button>
                 <button
                   onClick={handleSubmit}
-                  className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-2"
+                  className="px-4 sm:px-6 py-2 sm:py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base"
                   data-cy="confirm-edit-btn"
                 >
-                  <Save className="w-5 h-5" />
+                  <Save className="w-4 h-4 sm:w-5 sm:h-5" />
                   <span>บันทึกการแก้ไข</span>
                 </button>
               </div>

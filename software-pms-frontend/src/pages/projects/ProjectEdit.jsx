@@ -91,10 +91,10 @@ const DateRangePickerModal = ({
 
   return (
     <div
-      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
       data-cy="date-range-modal"
     >
-      <div className="bg-white rounded-xl shadow-xl p-6 max-w-4xl w-full mx-4">
+      <div className="bg-white rounded-xl shadow-xl p-4 md:p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-lg font-semibold text-gray-800">
             เลือกช่วงวันที่
@@ -108,13 +108,13 @@ const DateRangePickerModal = ({
           </button>
         </div>
 
-        <div className="flex justify-center">
+        <div className="flex justify-center overflow-x-auto">
           <DayPicker
             mode="range"
             selected={range}
             onSelect={handleRangeSelect}
             locale={th}
-            numberOfMonths={2}
+            numberOfMonths={window.innerWidth >= 768 ? 2 : 1}
             disabled={[
               { dayOfWeek: [0, 6] }, // ไม่อนุญาตให้เลือกวันเสาร์-อาทิตย์
             ]}
@@ -125,7 +125,11 @@ const DateRangePickerModal = ({
               formatCaption: formatCaption, // ใช้ formatter ที่สร้างขึ้น
             }}
             styles={{
-              months: { display: "flex", gap: "1rem" },
+              months: {
+                display: "flex",
+                flexDirection: window.innerWidth >= 768 ? "row" : "column",
+                gap: "1rem",
+              },
               caption: { color: "#3B82F6" },
               head_cell: { color: "#6B7280" },
               day_selected: {
@@ -139,14 +143,14 @@ const DateRangePickerModal = ({
               },
               day: { margin: "0.2rem" },
             }}
-            className="border border-gray-200 rounded-lg p-4"
+            className="border border-gray-200 rounded-lg p-2 md:p-4"
           />
         </div>
 
         <div className="flex justify-end gap-3 mt-4 pt-4 border-t">
           <button
             onClick={onClose}
-            className="px-4 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+            className="px-3 py-2 md:px-4 md:py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
             data-cy="date-modal-cancel"
           >
             ยกเลิก
@@ -154,7 +158,7 @@ const DateRangePickerModal = ({
           <button
             onClick={handleConfirm}
             disabled={!range?.from || !range?.to}
-            className="px-4 py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
+            className="px-3 py-2 md:px-4 md:py-2 text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 disabled:cursor-not-allowed transition-colors"
             data-cy="date-modal-confirm"
           >
             ยืนยัน
@@ -171,29 +175,31 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
       data-cy="confirm-modal"
     >
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-6 space-y-6">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
         <div className="text-center">
-          <CheckCircle className="mx-auto h-16 w-16 text-blue-500 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">{title}</h2>
-          <p className="text-gray-600 mb-6">{message}</p>
+          <CheckCircle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-blue-500 mb-3 md:mb-4" />
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+            {title}
+          </h2>
+          <p className="text-gray-600 mb-4 md:mb-6">{message}</p>
         </div>
-        <div className="flex justify-center space-x-4">
+        <div className="flex justify-center space-x-3 md:space-x-4">
           <button
             onClick={onClose}
-            className="px-6 py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
             data-cy="confirm-cancel"
           >
             ยกเลิก
           </button>
           <button
             onClick={onConfirm}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors"
+            className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors"
             data-cy="confirm-save"
           >
-            <Save className="w-5 h-5" />
+            <Save className="w-4 h-4 md:w-5 md:h-5" />
             บันทึก
           </button>
         </div>
@@ -208,6 +214,7 @@ const ProjectEdit = () => {
   const { id } = useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [windowWidth, setWindowWidth] = useState(window.innerWidth);
 
   // ===== STATE MANAGEMENT =====
 
@@ -231,6 +238,18 @@ const ProjectEdit = () => {
     status: "",
     photo: null,
   });
+
+  // ติดตามขนาดหน้าจอเพื่อปรับ UI
+  useEffect(() => {
+    const handleResize = () => {
+      setWindowWidth(window.innerWidth);
+    };
+
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+    };
+  }, []);
 
   // ===== DATA FETCHING =====
 
@@ -384,7 +403,7 @@ const ProjectEdit = () => {
         className="flex justify-center items-center h-screen"
         data-cy="loading-spinner"
       >
-        <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-blue-500"></div>
+        <div className="animate-spin rounded-full h-12 w-12 md:h-16 md:w-16 border-t-4 border-blue-500"></div>
       </div>
     );
 
@@ -392,7 +411,7 @@ const ProjectEdit = () => {
   if (error)
     return (
       <div
-        className="bg-red-50 border border-red-200 text-red-800 px-6 py-4 rounded-lg text-center"
+        className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 md:px-6 md:py-4 rounded-lg text-center mx-4 my-4 md:mx-auto md:my-8 max-w-2xl"
         data-cy="error-message"
       >
         {error}
@@ -403,7 +422,7 @@ const ProjectEdit = () => {
   if (!project)
     return (
       <div
-        className="text-center p-6 bg-gray-100 rounded-lg"
+        className="text-center p-4 md:p-6 bg-gray-100 rounded-lg mx-4 my-4 md:mx-auto md:my-8 max-w-2xl"
         data-cy="project-not-found"
       >
         Project not found
@@ -413,7 +432,7 @@ const ProjectEdit = () => {
   // แสดงฟอร์มแก้ไขโปรเจกต์
   return (
     <div
-      className="container mx-auto px-4 py-8 max-w-2xl"
+      className="container mx-auto px-4 py-4 md:py-8 max-w-2xl"
       data-cy="project-edit-container"
     >
       {/* โมดัลยืนยันการบันทึก */}
@@ -438,37 +457,37 @@ const ProjectEdit = () => {
       <button
         type="button"
         onClick={() => navigate(`/projects/${id}`)}
-        className="group flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 transition-colors"
+        className="group flex items-center gap-1 md:gap-2 text-sm md:text-base text-gray-600 hover:text-gray-900 mb-4 md:mb-6 transition-colors"
         data-cy="back-button"
       >
-        <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
+        <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 group-hover:-translate-x-1 transition-transform" />
         กลับไปหน้ารายละเอียด
       </button>
 
       {/* ฟอร์มแก้ไขโปรเจกต์ */}
-      <div className="bg-white shadow-lg rounded-xl overflow-hidden">
+      <div className="bg-white shadow-md md:shadow-lg rounded-xl overflow-hidden">
         {/* ส่วนหัวของฟอร์ม */}
-        <div className="p-6 bg-gradient-to-r from-blue-50 to-blue-100">
+        <div className="p-4 md:p-6 bg-gradient-to-r from-blue-50 to-blue-100">
           <h1
-            className="text-3xl font-bold text-gray-800 flex items-center gap-3"
+            className="text-xl md:text-3xl font-bold text-gray-800 flex items-center gap-2 md:gap-3"
             data-cy="form-title"
           >
-            <Edit className="w-8 h-8 text-blue-500" />
+            <Edit className="w-6 h-6 md:w-8 md:h-8 text-blue-500" />
             แก้ไขโปรเจกต์
           </h1>
         </div>
 
         {/* ฟอร์มสำหรับกรอกข้อมูล */}
-        <form className="p-6 space-y-6">
+        <form className="p-4 md:p-6 space-y-4 md:space-y-6">
           {/* แสดงข้อความแจ้งเตือนถ้ามีข้อผิดพลาด */}
           {error && (
             <div
-              className="bg-red-50 border border-red-200 p-4 rounded-lg flex items-center gap-3"
+              className="bg-red-50 border border-red-200 p-3 md:p-4 rounded-lg flex items-center gap-2 md:gap-3"
               data-cy="form-error"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-6 w-6 text-red-500"
+                className="h-5 w-5 md:h-6 md:w-6 text-red-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -480,15 +499,15 @@ const ProjectEdit = () => {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="text-red-800">{error}</span>
+              <span className="text-sm md:text-base text-red-800">{error}</span>
             </div>
           )}
 
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             {/* ส่วนอัพโหลดรูปภาพ */}
             <div className="space-y-2">
-              <label className="flex items-center gap-2 font-medium text-gray-700">
-                <Image className="w-5 h-5 text-blue-500" />
+              <label className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700">
+                <Image className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
                 รูปภาพโปรเจกต์
               </label>
               <div className="flex items-center justify-center w-full">
@@ -509,17 +528,17 @@ const ProjectEdit = () => {
                         className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
                         data-cy="remove-image"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3 h-3 md:w-4 md:h-4" />
                       </button>
                     </div>
                   ) : (
                     <label
-                      className="flex flex-col items-center justify-center w-full h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+                      className="flex flex-col items-center justify-center w-full h-40 md:h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
                       data-cy="image-upload-area"
                     >
                       <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-12 h-12 text-gray-400 mb-3" />
-                        <p className="mb-2 text-sm text-gray-500">
+                        <Upload className="w-8 h-8 md:w-12 md:h-12 text-gray-400 mb-2 md:mb-3" />
+                        <p className="mb-1 md:mb-2 text-xs md:text-sm text-gray-500">
                           <span className="font-semibold">
                             คลิกเพื่ออัปโหลดรูปภาพ
                           </span>{" "}
@@ -543,12 +562,12 @@ const ProjectEdit = () => {
             </div>
 
             {/* ชื่อโปรเจกต์ */}
-            <div className="space-y-2">
+            <div className="space-y-1 md:space-y-2">
               <label
                 htmlFor="name"
-                className="flex items-center gap-2 font-medium text-gray-700"
+                className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700"
               >
-                <FileText className="w-5 h-5 text-blue-500" />
+                <FileText className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
                 ชื่อโปรเจกต์
               </label>
               <input
@@ -557,18 +576,18 @@ const ProjectEdit = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
+                className="w-full p-2 md:p-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
                 data-cy="project-name"
               />
             </div>
 
             {/* รายละเอียดโปรเจกต์ */}
-            <div className="space-y-2">
+            <div className="space-y-1 md:space-y-2">
               <label
                 htmlFor="description"
-                className="flex items-center gap-2 font-medium text-gray-700"
+                className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700"
               >
-                <FileText className="w-5 h-5 text-green-500" />
+                <FileText className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
                 รายละเอียดโปรเจกต์
               </label>
               <textarea
@@ -576,15 +595,15 @@ const ProjectEdit = () => {
                 name="description"
                 value={formData.description}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg h-32 focus:ring-2 focus:ring-blue-200 transition-all"
+                className="w-full p-2 md:p-3 text-sm md:text-base border border-gray-300 rounded-lg h-24 md:h-32 focus:ring-2 focus:ring-blue-200 transition-all"
                 data-cy="project-description"
               />
             </div>
 
             {/* ส่วนเลือกช่วงวันที่ */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-2 font-medium text-gray-700">
-                <Calendar className="w-5 h-5 text-purple-500" />
+            <div className="space-y-1 md:space-y-2">
+              <label className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700">
+                <Calendar className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
                 ระยะเวลาของโปรเจกต์
               </label>
               <div className="relative">
@@ -593,7 +612,7 @@ const ProjectEdit = () => {
                   readOnly
                   value={displayDateRange()}
                   onClick={() => setShowDatePicker(true)}
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer"
+                  className="w-full p-2 md:p-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer"
                   placeholder="Select project duration"
                   data-cy="date-range-input"
                 />
@@ -601,12 +620,12 @@ const ProjectEdit = () => {
             </div>
 
             {/* สถานะโปรเจกต์ */}
-            <div className="space-y-2">
+            <div className="space-y-1 md:space-y-2">
               <label
                 htmlFor="status"
-                className="flex items-center gap-2 font-medium text-gray-700"
+                className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700"
               >
-                <Activity className="w-5 h-5 text-indigo-500" />
+                <Activity className="w-4 h-4 md:w-5 md:h-5 text-indigo-500" />
                 สถานะ
               </label>
               <select
@@ -614,7 +633,7 @@ const ProjectEdit = () => {
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
+                className="w-full p-2 md:p-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
                 data-cy="project-status"
               >
                 <option value="Active">Active</option>
@@ -625,11 +644,11 @@ const ProjectEdit = () => {
           </div>
 
           {/* ปุ่มการทำงาน */}
-          <div className="flex space-x-4 pt-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:space-x-4 pt-4 md:pt-6">
             <button
               type="button"
               onClick={() => navigate(`/projects/${id}`)}
-              className="flex-1 px-6 py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
+              className="flex-1 px-4 py-2 md:px-6 md:py-3 text-sm md:text-base text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               data-cy="cancel-button"
             >
               ยกเลิก
@@ -637,10 +656,10 @@ const ProjectEdit = () => {
             <button
               type="button"
               onClick={() => setShowConfirmModal(true)}
-              className="flex-1 flex items-center justify-center gap-2 px-6 py-3 text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors"
+              className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-4 py-2 md:px-6 md:py-3 text-sm md:text-base text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors"
               data-cy="save-button"
             >
-              <Save className="w-5 h-5" />
+              <Save className="w-4 h-4 md:w-5 md:h-5" />
               บันทึกการแก้ไข
             </button>
           </div>
