@@ -62,6 +62,32 @@ const ActionLogs = () => {
         delete displayDetails.password;
       }
 
+      // สร้างแผนที่สำหรับแปลงชื่อฟิลด์ภาษาอังกฤษเป็นภาษาไทย
+      const fieldNameMapping = {
+        name: "ชื่อ",
+        end_date: "วันที่สิ้นสุด",
+        sprint_id: "รหัสสปรินต์",
+        created_at: "วันที่สร้าง",
+        changed_at: "วันที่เปลี่ยน",
+        created_by: "สร้างโดย",
+        project_id: "รหัสโปรเจกต์",
+        upload_date: "วันที่อัพโหลด",
+        last_modified_by: "แก้ไขล่าสุดโดย",
+        start_date: "วันที่เริ่มต้น",
+        updated_at: "แก้ไขโดย",
+        file_size: "ขนาดไฟล์",
+        custom_filename: "ชื่อไฟล์",
+        original_filename: "ชื่อไฟล์ที่อัพโหลด",
+        photo: "รูปภาพ",
+        description: "รายละเอียด",
+        role: "บทบาท",
+        email: "อีเมล",
+        user_id: "รหัสผู้ใช้",
+        status: "สถานะ",
+        file_id: "รหัสไฟล์",
+        filename: "ชื่อไฟล์",
+      };
+
       return Object.entries(displayDetails)
         .filter(([key, value]) => value !== null && value !== undefined)
         .map(([key, value]) => {
@@ -97,13 +123,16 @@ const ActionLogs = () => {
             displayValue = value.toString();
           }
 
+          // แปลงชื่อฟิลด์ภาษาอังกฤษเป็นภาษาไทย (ถ้ามีใน mapping)
+          const displayKey = fieldNameMapping[key] || key;
+
           return (
             <div
               key={key}
               className="whitespace-normal break-words"
               data-cy={`detail-item-${key}`}
             >
-              <span className="font-medium">{key}:</span> {displayValue}
+              <span className="font-bold text-gray-700">{displayKey}:</span> {displayValue}
             </div>
           );
         });
