@@ -112,7 +112,10 @@ const SprintDetail = () => {
     } catch (err) {
       setShowDeleteModal(false);
       setDeleteWarningMessage(
-        err.response?.data?.message || "Failed to delete sprint"
+        err.response?.data?.message ===
+          "Cannot delete sprint with existing test files"
+          ? "ไม่สามารถลบสปรินต์ที่มีไฟล์ทดสอบอยู่ได้"
+          : err.response?.data?.message || "Failed to delete sprint"
       );
       setShowDeleteWarningModal(true);
     }

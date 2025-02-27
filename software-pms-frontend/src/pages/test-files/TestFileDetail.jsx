@@ -95,26 +95,6 @@ const TestFileDetail = () => {
     }
   };
 
-  // ฟังก์ชันสำหรับดาวน์โหลดไฟล์ทดสอบ
-  const handleDownload = async () => {
-    try {
-      const response = await axios.get(
-        `${API_BASE_URL}/api/test-files/${id}/download`,
-        {
-          headers: { Authorization: `Bearer ${user.token}` },
-          responseType: "blob",
-        }
-      );
-      const blob = new Blob([response.data], { type: "application/json" });
-      const link = document.createElement("a");
-      link.href = window.URL.createObjectURL(blob);
-      link.download = testFile.filename;
-      link.click();
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to download file");
-    }
-  };
-
   // ======== Conditional Rendering ========
   // แสดง loading spinner ระหว่างกำลังโหลดข้อมูล
   if (loading)
@@ -311,14 +291,6 @@ const TestFileDetail = () => {
 
             {/* ปุ่มการทำงาน */}
             <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row justify-end gap-3 sm:space-x-4">
-              <button
-                data-cy="download-button"
-                onClick={handleDownload}
-                className="flex items-center justify-center gap-2 px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 transition-colors text-sm sm:text-base"
-              >
-                <Download className="w-4 h-4 sm:w-5 sm:h-5" />
-                ดาวน์โหลด
-              </button>
               <button
                 data-cy="edit-button"
                 onClick={() => navigate(`/test-files/${id}/edit`)}

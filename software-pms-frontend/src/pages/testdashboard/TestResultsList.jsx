@@ -242,11 +242,7 @@ const TestResultsList = ({ tests }) => {
       <div
         className={`
         rounded-xl shadow-md p-3 sm:p-4
-        ${
-          allPassed
-            ? "bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200"
-            : "bg-gradient-to-r from-red-50 to-rose-50 border border-red-200"
-        }
+        ${allPassed ? "bg-white border-green-200" : "bg-white border-red-200"}
       `}
         data-cy="results-summary-card"
         data-test-status={allPassed ? "passed" : "failed"}
@@ -255,7 +251,7 @@ const TestResultsList = ({ tests }) => {
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div className="flex flex-col xs:flex-row items-start xs:items-center gap-2 sm:gap-4 w-full sm:w-auto">
             <div
-              className="flex items-center gap-2 bg-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-sm w-full xs:w-auto"
+              className="flex items-center gap-2 bg-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-sm w-full xs:w-auto border border-gray-900 border-opacity-50"
               data-cy="passed-tests-counter"
             >
               <CheckCircle className="text-green-500 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
@@ -265,7 +261,7 @@ const TestResultsList = ({ tests }) => {
             </div>
             {stats.failed > 0 && (
               <div
-                className="flex items-center gap-2 bg-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-sm w-full xs:w-auto"
+                className="flex items-center gap-2 bg-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg shadow-sm w-full xs:w-auto border border-gray-900 border-opacity-50"
                 data-cy="failed-tests-counter"
               >
                 <XCircle className="text-red-500 h-4 w-4 sm:h-5 sm:w-5 flex-shrink-0" />
