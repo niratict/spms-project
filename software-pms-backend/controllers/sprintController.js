@@ -311,7 +311,6 @@ const updateSprint = async (req, res) => {
   }
 };
 
-// Delete sprint
 const deleteSprint = async (req, res) => {
   try {
     const sprintId = req.params.id;
@@ -326,9 +325,9 @@ const deleteSprint = async (req, res) => {
       return res.status(404).json({ message: "Sprint not found" });
     }
 
-    // Check for test files
+    // Check for active test files (exclude files with "Deleted" status)
     const [testFiles] = await db.query(
-      "SELECT COUNT(*) as count FROM test_files WHERE sprint_id = ?",
+      "SELECT COUNT(*) as count FROM test_files WHERE sprint_id = ? AND status != 'Deleted'",
       [sprintId]
     );
 

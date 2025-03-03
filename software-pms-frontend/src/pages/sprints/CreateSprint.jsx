@@ -28,6 +28,11 @@ const CreateSprint = () => {
   });
   const [numberOfMonths, setNumberOfMonths] = useState(2);
 
+  // เลื่อนไปด้านบนสุดของหน้าเมื่อคอมโพเนนต์ถูกโหลด
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // ปรับจำนวน months ที่แสดงในปฏิทินตามขนาดหน้าจอ
   useEffect(() => {
     const handleResize = () => {
@@ -175,14 +180,14 @@ const CreateSprint = () => {
 
   return (
     <div
-      className="bg-gray-50 p-4 sm:p-8 md:p-16"
+      className="min-h-screen bg-gray-50 flex flex-col"
       data-cy="create-sprint-container"
     >
-      <div className="w-full max-w-2xl mx-auto">
+      <div className="w-full px-4 sm:px-6 py-6 sm:py-8 mx-auto max-w-lg sm:max-w-xl md:max-w-2xl">
         {/* ปุ่มกลับไปยังหน้าเลือกสปรินต์ */}
         <button
           onClick={handleBack}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 p-3 sm:p-6"
+          className="flex items-center text-gray-600 hover:text-gray-800 mb-4 sm:mb-6 transition-colors"
           data-cy="back-button"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />

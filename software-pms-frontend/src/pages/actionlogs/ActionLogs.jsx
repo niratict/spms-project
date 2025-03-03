@@ -41,6 +41,7 @@ const ActionLogs = () => {
 
   // --------- ฟังก์ชันจัดรูปแบบรายละเอียด ---------
   // แสดงรายละเอียดการดำเนินการในรูปแบบที่อ่านง่าย
+  // ฟังก์ชันจัดรูปแบบรายละเอียด (ปรับปรุง)
   const formatDetails = (details, targetTable, actionType) => {
     if (!details) return "-";
 
@@ -86,56 +87,101 @@ const ActionLogs = () => {
         status: "สถานะ",
         file_id: "รหัสไฟล์",
         filename: "ชื่อไฟล์",
+        last_modified_date: "วันที่แก้ไขล่าสุด",
       };
 
-      return Object.entries(displayDetails)
-        .filter(([key, value]) => value !== null && value !== undefined)
-        .map(([key, value]) => {
-          // ตรวจสอบว่าชื่อ field เป็นฟิลด์วันที่หรือไม่
-          const isDateField =
-            [
-              "created_at",
-              "updated_at",
-              "start_date",
-              "end_date",
-              "action_date",
-              "upload_date",
-              "changed_at",
-            ].includes(key) && typeof value === "string";
+      // กำหนดลำดับความสำคัญของฟิลด์ที่ต้องการแสดงก่อน
+      const fieldDisplayOrder = [
+        "status", // สถานะ
+        "file_id", // รหัสไฟล์
+        "filename", // ชื่อไฟล์
+        "original_filename", // ชื่อไฟล์ที่อัพโหลด
+        "custom_filename", // ชื่อไฟล์
+        "file_size", // ขนาดไฟล์
+        "upload_date", // วันที่อัพโหลด
+        "last_modified_by", // แก้ไขล่าสุดโดย
+        "last_modified_date", // วันที่แก้ไขล่าสุด
+        "name", // ชื่อ
+        "description", // รายละเอียด
+        "role", // บทบาท
+        "email", // อีเมล
+        "user_id", // รหัสผู้ใช้
+        "created_by", // สร้างโดย
+        "created_at", // วันที่สร้าง
+        "updated_at", // แก้ไขโดย
+        "start_date", // วันที่เริ่มต้น
+        "end_date", // วันที่สิ้นสุด
+        "sprint_id", // รหัสสปรินต์
+        "project_id", // รหัสโปรเจกต์
+        "changed_at", // วันที่เปลี่ยน
+        "photo", // รูปภาพ
+      ];
 
-          // ตรวจสอบรูปแบบวันที่แบบ ISO date (YYYY-MM-DDThh:mm:ss...)
-          const isISODateFormat =
-            isDateField && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value);
+      // เก็บฟิลด์ที่มีค่าไม่เป็น null หรือ undefined
+      const validFields = Object.entries(displayDetails).filter(
+        ([key, value]) => value !== null && value !== undefined
+      );
 
-          // ตรวจสอบรูปแบบวันที่แบบ YYYY-MM-DD
-          const isSimpleDateFormat =
-            isDateField && /^\d{4}-\d{2}-\d{2}$/.test(value);
+      // จัดเรียงฟิลด์ตามลำดับที่กำหนด
+      const sortedFields = validFields.sort((a, b) => {
+        const indexA = fieldDisplayOrder.indexOf(a[0]);
+        const indexB = fieldDisplayOrder.indexOf(b[0]);
 
-          // แปลงค่าตามรูปแบบที่พบ
-          let displayValue;
-          if (isISODateFormat) {
-            displayValue = formatThaiDate(new Date(value));
-          } else if (isSimpleDateFormat) {
-            displayValue = formatThaiDate(new Date(value));
-          } else if (typeof value === "object") {
-            displayValue = JSON.stringify(value);
-          } else {
-            displayValue = value.toString();
-          }
+        // ถ้าฟิลด์ไม่อยู่ในรายการลำดับ ให้แสดงอยู่ท้ายๆ
+        const priorityA = indexA === -1 ? 999 : indexA;
+        const priorityB = indexB === -1 ? 999 : indexB;
 
-          // แปลงชื่อฟิลด์ภาษาอังกฤษเป็นภาษาไทย (ถ้ามีใน mapping)
-          const displayKey = fieldNameMapping[key] || key;
+        return priorityA - priorityB;
+      });
 
-          return (
-            <div
-              key={key}
-              className="whitespace-normal break-words"
-              data-cy={`detail-item-${key}`}
-            >
-              <span className="font-bold text-gray-700">{displayKey}:</span> {displayValue}
-            </div>
-          );
-        });
+      return sortedFields.map(([key, value]) => {
+        // ตรวจสอบว่าชื่อ field เป็นฟิลด์วันที่หรือไม่
+        const isDateField =
+          [
+            "created_at",
+            "updated_at",
+            "start_date",
+            "end_date",
+            "action_date",
+            "upload_date",
+            "changed_at",
+            "last_modified_date",
+          ].includes(key) && typeof value === "string";
+
+        // ตรวจสอบรูปแบบวันที่แบบ ISO date (YYYY-MM-DDThh:mm:ss...)
+        const isISODateFormat =
+          isDateField && /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/.test(value);
+
+        // ตรวจสอบรูปแบบวันที่แบบ YYYY-MM-DD
+        const isSimpleDateFormat =
+          isDateField && /^\d{4}-\d{2}-\d{2}$/.test(value);
+
+        // แปลงค่าตามรูปแบบที่พบ
+        let displayValue;
+        if (isISODateFormat) {
+          displayValue = formatThaiDate(new Date(value));
+        } else if (isSimpleDateFormat) {
+          displayValue = formatThaiDate(new Date(value));
+        } else if (typeof value === "object") {
+          displayValue = JSON.stringify(value);
+        } else {
+          displayValue = value.toString();
+        }
+
+        // แปลงชื่อฟิลด์ภาษาอังกฤษเป็นภาษาไทย (ถ้ามีใน mapping)
+        const displayKey = fieldNameMapping[key] || key;
+
+        return (
+          <div
+            key={key}
+            className="whitespace-normal break-words"
+            data-cy={`detail-item-${key}`}
+          >
+            <span className="font-bold text-gray-700">{displayKey}:</span>{" "}
+            {displayValue}
+          </div>
+        );
+      });
     }
 
     return details;

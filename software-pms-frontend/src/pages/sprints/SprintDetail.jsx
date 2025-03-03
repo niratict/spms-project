@@ -36,6 +36,11 @@ const SprintDetail = () => {
   const [showDeleteWarningModal, setShowDeleteWarningModal] = useState(false);
   const [deleteWarningMessage, setDeleteWarningMessage] = useState("");
 
+  // เลื่อนไปด้านบนสุดของหน้าเมื่อคอมโพเนนต์ถูกโหลด
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // ดึงข้อมูล Sprint เมื่อ Component โหลด
   useEffect(() => {
     const fetchSprintData = async () => {

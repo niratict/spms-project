@@ -29,7 +29,6 @@ const TestFileEdit = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false); // แสดง/ซ่อนหน้าต่างยืนยัน
   const [formData, setFormData] = useState({
     filename: "",
-    status: "Pending",
   });
 
   // ดึงข้อมูลไฟล์ทดสอบเมื่อโหลดหน้า
@@ -45,7 +44,6 @@ const TestFileEdit = () => {
         setTestFile(response.data);
         setFormData({
           filename: response.data.filename,
-          status: response.data.status || "Pending",
         });
       } catch (err) {
         setError(err.response?.data?.message || "Failed to fetch test file");
@@ -101,9 +99,16 @@ const TestFileEdit = () => {
       const submitData = new FormData();
       if (selectedFile) {
         submitData.append("testFile", selectedFile);
+        // ไม่ต้องส่ง status เดิมไปเมื่อมีการอัพโหลดไฟล์ใหม่
+        // เพื่อให้ backend กำหนดสถานะจาก JSON content ใหม่อัตโนมัติ
+      } else {
+        // ใช้สถานะเดิมจาก testFile เฉพาะกรณีที่ไม่มีการอัพโหลดไฟล์ใหม่
+        if (testFile && testFile.status) {
+          submitData.append("status", testFile.status);
+        }
       }
+
       submitData.append("filename", formData.filename);
-      submitData.append("status", formData.status);
 
       // ส่งข้อมูลไปยัง API
       await axios.put(
@@ -177,7 +182,7 @@ const TestFileEdit = () => {
               <span>กลับไปหน้ารายละเอียด</span>
             </button>
 
-            {/* แสดงสถานะไฟล์ทดสอบ */}
+            {/* แสดงสถานะไฟล์ทดสอบ (ไม่สามารถแก้ไขได้) */}
             {testFile.status === "Pass" ? (
               <div
                 className="flex items-center gap-2 text-green-600 text-sm sm:text-base"
@@ -194,7 +199,15 @@ const TestFileEdit = () => {
                 <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
                 <span>Failed</span>
               </div>
-            ) : null}
+            ) : (
+              <div
+                className="flex items-center gap-2 text-yellow-600 text-sm sm:text-base"
+                data-cy="status-pending"
+              >
+                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
+                <span>Pending</span>
+              </div>
+            )}
           </div>
 
           {/* แบบฟอร์มแก้ไขไฟล์ */}
@@ -289,39 +302,6 @@ const TestFileEdit = () => {
                     data-cy="filename-input"
                   />
                 </div>
-
-                {/* เลือกสถานะ */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    สถานะ
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={formData.status}
-                      onChange={(e) =>
-                        setFormData((prev) => ({
-                          ...prev,
-                          status: e.target.value,
-                        }))
-                      }
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg appearance-none focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
-                      data-cy="status-select"
-                    >
-                      <option value="Pending">Pending</option>
-                      <option value="Pass">Pass</option>
-                      <option value="Fail">Fail</option>
-                    </select>
-                    <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-gray-700">
-                      <svg
-                        className="fill-current h-4 w-4"
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 20 20"
-                      >
-                        <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
-                      </svg>
-                    </div>
-                  </div>
-                </div>
               </div>
 
               {/* ปุ่มดำเนินการ */}
@@ -391,11 +371,7 @@ const TestFileEdit = () => {
                 )}
               </p>
 
-              <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500 space-y-1">
-                <p data-cy="confirm-status">
-                  • สถานะจะถูกเปลี่ยนเป็น:{" "}
-                  <span className="font-medium">{formData.status}</span>
-                </p>
+              <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500">
                 <p data-cy="confirm-filename" className="break-words">
                   • ชื่อไฟล์จะเป็น:{" "}
                   <span className="font-medium">{formData.filename}</span>

@@ -29,6 +29,11 @@ const CreateTestFile = () => {
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
 
+  // เลื่อนไปด้านบนสุดของหน้าเมื่อคอมโพเนนต์ถูกโหลด
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   // ดึงข้อมูลไฟล์ที่มีอยู่เมื่อคอมโพเนนต์โหลด
   useEffect(() => {
     const fetchExistingFiles = async () => {
@@ -185,7 +190,7 @@ const CreateTestFile = () => {
         >
           <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
           <span className="text-sm sm:text-base font-medium">
-            กลับหน้าเลือกไฟล์ทดสอบ
+            กลับไปที่หน้าเลือกไฟล์ทดสอบ
           </span>
         </button>
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
@@ -10,17 +10,17 @@ import {
   X,
   Clock,
   Search,
-  Target,
+  Puzzle,
   FolderX,
-  Menu,
   ChevronDown,
   ChevronUp,
   RefreshCw,
-  Filter,
-  Zap,
-  AlertCircle,
-  Puzzle,
   ArrowUpRight,
+  FolderKanban,
+  Timer,
+  AlertCircle,
+  Zap,
+  Filter,
 } from "lucide-react";
 import TestStatsDashboard from "./TestStatsDashboard";
 
@@ -39,40 +39,58 @@ const TestFiles = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  // สถานะข้อมูลโปรเจกต์และสปรินต์
+  const fileSectionRef = useRef(null);
+
+  useEffect(() => {
+    if (location.state?.scrollToFileSection && fileSectionRef.current) {
+      // ลองใช้วิธีอื่นในการเลื่อน
+      window.scrollTo({
+        top: fileSectionRef.current.offsetTop - 100, // ลบระยะห่างด้านบนออก 100px
+        behavior: "smooth",
+      });
+    }
+  }, [location]);
+
+  // Core state
   const [projects, setProjects] = useState([]);
   const [sprints, setSprints] = useState([]);
   const [selectedProject, setSelectedProject] = useState(null);
   const [selectedSprint, setSelectedSprint] = useState(null);
-
-  // สถานะข้อมูลไฟล์ทดสอบและการแสดงผล
   const [testFiles, setTestFiles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [stats, setStats] = useState(null);
+
+  // UI state
   const [searchTerm, setSearchTerm] = useState("");
-  const [isDashboardVisible, setIsDashboardVisible] = useState(true);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  // สถานะสำหรับการแสดงผลแบบ Responsive
-  const [isProjectSectionCollapsed, setIsProjectSectionCollapsed] =
-    useState(false);
-  const [isSprintSectionCollapsed, setIsSprintSectionCollapsed] =
-    useState(false);
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-
-  // สถานะสำหรับการกรองข้อมูล
   const [statusFilter, setStatusFilter] = useState("all");
   const [sortOrder, setSortOrder] = useState("newest");
+  const [isDashboardVisible, setIsDashboardVisible] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isProjectSectionCollapsed, setIsProjectSectionCollapsed] =
+    useState(true);
+  const [isSprintSectionCollapsed, setIsSprintSectionCollapsed] =
+    useState(true);
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const [isStatusDropdownOpen, setIsStatusDropdownOpen] = useState(false);
 
-  // ฟังก์ชั่นลบข้อมูลที่เก็บใน localStorage
+  // Clear localStorage data when navigating away
   const clearStoredSelections = () => {
     Object.values(STORAGE_KEYS).forEach((key) => localStorage.removeItem(key));
   };
 
-  // ดึงข้อมูลโปรเจกต์และจัดการการเลือกโปรเจกต์จาก state หรือ localStorage
+  // Handle navigation with cleanup
+  const navigateWithCleanup = (path) => {
+    if (!path.includes("/test-files")) {
+      clearStoredSelections();
+    }
+    navigate(path);
+  };
+
+  // Fetch projects and handle selection from state or localStorage
   useEffect(() => {
     const fetchProjects = async () => {
+      if (!user) return;
+
       try {
         setLoading(true);
         const response = await axios.get(`${API_BASE_URL}/api/projects`, {
@@ -80,75 +98,32 @@ const TestFiles = () => {
         });
         setProjects(response.data);
 
-        // ตรวจสอบ state จาก location ก่อน
+        // First check location state, then localStorage
+        let projectToSelect = null;
+
         if (location.state?.selectedProjectId) {
-          const project = response.data.find(
+          projectToSelect = response.data.find(
             (p) => p.project_id === location.state.selectedProjectId
           );
-          if (project) {
-            setSelectedProject(project);
-            localStorage.setItem(STORAGE_KEYS.PROJECT_ID, project.project_id);
-            localStorage.setItem(STORAGE_KEYS.PROJECT_NAME, project.name);
-          }
-        }
-        // ถ้าไม่มี state ให้ดึงจาก localStorage
-        else {
+        } else {
           const savedProjectId = localStorage.getItem(STORAGE_KEYS.PROJECT_ID);
           if (savedProjectId) {
-            const project = response.data.find(
+            projectToSelect = response.data.find(
               (p) => p.project_id === parseInt(savedProjectId)
             );
-            if (project) {
-              setSelectedProject(project);
-            }
           }
         }
 
-        // จัดการการเลือกสปรินต์จาก state หรือ localStorage
-        const handleSprintSelection = async (projectId) => {
-          try {
-            const sprintResponse = await axios.get(
-              `${API_BASE_URL}/api/sprints?project_id=${projectId}`,
-              {
-                headers: { Authorization: `Bearer ${user.token}` },
-              }
-            );
-            setSprints(sprintResponse.data);
+        if (projectToSelect) {
+          setSelectedProject(projectToSelect);
+          localStorage.setItem(
+            STORAGE_KEYS.PROJECT_ID,
+            projectToSelect.project_id
+          );
+          localStorage.setItem(STORAGE_KEYS.PROJECT_NAME, projectToSelect.name);
 
-            if (location.state?.selectedSprintId) {
-              const sprint = sprintResponse.data.find(
-                (s) => s.sprint_id === location.state.selectedSprintId
-              );
-              if (sprint) {
-                setSelectedSprint(sprint);
-                localStorage.setItem(STORAGE_KEYS.SPRINT_ID, sprint.sprint_id);
-                localStorage.setItem(STORAGE_KEYS.SPRINT_NAME, sprint.name);
-              }
-            } else {
-              const savedSprintId = localStorage.getItem(
-                STORAGE_KEYS.SPRINT_ID
-              );
-              if (savedSprintId) {
-                const sprint = sprintResponse.data.find(
-                  (s) => s.sprint_id === parseInt(savedSprintId)
-                );
-                if (sprint) {
-                  setSelectedSprint(sprint);
-                }
-              }
-            }
-          } catch (err) {
-            console.error("Failed to fetch sprint:", err);
-          } finally {
-            setLoading(false);
-          }
-        };
-
-        const projectId =
-          location.state?.selectedProjectId ||
-          localStorage.getItem(STORAGE_KEYS.PROJECT_ID);
-        if (projectId) {
-          handleSprintSelection(projectId);
+          // Fetch sprints for selected project
+          await fetchSprintsForProject(projectToSelect.project_id);
         } else {
           setLoading(false);
         }
@@ -158,14 +133,49 @@ const TestFiles = () => {
       }
     };
 
-    if (user) fetchProjects();
-  }, [
-    user,
-    location.state?.selectedProjectId,
-    location.state?.selectedSprintId,
-  ]);
+    fetchProjects();
+  }, [user, location.state?.selectedProjectId]);
 
-  // ดึงข้อมูลไฟล์ทดสอบเมื่อมีการเลือกสปรินต์
+  // Fetch sprints for a project
+  const fetchSprintsForProject = async (projectId) => {
+    try {
+      const sprintResponse = await axios.get(
+        `${API_BASE_URL}/api/sprints?project_id=${projectId}`,
+        {
+          headers: { Authorization: `Bearer ${user.token}` },
+        }
+      );
+      setSprints(sprintResponse.data);
+
+      // Handle sprint selection from state or localStorage
+      let sprintToSelect = null;
+
+      if (location.state?.selectedSprintId) {
+        sprintToSelect = sprintResponse.data.find(
+          (s) => s.sprint_id === location.state.selectedSprintId
+        );
+      } else {
+        const savedSprintId = localStorage.getItem(STORAGE_KEYS.SPRINT_ID);
+        if (savedSprintId) {
+          sprintToSelect = sprintResponse.data.find(
+            (s) => s.sprint_id === parseInt(savedSprintId)
+          );
+        }
+      }
+
+      if (sprintToSelect) {
+        setSelectedSprint(sprintToSelect);
+        localStorage.setItem(STORAGE_KEYS.SPRINT_ID, sprintToSelect.sprint_id);
+        localStorage.setItem(STORAGE_KEYS.SPRINT_NAME, sprintToSelect.name);
+      }
+    } catch (err) {
+      console.error("Failed to fetch sprints:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch test files when sprint selection changes
   useEffect(() => {
     const fetchTestFiles = async () => {
       if (!selectedSprint) {
@@ -176,23 +186,12 @@ const TestFiles = () => {
 
       setLoading(true);
       try {
-        // ดึงข้อมูลไฟล์ทดสอบตามสปรินต์ที่เลือก
+        // Fetch test files for selected sprint
         const response = await axios.get(
           `${API_BASE_URL}/api/test-files?sprint_id=${selectedSprint.sprint_id}`,
-          {
-            headers: { Authorization: `Bearer ${user.token}` },
-          }
+          { headers: { Authorization: `Bearer ${user.token}` } }
         );
         setTestFiles(response.data);
-
-        // ดึงข้อมูลสถิติการทดสอบ
-        const statsResponse = await axios.get(
-          `${API_BASE_URL}/api/test-files/stats?sprint_id=${selectedSprint.sprint_id}`,
-          {
-            headers: { Authorization: `Bearer ${user.token}` },
-          }
-        );
-        setStats(statsResponse.data);
       } catch (err) {
         setError(err.response?.data?.message || "Failed to fetch test files");
       } finally {
@@ -204,37 +203,24 @@ const TestFiles = () => {
     fetchTestFiles();
   }, [selectedSprint, user, isRefreshing]);
 
-  // จัดการการเปลี่ยนเส้นทางและล้าง localStorage เมื่อออกจากหน้า test-files
+  // Clear localStorage when navigating away
   useEffect(() => {
-    // ฟังก์ชั่นจัดการการเปลี่ยนเส้นทาง
     const handleRouteChange = () => {
-      const currentPath = location.pathname;
-      // ถ้าไม่ได้อยู่ในหน้าที่เกี่ยวกับ test files ให้เคลียร์ค่า
-      if (!currentPath.includes("/test-files")) {
+      if (!location.pathname.includes("/test-files")) {
         clearStoredSelections();
       }
     };
 
     handleRouteChange();
 
-    // Cleanup เมื่อ component unmounts
     return () => {
-      // ล้างข้อมูลเมื่อนำทางออกจากเส้นทาง test-files
       if (!window.location.pathname.includes("/test-files")) {
         clearStoredSelections();
       }
     };
-  }, []);
+  }, [location.pathname]);
 
-  // ฟังก์ชันนำทางที่จะล้าง localStorage เมื่อออกจาก test-files
-  const navigateWithCleanup = (path) => {
-    if (!path.includes("/test-files")) {
-      clearStoredSelections();
-    }
-    navigate(path);
-  };
-
-  // จัดการการเลือกโปรเจกต์
+  // Event handlers
   const handleProjectSelect = (project) => {
     setSelectedProject(project);
     setSelectedSprint(null);
@@ -242,20 +228,20 @@ const TestFiles = () => {
     localStorage.setItem(STORAGE_KEYS.PROJECT_NAME, project.name);
     localStorage.removeItem(STORAGE_KEYS.SPRINT_ID);
     localStorage.removeItem(STORAGE_KEYS.SPRINT_NAME);
+
     navigate(".", {
       replace: true,
       state: { selectedProjectId: project.project_id },
     });
 
-    // ปิดเมนูบนมือถือหลังจากเลือกโปรเจกต์
-    setIsMobileMenuOpen(false);
+    fetchSprintsForProject(project.project_id);
   };
 
-  // จัดการการเลือกสปรินต์
   const handleSprintSelect = (sprint) => {
     setSelectedSprint(sprint);
     localStorage.setItem(STORAGE_KEYS.SPRINT_ID, sprint.sprint_id);
     localStorage.setItem(STORAGE_KEYS.SPRINT_NAME, sprint.name);
+
     navigate(".", {
       replace: true,
       state: {
@@ -263,39 +249,33 @@ const TestFiles = () => {
         selectedSprintId: sprint.sprint_id,
       },
     });
-
-    // ปิดเมนูบนมือถือหลังจากเลือกสปรินต์
-    setIsMobileMenuOpen(false);
   };
 
-  // จัดการการค้นหาไฟล์ทดสอบ
-  const handleSearch = (e) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // จัดการการรีเฟรชข้อมูล
-  const handleRefresh = () => {
-    setIsRefreshing(true);
-  };
-
-  // จัดการการกรองตามสถานะ
-  const handleStatusFilter = (status) => {
-    setStatusFilter(status);
-  };
-
-  // จัดการการเรียงลำดับ
-  const handleSortOrder = (order) => {
-    setSortOrder(order);
-  };
-
-  // นำทางไปยังหน้าสร้างไฟล์ทดสอบใหม่
   const handleCreateTestFile = () => {
     if (selectedSprint) {
       navigate(`/test-files/create/${selectedSprint.sprint_id}`);
     }
   };
 
-  // สร้างไอคอนตามสถานะไฟล์ทดสอบ
+  const handleRefresh = () => {
+    setIsRefreshing(true);
+  };
+
+  const handleSearch = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const handleStatusFilter = (status) => {
+    setStatusFilter(status);
+    setIsStatusDropdownOpen(false);
+  };
+
+  const handleSortOrder = (order) => {
+    setSortOrder(order);
+    setIsSortDropdownOpen(false);
+  };
+
+  // Utility functions
   const getStatusIcon = (status) => {
     switch (status) {
       case "Pass":
@@ -307,7 +287,38 @@ const TestFiles = () => {
     }
   };
 
-  // กรองไฟล์ทดสอบตามคำค้นหาและสถานะ
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Pass":
+        return "bg-green-500";
+      case "Fail":
+        return "bg-red-500";
+      default:
+        return "bg-yellow-500";
+    }
+  };
+
+  const getRelativeTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now - date;
+    const seconds = Math.floor(diff / 1000);
+    const minutes = Math.floor(seconds / 60);
+    const hours = Math.floor(minutes / 60);
+    const days = Math.floor(hours / 24);
+
+    if (days > 0) {
+      return days === 1 ? "1 วันที่แล้ว" : `${days} วันที่แล้ว`;
+    } else if (hours > 0) {
+      return hours === 1 ? "1 ชั่วโมงที่แล้ว" : `${hours} ชั่วโมงที่แล้ว`;
+    } else if (minutes > 0) {
+      return minutes === 1 ? "1 นาทีที่แล้ว" : `${minutes} นาทีที่แล้ว`;
+    } else {
+      return seconds <= 10 ? "เมื่อสักครู่" : `${seconds} วินาทีที่แล้ว`;
+    }
+  };
+
+  // Filter and sort test files
   const filteredTestFiles = testFiles
     .filter(
       (file) =>
@@ -328,118 +339,40 @@ const TestFiles = () => {
       return 0;
     });
 
-  // สร้างแถบสถานะสี
-  const getStatusBar = (status) => {
-    const statusClasses = {
-      Pass: "bg-green-500",
-      Fail: "bg-red-500",
-      Pending: "bg-yellow-500",
-    };
-    return (
-      <div
-        className={`absolute top-0 left-0 w-full h-1 ${
-          statusClasses[status] || "bg-gray-300"
-        }`}
-      ></div>
-    );
+  // Format file size to KB
+  const formatFileSize = (bytes) => {
+    return (bytes / 1024).toFixed(2) + " KB";
   };
 
-  // แสดงวันที่แบบ relative
-  const getRelativeTimeString = (dateString) => {
-    const date = new Date(dateString);
-    const now = new Date();
-    const diff = now - date;
-    const seconds = Math.floor(diff / 1000);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const days = Math.floor(hours / 24);
-
-    if (days > 0) {
-      return days === 1 ? "1 วันที่แล้ว" : `${days} วันที่แล้ว`;
-    } else if (hours > 0) {
-      return hours === 1 ? "1 ชั่วโมงที่แล้ว" : `${hours} ชั่วโมงที่แล้ว`;
-    } else if (minutes > 0) {
-      return minutes === 1 ? "1 นาทีที่แล้ว" : `${minutes} นาทีที่แล้ว`;
-    } else {
-      return seconds <= 10 ? "เมื่อสักครู่" : `${seconds} วินาทีที่แล้ว`;
-    }
-  };
-
-  // แสดงจำนวนรายการที่กรองได้
-  const showFilterResults = () => {
+  // Show filter results count
+  const showFilterCount = () => {
     if (filteredTestFiles.length === 0) return "ไม่พบรายการที่ตรงกับเงื่อนไข";
     return `พบ ${filteredTestFiles.length} รายการจากทั้งหมด ${testFiles.length} รายการ`;
   };
 
   return (
     <div
-      className="bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen p-3 sm:p-5 md:p-8"
+      className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8"
       data-cy="test-files-page"
     >
       <div className="container mx-auto max-w-7xl">
-        {/* Header section with mobile menu */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 md:mb-8">
-          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center mb-4 sm:mb-0">
-            <FileText className="w-8 h-8 sm:w-10 sm:h-10 mr-3 sm:mr-4 text-blue-600" />
-            <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+        {/* Page header */}
+        <header className="mb-6">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
+            <FileText className="w-8 h-8 md:w-9 md:h-9 mr-3 text-blue-600" />
+            <span className="bg-black bg-clip-text text-transparent">
               การจัดการไฟล์ทดสอบ
             </span>
           </h1>
-        </div>
+        </header>
 
-        {/* Mobile Menu */}
-        <div
-          className={`sm:hidden transition-all duration-500 overflow-hidden rounded-xl mb-6 ${
-            isMobileMenuOpen
-              ? "max-h-screen opacity-100 border-2 border-blue-100 shadow-lg"
-              : "max-h-0 opacity-0"
-          }`}
-        >
-          <div className="bg-white p-4 divide-y divide-blue-100">
-            {selectedProject && (
-              <div className="py-3">
-                <p className="text-sm text-gray-500 mb-1">โปรเจกต์ที่เลือก</p>
-                <div className="flex items-center bg-blue-50 p-3 rounded-lg border border-blue-200">
-                  <Puzzle className="w-5 h-5 text-blue-500 mr-2" />
-                  <p className="font-medium text-blue-700">
-                    {selectedProject.name}
-                  </p>
-                </div>
-              </div>
-            )}
-            {selectedSprint && (
-              <div className="py-3">
-                <p className="text-sm text-gray-500 mb-1">สปรินต์ที่เลือก</p>
-                <div className="flex items-center bg-green-50 p-3 rounded-lg border border-green-200">
-                  <Zap className="w-5 h-5 text-green-500 mr-2" />
-                  <p className="font-medium text-green-700">
-                    {selectedSprint.name}
-                  </p>
-                </div>
-              </div>
-            )}
-            {selectedSprint && (
-              <div className="pt-3">
-                <button
-                  onClick={handleCreateTestFile}
-                  data-cy="mobile-create-test-file-button"
-                  className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-3 rounded-lg hover:shadow-lg transform transition hover:scale-105"
-                >
-                  <Upload className="w-5 h-5" />
-                  อัพโหลดไฟล์ทดสอบ
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* แสดงข้อผิดพลาด */}
+        {/* Error message */}
         {error && (
           <div
-            className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg shadow-md flex items-center"
+            className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg shadow flex items-center"
             data-cy="error-message"
           >
-            <AlertCircle className="text-red-500 mr-3 w-6 h-6" />
+            <AlertCircle className="text-red-500 mr-3 w-5 h-5 flex-shrink-0" />
             <div>
               <p className="text-red-700 font-medium">เกิดข้อผิดพลาด</p>
               <p className="text-red-600 text-sm">{error}</p>
@@ -447,9 +380,9 @@ const TestFiles = () => {
           </div>
         )}
 
-        {/* ส่วนเลือกโปรเจกต์ */}
-        <div
-          className="bg-white shadow-lg rounded-xl p-4 sm:p-6 mb-6 transform transition-transform hover:translate-y-[-2px]"
+        {/* Project selection */}
+        <section
+          className="bg-white shadow rounded-xl p-5 mb-5 transition-all hover:shadow-md"
           data-cy="project-selection-section"
         >
           <div
@@ -458,13 +391,11 @@ const TestFiles = () => {
               setIsProjectSectionCollapsed(!isProjectSectionCollapsed)
             }
           >
-            <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
-              <Target className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-blue-500" />
-              <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                เลือกโปรเจกต์
-              </span>
+            <h2 className="text-xl font-bold text-gray-800 flex items-center">
+              <FolderKanban className="w-5 h-5 mr-2 text-blue-500" />
+              <span>เลือกโปรเจกต์</span>
             </h2>
-            <div className="flex items-center space-x-2 text-gray-600">
+            <div className="flex items-center gap-2">
               {selectedProject && (
                 <span className="hidden md:inline text-sm text-blue-600 font-medium">
                   {selectedProject.name}
@@ -479,10 +410,10 @@ const TestFiles = () => {
           </div>
 
           <div
-            className={`transition-all duration-500 overflow-hidden ${
+            className={`transition-all duration-300 overflow-hidden ${
               isProjectSectionCollapsed
                 ? "max-h-0 opacity-0 mt-0"
-                : "max-h-screen opacity-100 mt-6"
+                : "max-h-screen opacity-100 mt-4"
             }`}
           >
             {loading && !projects.length ? (
@@ -491,7 +422,7 @@ const TestFiles = () => {
                 <span className="ml-3 text-gray-600">กำลังโหลดโปรเจกต์...</span>
               </div>
             ) : projects.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 {projects.map((project) => (
                   <div
                     key={project.project_id}
@@ -499,12 +430,12 @@ const TestFiles = () => {
                     data-cy={`project-card-${project.project_id}`}
                     className={`
                       cursor-pointer relative overflow-hidden
-                      border-2 rounded-lg p-4 sm:p-5 
-                      transition-all duration-300 
-                      hover:shadow-lg transform hover:scale-[1.02]
+                      border-2 rounded-lg p-4
+                      transition-all duration-200 
+                      hover:shadow-md hover:scale-[1.01]
                       ${
                         selectedProject?.project_id === project.project_id
-                          ? "border-blue-500 bg-blue-50 shadow-md"
+                          ? "border-blue-500 bg-blue-50 shadow"
                           : "border-gray-200 hover:border-blue-300"
                       }
                     `}
@@ -512,14 +443,14 @@ const TestFiles = () => {
                     {selectedProject?.project_id === project.project_id && (
                       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
                     )}
-                    <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-1 sm:mb-2">
+                    <h3 className="text-base font-semibold text-gray-800 mb-1">
                       {project.name}
                     </h3>
-                    <p className="text-xs sm:text-sm text-gray-600 line-clamp-2 mb-3">
-                      {project.description}
+                    <p className="text-xs text-gray-600 line-clamp-1 mb-2">
+                      {project.description || "ไม่มีคำอธิบาย"}
                     </p>
                     {selectedProject?.project_id === project.project_id && (
-                      <span className="absolute bottom-2 right-3 text-xs font-medium py-1 px-2 bg-blue-100 text-blue-700 rounded-full">
+                      <span className="absolute bottom-2 right-2 text-xs font-medium py-1 px-2 bg-blue-100 text-blue-700 rounded-full">
                         ที่เลือก
                       </span>
                     )}
@@ -527,16 +458,16 @@ const TestFiles = () => {
                 ))}
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
-                <FolderX className="w-10 h-10 sm:w-14 sm:h-14 text-gray-400 mb-3 sm:mb-4" />
+              <div className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50">
+                <FolderX className="w-12 h-12 text-gray-400 mb-3" />
                 <p
-                  className="text-lg sm:text-xl font-medium text-gray-700 mb-2"
+                  className="text-lg font-medium text-gray-700 mb-2"
                   data-cy="project-notfound-1"
                 >
                   ไม่พบโปรเจกต์
                 </p>
                 <p
-                  className="text-sm text-gray-500 text-center mb-4"
+                  className="text-sm text-gray-500 text-center"
                   data-cy="project-notfound-2"
                 >
                   คุณยังไม่ได้ทำการสร้างโปรเจกต์
@@ -544,12 +475,12 @@ const TestFiles = () => {
               </div>
             )}
           </div>
-        </div>
+        </section>
 
-        {/* ส่วนแสดงสปรินต์ */}
+        {/* Sprint selection */}
         {selectedProject && (
-          <div
-            className="bg-white shadow-lg rounded-xl p-4 sm:p-6 mb-6 transform transition-transform hover:translate-y-[-2px]"
+          <section
+            className="bg-white shadow rounded-xl p-5 mb-5 transition-all hover:shadow-md"
             data-cy="sprints-section"
           >
             <div
@@ -558,13 +489,11 @@ const TestFiles = () => {
                 setIsSprintSectionCollapsed(!isSprintSectionCollapsed)
               }
             >
-              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
-                <Target className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-green-500" />
-                <span className="bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-                  เลือกสปรินต์ในโปรเจกต์ {selectedProject.name}
-                </span>
+              <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                <Timer className="w-5 h-5 mr-2 text-green-500" />
+                <span>เลือกสปรินต์ในโปรเจกต์ {selectedProject.name}</span>
               </h2>
-              <div className="flex items-center space-x-2 text-gray-600">
+              <div className="flex items-center gap-2">
                 {selectedSprint && (
                   <span className="hidden md:inline text-sm text-green-600 font-medium">
                     {selectedSprint.name}
@@ -579,10 +508,10 @@ const TestFiles = () => {
             </div>
 
             <div
-              className={`transition-all duration-500 overflow-hidden ${
+              className={`transition-all duration-300 overflow-hidden ${
                 isSprintSectionCollapsed
                   ? "max-h-0 opacity-0 mt-0"
-                  : "max-h-screen opacity-100 mt-6"
+                  : "max-h-screen opacity-100 mt-4"
               }`}
             >
               {loading && !sprints.length ? (
@@ -593,33 +522,33 @@ const TestFiles = () => {
                   </span>
                 </div>
               ) : sprints.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   {sprints.map((sprint) => (
                     <div
                       key={sprint.sprint_id}
                       onClick={() => handleSprintSelect(sprint)}
                       data-cy={`sprint-item-${sprint.sprint_id}`}
                       className={`
-                  cursor-pointer relative overflow-hidden
-                  border-2 rounded-lg p-4 sm:p-5 
-                  transition-all duration-300 
-                  hover:shadow-lg transform hover:scale-[1.02]
-                  ${
-                    selectedSprint?.sprint_id === sprint.sprint_id
-                      ? "border-green-500 bg-green-50 shadow-md"
-                      : "border-gray-200 hover:border-green-300"
-                  }
-                `}
+                        cursor-pointer relative overflow-hidden
+                        border-2 rounded-lg p-4
+                        transition-all duration-200
+                        hover:shadow-md hover:scale-[1.01]
+                        ${
+                          selectedSprint?.sprint_id === sprint.sprint_id
+                            ? "border-green-500 bg-green-50 shadow"
+                            : "border-gray-200 hover:border-green-300"
+                        }
+                      `}
                     >
                       {selectedSprint?.sprint_id === sprint.sprint_id && (
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-teal-500"></div>
                       )}
-                      <h3 className="text-base sm:text-lg font-semibold text-gray-800 mb-2">
+                      <h3 className="text-base font-semibold text-gray-800 mb-2">
                         {sprint.name}
                       </h3>
-                      <div className="flex items-center text-xs sm:text-sm text-gray-600 mb-3">
-                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2 text-gray-500" />
-                        <span className="text-xs sm:text-sm">
+                      <div className="flex items-center text-xs text-gray-600 mb-2">
+                        <Calendar className="w-3.5 h-3.5 mr-1.5 text-gray-500" />
+                        <span>
                           {new Date(sprint.start_date).toLocaleDateString(
                             "th-TH",
                             {
@@ -627,8 +556,8 @@ const TestFiles = () => {
                               month: "2-digit",
                               year: "numeric",
                             }
-                          )}{" "}
-                          -{" "}
+                          )}
+                          {" - "}
                           {new Date(sprint.end_date).toLocaleDateString(
                             "th-TH",
                             {
@@ -640,7 +569,7 @@ const TestFiles = () => {
                         </span>
                       </div>
                       {selectedSprint?.sprint_id === sprint.sprint_id && (
-                        <span className="absolute bottom-2 right-3 text-xs font-medium py-1 px-2 bg-green-100 text-green-700 rounded-full">
+                        <span className="absolute bottom-2 right-2 text-xs font-medium py-1 px-2 bg-green-100 text-green-700 rounded-full">
                           ที่เลือก
                         </span>
                       )}
@@ -649,11 +578,11 @@ const TestFiles = () => {
                 </div>
               ) : (
                 <div
-                  className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
+                  className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
                   data-cy="empty-sprints"
                 >
-                  <FolderX className="w-10 h-10 sm:w-14 sm:h-14 text-gray-400 mb-3 sm:mb-4" />
-                  <h2 className="text-lg sm:text-xl font-medium text-gray-700 mb-2">
+                  <FolderX className="w-12 h-12 text-gray-400 mb-3" />
+                  <h2 className="text-lg font-medium text-gray-700 mb-2">
                     ยังไม่มีสปรินต์ในโปรเจกต์นี้
                   </h2>
                   <p className="text-sm text-gray-500 text-center">
@@ -662,12 +591,13 @@ const TestFiles = () => {
                 </div>
               )}
             </div>
-          </div>
+          </section>
         )}
-        {/* ส่วนแสดงไฟล์ทดสอบและสถิติ */}
+
+        {/* Test files section */}
         {selectedSprint && (
-          <div className="space-y-4 sm:space-y-6">
-            {/* แดชบอร์ดแสดงสถิติ */}
+          <div className="space-y-5">
+            {/* Dashboard */}
             <TestStatsDashboard
               testFiles={testFiles}
               isVisible={isDashboardVisible}
@@ -675,89 +605,154 @@ const TestFiles = () => {
               data-cy="test-stats-dashboard"
             />
 
-            {/* ส่วนค้นหาและตัวกรองข้อมูล */}
-            <div
-              className="bg-white shadow-lg rounded-xl p-3 sm:p-4 md:p-6 transform transition-transform hover:translate-y-[-2px] relative z-10"
+            {/* Test files search and filters */}
+            <section
+              className="bg-white shadow rounded-xl p-5 transition-all hover:shadow-md"
               data-cy="test-files-filter-section"
+              ref={fileSectionRef}
             >
-              <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3 md:gap-4 mb-3 md:mb-4">
-                <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-gray-800 flex items-center">
-                  <FileText className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 mr-2 text-blue-600" />
-                  <span className="bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent truncate">
+              <div className="flex items-center justify-between mb-4">
+                <h2 className="text-xl font-bold text-gray-800 flex items-center">
+                  <FileText className="w-5 h-5 mr-2 text-blue-600" />
+                  <span className="truncate">
                     ไฟล์ทดสอบของ {selectedSprint.name}
                   </span>
                 </h2>
+              </div>
 
-                {/* ปรับปรุงส่วนควบคุมให้มีขนาดและการจัดวางที่เหมาะสมทั้งบน tablet และ laptop */}
-                <div className="flex flex-col sm:flex-col md:flex-row items-stretch md:items-center gap-2 md:gap-3 w-full md:w-auto">
-                  {/* ส่วนของการค้นหาและตัวกรอง */}
-                  <div className="flex flex-col sm:flex-row gap-2 w-full">
-                    {/* Search input */}
-                    <div className="relative w-full sm:w-64 md:w-56 lg:w-64 xl:w-72">
-                      <input
-                        type="text"
-                        placeholder="ค้นหาไฟล์ทดสอบ..."
-                        value={searchTerm}
-                        onChange={handleSearch}
-                        data-cy="search-test-files"
-                        className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 transition-shadow"
-                      />
-                      <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-                    </div>
+              <div className="flex flex-col md:flex-row gap-3 mb-3">
+                {/* Search input */}
+                <div className="relative flex-grow">
+                  <input
+                    type="text"
+                    placeholder="ค้นหาไฟล์ทดสอบ..."
+                    value={searchTerm}
+                    onChange={handleSearch}
+                    data-cy="search-test-files"
+                    className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 transition-shadow"
+                  />
+                  <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                </div>
 
-                    {/* Filter dropdown */}
-                    <div className="relative flex-grow sm:flex-grow-0 sm:w-40 md:w-40 lg:w-44 z-30">
+                {/* Action buttons */}
+                <div className="flex flex-wrap gap-2">
+                  <div className="relative z-30">
+                    <button
+                      className="flex items-center justify-between bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors text-sm h-9 min-w-[100px]"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        const dropdown =
+                          document.getElementById("statusDropdown");
+                        dropdown.classList.toggle("hidden");
+
+                        const closeDropdown = () => {
+                          dropdown.classList.add("hidden");
+                          document.removeEventListener("click", closeDropdown);
+                        };
+
+                        setTimeout(() => {
+                          document.addEventListener("click", closeDropdown);
+                        }, 0);
+                      }}
+                      data-cy="status-filter-button"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <Filter className="w-3.5 h-3.5" />
+                        <span>
+                          {statusFilter === "all"
+                            ? "ทั้งหมด"
+                            : statusFilter === "pass"
+                            ? "ผ่าน"
+                            : statusFilter === "fail"
+                            ? "ไม่ผ่าน"
+                            : "รอดำเนินการ"}
+                        </span>
+                      </div>
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </button>
+                    <div
+                      id="statusDropdown"
+                      className="hidden absolute z-50 mt-1 w-36 bg-white border rounded-lg shadow-lg py-1 right-0"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <button
-                        className="flex items-center justify-between gap-1 bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors w-full text-sm min-h-[40px]"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const dropdown =
-                            document.getElementById("sortOrderDropdown");
-                          dropdown.classList.toggle("hidden");
-
-                          const closeDropdown = () => {
-                            dropdown.classList.add("hidden");
-                            document.removeEventListener(
-                              "click",
-                              closeDropdown
-                            );
-                          };
-
-                          setTimeout(() => {
-                            document.addEventListener("click", closeDropdown);
-                          }, 0);
+                        onClick={() => {
+                          handleStatusFilter("all");
+                          document
+                            .getElementById("statusDropdown")
+                            .classList.add("hidden");
                         }}
-                        data-cy="sort-order-button"
+                        className={`block w-full text-left px-3 py-1.5 text-sm ${
+                          statusFilter === "all"
+                            ? "bg-blue-50 text-blue-600"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                        data-cy="filter-all"
                       >
-                        <div className="flex items-center gap-2">
-                          <ArrowUpRight className="w-4 h-4 flex-shrink-0" />
-                          <span className="truncate">
-                            เรียง:{" "}
-                            {sortOrder === "newest"
-                              ? "ล่าสุด"
-                              : sortOrder === "oldest"
-                              ? "เก่าสุด"
-                              : sortOrder === "name-asc"
-                              ? "A-Z"
-                              : "Z-A"}
-                          </span>
-                        </div>
-                        <ChevronDown className="w-4 h-4 flex-shrink-0" />
+                        ทั้งหมด
                       </button>
-                      <div
-                        id="sortOrderDropdown"
-                        className="hidden absolute z-50 mt-1 w-full bg-white border rounded-lg shadow-lg py-1 right-0"
-                        style={{ maxHeight: "200px", overflowY: "auto" }}
-                        onClick={(e) => e.stopPropagation()}
+                      <button
+                        onClick={() => {
+                          handleStatusFilter("pass");
+                          document
+                            .getElementById("statusDropdown")
+                            .classList.add("hidden");
+                        }}
+                        className={`block w-full text-left px-3 py-1.5 text-sm ${
+                          statusFilter === "pass"
+                            ? "bg-blue-50 text-blue-600"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                        data-cy="filter-pass"
                       >
+                        ผ่าน
+                      </button>
+                      <button
+                        onClick={() => {
+                          handleStatusFilter("fail");
+                          document
+                            .getElementById("statusDropdown")
+                            .classList.add("hidden");
+                        }}
+                        className={`block w-full text-left px-3 py-1.5 text-sm ${
+                          statusFilter === "fail"
+                            ? "bg-blue-50 text-blue-600"
+                            : "text-gray-700 hover:bg-gray-100"
+                        }`}
+                        data-cy="filter-fail"
+                      >
+                        ไม่ผ่าน
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Sort order */}
+                  <div className="relative">
+                    <button
+                      className="flex items-center justify-between bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm min-w-[100px]"
+                      onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                      data-cy="sort-order-button"
+                    >
+                      <div className="flex items-center gap-1.5">
+                        <ArrowUpRight className="w-3.5 h-3.5" />
+                        <span>
+                          {sortOrder === "newest"
+                            ? "ล่าสุด"
+                            : sortOrder === "oldest"
+                            ? "เก่าสุด"
+                            : sortOrder === "name-asc"
+                            ? "A-Z"
+                            : "Z-A"}
+                        </span>
+                      </div>
+                      <ChevronDown className="w-4 h-4 ml-1" />
+                    </button>
+
+                    {isSortDropdownOpen && (
+                      <div className="absolute z-10 mt-1 w-full bg-white border rounded-lg shadow-lg py-1">
                         <button
-                          onClick={() => {
-                            handleSortOrder("newest");
-                            document
-                              .getElementById("sortOrderDropdown")
-                              .classList.add("hidden");
-                          }}
-                          className={`block w-full text-left px-4 py-2 text-sm ${
+                          onClick={() => handleSortOrder("newest")}
+                          className={`block w-full text-left px-3 py-1.5 text-sm ${
                             sortOrder === "newest"
                               ? "bg-blue-50 text-blue-600"
                               : "text-gray-700 hover:bg-gray-100"
@@ -767,13 +762,8 @@ const TestFiles = () => {
                           ล่าสุด
                         </button>
                         <button
-                          onClick={() => {
-                            handleSortOrder("oldest");
-                            document
-                              .getElementById("sortOrderDropdown")
-                              .classList.add("hidden");
-                          }}
-                          className={`block w-full text-left px-4 py-2 text-sm ${
+                          onClick={() => handleSortOrder("oldest")}
+                          className={`block w-full text-left px-3 py-1.5 text-sm ${
                             sortOrder === "oldest"
                               ? "bg-blue-50 text-blue-600"
                               : "text-gray-700 hover:bg-gray-100"
@@ -783,13 +773,8 @@ const TestFiles = () => {
                           เก่าสุด
                         </button>
                         <button
-                          onClick={() => {
-                            handleSortOrder("name-asc");
-                            document
-                              .getElementById("sortOrderDropdown")
-                              .classList.add("hidden");
-                          }}
-                          className={`block w-full text-left px-4 py-2 text-sm ${
+                          onClick={() => handleSortOrder("name-asc")}
+                          className={`block w-full text-left px-3 py-1.5 text-sm ${
                             sortOrder === "name-asc"
                               ? "bg-blue-50 text-blue-600"
                               : "text-gray-700 hover:bg-gray-100"
@@ -799,13 +784,8 @@ const TestFiles = () => {
                           ชื่อ A-Z
                         </button>
                         <button
-                          onClick={() => {
-                            handleSortOrder("name-desc");
-                            document
-                              .getElementById("sortOrderDropdown")
-                              .classList.add("hidden");
-                          }}
-                          className={`block w-full text-left px-4 py-2 text-sm ${
+                          onClick={() => handleSortOrder("name-desc")}
+                          className={`block w-full text-left px-3 py-1.5 text-sm ${
                             sortOrder === "name-desc"
                               ? "bg-blue-50 text-blue-600"
                               : "text-gray-700 hover:bg-gray-100"
@@ -815,173 +795,157 @@ const TestFiles = () => {
                           ชื่อ Z-A
                         </button>
                       </div>
-                    </div>
-
-                    {/* Refresh button */}
-                    <button
-                      onClick={handleRefresh}
-                      className="bg-blue-100 text-blue-700 p-2 rounded-lg hover:bg-blue-200 transition-colors min-h-[40px] min-w-[40px] flex items-center justify-center flex-shrink-0"
-                      data-cy="refresh-test-files"
-                    >
-                      <RefreshCw
-                        className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                          isRefreshing ? "animate-spin" : ""
-                        }`}
-                      />
-                    </button>
+                    )}
                   </div>
+
+                  {/* Refresh button */}
+                  <button
+                    onClick={handleRefresh}
+                    className="bg-blue-100 text-blue-700 p-2 rounded-lg hover:bg-blue-200 transition-colors"
+                    data-cy="refresh-test-files"
+                    title="รีเฟรชข้อมูล"
+                  >
+                    <RefreshCw
+                      className={`w-4 h-4 ${
+                        isRefreshing ? "animate-spin" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* Upload button for desktop */}
+                  <button
+                    onClick={handleCreateTestFile}
+                    data-cy="create-test-file-button"
+                    className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:shadow-md transition-all"
+                  >
+                    <Upload className="w-4 h-4" />
+                    อัพโหลดไฟล์
+                  </button>
                 </div>
               </div>
 
-              {/* Action Bar */}
-              <div className="mt-3 sm:mt-4 flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3">
-                <p
-                  className="text-xs sm:text-sm text-gray-600 w-full sm:w-auto text-center sm:text-left order-2 sm:order-1"
-                  data-cy="filter-results-count"
-                >
-                  {showFilterResults()}
-                </p>
-
+              {/* Upload button for mobile */}
+              <div className="sm:hidden mb-3">
                 <button
                   onClick={handleCreateTestFile}
-                  data-cy="create-test-file-button"
-                  className="flex items-center justify-center gap-1 sm:gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:shadow-lg transform transition hover:scale-105 w-full sm:w-auto text-sm min-h-[40px] order-1 sm:order-2"
+                  data-cy="create-test-file-button-mobile"
+                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:shadow-md transition w-full"
                 >
-                  <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <Upload className="w-4 h-4" />
                   อัพโหลดไฟล์ทดสอบ
                 </button>
               </div>
-            </div>
 
-            {/* แสดงรายการไฟล์ทดสอบ */}
-            {loading ? (
-              <div
-                className="bg-white rounded-xl shadow-md p-8 flex flex-col items-center justify-center"
-                data-cy="loading-test-files"
+              {/* Filter results count */}
+              <p
+                className="text-xs text-gray-600"
+                data-cy="filter-results-count"
               >
-                <RefreshCw className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-                <p className="text-center text-gray-600">
-                  กำลังโหลดไฟล์ทดสอบ...
-                </p>
-              </div>
-            ) : testFiles.length === 0 ? (
-              <div
-                className="bg-white rounded-xl shadow-md p-8 flex flex-col items-center justify-center"
-                data-cy="empty-test-files"
-              >
-                <FolderX className="w-16 h-16 text-gray-400 mb-4" />
-                <p className="text-xl text-gray-600 mb-6 text-center">
-                  ไม่พบไฟล์ทดสอบในสปรินต์นี้
-                </p>
-                <button
-                  onClick={handleCreateTestFile}
-                  data-cy="upload-first-test-file-button"
-                  className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 text-base rounded-lg hover:shadow-lg transform transition hover:scale-105"
-                >
-                  อัพโหลดไฟล์ทดสอบไฟล์แรก
-                </button>
-              </div>
-            ) : (
-              <div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
-                data-cy="test-files-grid"
-              >
-                {filteredTestFiles.map((file) => (
-                  <div
-                    key={file.file_id}
-                    data-cy={`test-file-${file.file_id}`}
-                    className="bg-white rounded-xl shadow-md overflow-hidden relative hover:shadow-lg transition-all transform hover:translate-y-[-2px]"
+                {showFilterCount()}
+              </p>
+            </section>
+
+            {/* Test files list */}
+            <section
+              className="bg-white shadow rounded-xl p-5 transition-all hover:shadow-md"
+              data-cy="test-files-list-section"
+            >
+              {loading ? (
+                <div className="flex flex-col items-center justify-center p-8">
+                  <RefreshCw className="w-12 h-12 text-blue-500 animate-spin mb-4" />
+                  <p className="text-center text-gray-600">
+                    กำลังโหลดไฟล์ทดสอบ...
+                  </p>
+                </div>
+              ) : testFiles.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-5">
+                  <FolderX className="w-12 h-12 text-gray-400 mb-3" />
+                  <p className="text-lg text-gray-600 mb-4 text-center">
+                    ไม่พบไฟล์ทดสอบในสปรินต์นี้
+                  </p>
+                  <button
+                    onClick={handleCreateTestFile}
+                    data-cy="upload-first-test-file-button"
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 text-sm rounded-lg hover:shadow-md transition-all duration-200"
                   >
-                    {getStatusBar(file.status)}
-                    <div className="p-4 sm:p-6">
-                      <div className="flex justify-between items-start mb-3 sm:mb-4">
-                        <h3 className="text-base sm:text-lg font-semibold text-gray-800 break-words pr-2">
-                          {file.filename}
-                        </h3>
-                        <div
-                          data-cy={`test-status-${file.status.toLowerCase()}`}
-                          className={`flex-shrink-0 p-1.5 rounded-full ${
-                            file.status === "Pass"
-                              ? "bg-green-100"
-                              : file.status === "Fail"
-                              ? "bg-red-100"
-                              : "bg-yellow-100"
-                          }`}
-                        >
-                          {getStatusIcon(file.status)}
+                    อัพโหลดไฟล์ทดสอบไฟล์แรก
+                  </button>
+                </div>
+              ) : (
+                <div
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                  data-cy="test-files-grid"
+                >
+                  {filteredTestFiles.map((file) => (
+                    <div
+                      key={file.file_id}
+                      data-cy={`test-file-${file.file_id}`}
+                      className="border rounded-xl overflow-hidden relative hover:shadow-lg transition-all transform hover:translate-y-[-2px]"
+                    >
+                      <div
+                        className={`h-1 w-full ${getStatusColor(file.status)}`}
+                      ></div>
+                      <div className="p-4">
+                        <div className="flex justify-between items-start mb-3">
+                          <h3 className="text-base font-semibold text-gray-800 break-words pr-2">
+                            {file.filename}
+                          </h3>
+                          <div
+                            data-cy={`test-status-${file.status.toLowerCase()}`}
+                            className={`flex-shrink-0 p-1.5 rounded-full ${
+                              file.status === "Pass"
+                                ? "bg-green-100"
+                                : file.status === "Fail"
+                                ? "bg-red-100"
+                                : "bg-yellow-100"
+                            }`}
+                          >
+                            {getStatusIcon(file.status)}
+                          </div>
                         </div>
-                      </div>
 
-                      <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm text-gray-600">
-                        <div className="flex items-center gap-2">
-                          <FileText className="w-3 h-3 sm:w-4 sm:h-4" />
-                          <span>{(file.file_size / 1024).toFixed(2)} KB</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
-                          <span className="text-xs sm:text-sm flex items-center">
-                            <span>
-                              {getRelativeTimeString(file.upload_date)}
+                        <div className="space-y-2 text-sm text-gray-600">
+                          <div className="flex items-center gap-2">
+                            <FileText className="w-4 h-4" />
+                            <span>{formatFileSize(file.file_size)}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            <span className="text-sm flex items-center">
+                              <span>{getRelativeTime(file.upload_date)}</span>
+                              <span className="mx-1">•</span>
+                              <span className="text-gray-500 text-xs">
+                                {new Date(file.upload_date).toLocaleString(
+                                  "th-TH",
+                                  {
+                                    day: "2-digit",
+                                    month: "2-digit",
+                                    year: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                    hour12: false,
+                                  }
+                                )}
+                              </span>
                             </span>
-                            <span className="mx-1">•</span>
-                            <span className="text-gray-500 text-xs">
-                              {new Date(file.upload_date).toLocaleDateString(
-                                "th-TH",
-                                {
-                                  day: "2-digit",
-                                  month: "2-digit",
-                                  year: "numeric",
-                                }
-                              )}
-                            </span>
-                          </span>
+                          </div>
                         </div>
-                      </div>
-
-                      <div className="mt-4 sm:mt-5 flex justify-between items-center">
-                        <span
-                          className={`
-                    text-xs font-medium px-2 py-1 rounded-full
-                    ${
-                      file.status === "Pass"
-                        ? "bg-green-100 text-green-700"
-                        : file.status === "Fail"
-                        ? "bg-red-100 text-red-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }
-                  `}
-                        >
-                          {file.status === "Pass"
-                            ? "ผ่านการทดสอบ"
-                            : file.status === "Fail"
-                            ? "ไม่ผ่านการทดสอบ"
-                            : "รอดำเนินการ"}
-                        </span>
 
                         <button
                           onClick={() =>
                             navigate(`/test-files/${file.file_id}`)
                           }
-                          data-cy={`view-test-file-${file.file_id}`}
-                          className="text-blue-600 hover:text-blue-800 text-sm font-medium flex items-center"
+                          data-cy={`view-detail-button-${file.file_id}`}
+                          className="mt-4 w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 text-sm rounded-lg hover:shadow-lg transform transition hover:scale-[1.02]"
                         >
-                          ดูรายละเอียด
-                          <ArrowUpRight className="w-3 h-3 ml-1" />
+                          ดูรายละเอียดเพิ่มเติม
                         </button>
                       </div>
-
-                      <button
-                        onClick={() => navigate(`/test-files/${file.file_id}`)}
-                        data-cy={`view-detail-button-${file.file_id}`}
-                        className="mt-4 w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 text-sm rounded-lg hover:shadow-lg transform transition hover:scale-[1.02]"
-                      >
-                        ดูรายละเอียดเพิ่มเติม
-                      </button>
                     </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </section>
           </div>
         )}
       </div>

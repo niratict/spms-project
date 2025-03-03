@@ -133,46 +133,42 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
   );
 
   return (
-    <div
-      className={`
-        bg-white shadow-lg rounded-xl overflow-hidden
-        transform transition-all duration-500
-        ${isVisible ? "opacity-100" : "opacity-75 hover:opacity-100"}
-        max-w-screen-xl mx-auto
-      `}
+    <section
+      className="bg-white shadow rounded-xl p-5 mb-5 transition-all hover:shadow-md"
       data-cy="test-stats-dashboard"
     >
-      {/* ส่วนหัวที่มีปุ่มเปิด/ปิดแผงควบคุม - ปรับขนาดให้ responsive */}
       <div
-        className="p-2 xs:p-3 sm:p-4 md:p-6 cursor-pointer border-b border-gray-100 hover:bg-gray-50 transition-colors"
+        className="flex justify-between items-center cursor-pointer"
         onClick={onToggle}
         data-cy="toggle-dashboard"
       >
-        <div className="flex justify-between items-center">
-          <h2 className="text-base xs:text-lg sm:text-xl md:text-2xl font-bold flex items-center">
-            <Target className="w-3 h-3 xs:w-4 xs:h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 mr-1 xs:mr-2 text-indigo-500" />
-            <span className="bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-              สถิติการทดสอบ
+        <h2 className="text-xl font-bold text-gray-800 flex items-center">
+          <Target className="w-5 h-5 mr-2 text-blue-500" />
+          <span>สถิติไฟล์ทดสอบของ Sprint</span>
+        </h2>
+        <div className="flex items-center gap-2">
+          {/* เพิ่มตัวเลือกสำหรับแสดงสถานะให้สอดคล้องกับ Sprint Section */}
+          {isVisible && (
+            <span className="hidden md:inline text-sm text-blue-600 font-medium">
+              แสดงสถิติ
             </span>
-          </h2>
+          )}
           {isVisible ? (
-            <ChevronUp className="w-3 h-3 xs:w-4 xs:h-4 md:w-5 md:h-5 text-indigo-500" />
+            <ChevronUp className="w-5 h-5 text-blue-500" />
           ) : (
-            <ChevronDown className="w-3 h-3 xs:w-4 xs:h-4 md:w-5 md:h-5 text-indigo-500" />
+            <ChevronDown className="w-5 h-5 text-blue-500" />
           )}
         </div>
       </div>
 
-      {/* ส่วนแสดงข้อมูลสถิติ */}
       <div
-        className={`
-          transition-all duration-500 overflow-hidden
-          ${isVisible ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}
-        `}
+        className={`transition-all duration-300 overflow-hidden ${
+          isVisible ? "max-h-screen opacity-100 mt-4" : "max-h-0 opacity-0 mt-0"
+        }`}
         data-cy="stats-content"
       >
-        <div className="p-2 xs:p-3 sm:p-4 md:p-6">
-          {/* Progress bar แสดงภาพรวม - แสดงตอนบนบนทุกอุปกรณ์ */}
+        <div>
+          {/* Progress bar แสดงภาพรวม */}
           <div className="mb-3 md:mb-6" data-cy="progress-bar">
             <div className="text-2xs xs:text-xs sm:text-sm text-gray-700 mb-1 font-medium">
               ภาพรวมการทดสอบ
@@ -195,7 +191,7 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
               ></div>
             </div>
 
-            {/* คำอธิบายสี - ปรับขนาดให้ responsive */}
+            {/* คำอธิบายสี */}
             <div
               className="flex flex-wrap gap-3 xs:gap-4 sm:gap-6 text-2xs xs:text-xs mt-1 xs:mt-2 justify-center sm:justify-start"
               data-cy="color-legend"
@@ -211,10 +207,10 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
             </div>
           </div>
 
-          {/* แสดงสถิติหลักให้เด่นชัด - ปรับ grid เพื่อรองรับจอขนาดเล็กมากๆ */}
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-1.5 xs:gap-2 md:gap-4 mb-2 xs:mb-3 md:mb-4">
+          {/* แสดงสถิติหลักให้เด่นชัด */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
             {/* สถิติหลัก: ไฟล์ทั้งหมด */}
-            <div className="lg:col-span-2">
+            <div>
               <StatCard
                 title="ไฟล์ทั้งหมด"
                 value={stats.totalFiles || 0}
@@ -227,7 +223,7 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
             </div>
 
             {/* สถิติหลัก: การทดสอบทั้งหมด */}
-            <div className="lg:col-span-2">
+            <div>
               <StatCard
                 title="การทดสอบทั้งหมด"
                 value={aggregateStats.totalTests || 0}
@@ -240,7 +236,7 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
             </div>
 
             {/* สถิติหลัก: ชุดทดสอบ */}
-            <div className="lg:col-span-2">
+            <div>
               <StatCard
                 title="ชุดทดสอบ"
                 value={aggregateStats.totalSuites || 0}
@@ -253,34 +249,38 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
             </div>
           </div>
 
-          {/* แสดงผลลัพธ์การทดสอบ - ปรับให้แสดงเป็น 1 คอลัมน์บนจอขนาดเล็กมาก */}
-          <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-3 gap-1.5 xs:gap-2 md:gap-4">
+          {/* แสดงผลลัพธ์การทดสอบ */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {/* ผ่านการทดสอบ */}
-            <StatCard
-              title="ผ่านการทดสอบ"
-              value={stats.passCount || 0}
-              subValue={`(${stats.passPercentage || 0}%)`}
-              bgColor="from-green-50 to-emerald-50"
-              borderColor="border-green-100"
-              textColor="text-green-700"
-              icon={<Check className="text-green-600" />}
-              dataCy="stat-card-tests-passed"
-            />
+            <div>
+              <StatCard
+                title="ผ่านการทดสอบ"
+                value={stats.passCount || 0}
+                subValue={`(${stats.passPercentage || 0}%)`}
+                bgColor="from-green-50 to-emerald-50"
+                borderColor="border-green-100"
+                textColor="text-green-700"
+                icon={<Check className="text-green-600" />}
+                dataCy="stat-card-tests-passed"
+              />
+            </div>
 
             {/* ไม่ผ่านการทดสอบ */}
-            <StatCard
-              title="ไม่ผ่านการทดสอบ"
-              value={stats.failCount || 0}
-              subValue={`(${stats.failPercentage || 0}%)`}
-              bgColor="from-red-50 to-rose-50"
-              borderColor="border-red-100"
-              textColor="text-red-700"
-              icon={<X className="text-red-600" />}
-              dataCy="stat-card-tests-failed"
-            />
+            <div>
+              <StatCard
+                title="ไม่ผ่านการทดสอบ"
+                value={stats.failCount || 0}
+                subValue={`(${stats.failPercentage || 0}%)`}
+                bgColor="from-red-50 to-rose-50"
+                borderColor="border-red-100"
+                textColor="text-red-700"
+                icon={<X className="text-red-600" />}
+                dataCy="stat-card-tests-failed"
+              />
+            </div>
 
-            {/* อัตราความสำเร็จ (และรอดำเนินการ) */}
-            <div className="xs:col-span-2 sm:col-span-1">
+            {/* อัตราความสำเร็จ */}
+            <div>
               <StatCard
                 title="อัตราความสำเร็จ"
                 value={`${stats.successRate || 0}%`}
@@ -294,7 +294,7 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
           </div>
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 
