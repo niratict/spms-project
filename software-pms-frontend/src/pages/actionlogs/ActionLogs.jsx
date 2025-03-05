@@ -39,6 +39,23 @@ const ActionLogs = () => {
     limit: 10,
   });
 
+  // แมปปิ้งประเภทการดำเนินการเป็นภาษาไทย
+  const actionTypeMapping = {
+    create: "สร้าง",
+    delete: "ลบ",
+    update: "อัพเดต",
+    upload: "อัพโหลด",
+    update_profile_image: "อัพโหลดรูปโปรไฟล์",
+  };
+
+  // แมปปิ้งตารางเป้าหมายเป็นภาษาไทย
+  const targetTableMapping = {
+    projects: "โปรเจกต์",
+    sprints: "สปรินต์",
+    test_files: "ไฟล์ทดสอบ",
+    users: "ผู้ใช้",
+  };
+
   // --------- ฟังก์ชันจัดรูปแบบรายละเอียด ---------
   // แสดงรายละเอียดการดำเนินการในรูปแบบที่อ่านง่าย
   // ฟังก์ชันจัดรูปแบบรายละเอียด (ปรับปรุง)
@@ -87,6 +104,8 @@ const ActionLogs = () => {
         status: "สถานะ",
         file_id: "รหัสไฟล์",
         filename: "ชื่อไฟล์",
+        new_image: "รูปภาพใหม่",
+        old_image: "รูปภาพเก่า",
         last_modified_date: "วันที่แก้ไขล่าสุด",
       };
 
@@ -189,16 +208,29 @@ const ActionLogs = () => {
 
   // --------- ฟังก์ชันจัดรูปแบบวันที่ ---------
   // แปลงวันที่เป็นรูปแบบปฏิทินไทย (วัน/เดือน/พ.ศ.)
-  const formatThaiDate = (date) => {
+  const formatThaiDate = (date, includeTime = false) => {
     if (!date) return "";
     const buddhistYear = parseInt(format(date, "yyyy", { locale: th })) + 543;
-    return format(date, "dd/MM/") + buddhistYear;
+    const dateFormatted = format(date, "dd/MM/") + buddhistYear;
+
+    if (includeTime) {
+      const timeFormatted = format(date, "HH:mm:ss");
+      return dateFormatted;
+    }
+
+    return dateFormatted;
+  };
+
+  // เพิ่มฟังก์ชันใหม่สำหรับแสดงเฉพาะเวลา
+  const formatTime = (date) => {
+    if (!date) return "";
+    return format(date, "HH:mm:ss");
   };
 
   // --------- ฟังก์ชันจัดรูปแบบช่วงวันที่ ---------
   // จัดรูปแบบช่วงวันที่สำหรับแสดงผล
   const formatDateRange = () => {
-    if (!selectedRange.from && !selectedRange.to) return "เลือกช่วงเวลา";
+    if (!selectedRange.from && !selectedRange.to) return "เลือกช่วงวันที่";
     if (selectedRange.from && !selectedRange.to)
       return formatThaiDate(selectedRange.from);
     return `${formatThaiDate(selectedRange.from)} ถึง ${formatThaiDate(
@@ -419,7 +451,7 @@ const ActionLogs = () => {
                     value={type}
                     data-cy={`action-type-option-${type}`}
                   >
-                    {type}
+                    {actionTypeMapping[type] || type}
                   </option>
                 ))}
               </select>
@@ -441,7 +473,7 @@ const ActionLogs = () => {
                     value={table}
                     data-cy={`target-table-option-${table}`}
                   >
-                    {table}
+                    {targetTableMapping[table] || table}
                   </option>
                 ))}
               </select>
@@ -585,7 +617,10 @@ const ActionLogs = () => {
                       className="px-3 sm:px-6 py-2 sm:py-4 text-xs sm:text-sm text-gray-600"
                       data-cy={`log-date-${log.log_id}`}
                     >
-                      {formatThaiDate(new Date(log.action_date))}
+                      <div>{formatThaiDate(new Date(log.action_date))}</div>
+                      <div className="text-gray-400 text-xs">
+                        เวลา {formatTime(new Date(log.action_date))}
+                      </div>
                     </td>
                     <td
                       className="px-3 sm:px-6 py-2 sm:py-4"
@@ -609,7 +644,7 @@ const ActionLogs = () => {
                       data-cy={`log-action-${log.log_id}`}
                     >
                       <span className="px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {log.action_type}
+                        {actionTypeMapping[log.action_type] || log.action_type}
                       </span>
                     </td>
                     <td
@@ -617,7 +652,9 @@ const ActionLogs = () => {
                       data-cy={`log-target-${log.log_id}`}
                     >
                       <span data-cy={`target-info-${log.log_id}`}>
-                        {log.target_table} #{log.target_id}
+                        {targetTableMapping[log.target_table] ||
+                          log.target_table}{" "}
+                        #{log.target_id}
                       </span>
                       {log.target_name && (
                         <div

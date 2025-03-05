@@ -16,9 +16,13 @@ const getDashboardStats = async (req, res) => {
       FROM sprints
     `);
 
-    // Get total test files
+    // Get test files stats
     const [fileStats] = await db.query(`
-      SELECT COUNT(*) as total_files
+      SELECT 
+        COUNT(*) as total_files,
+        COUNT(CASE WHEN status = 'Pass' THEN 1 END) as passed_files,
+        COUNT(CASE WHEN status = 'Fail' THEN 1 END) as failed_files,
+        COUNT(CASE WHEN status = 'Pending' THEN 1 END) as pending_files
       FROM test_files
       WHERE status != 'Deleted'
     `);
@@ -46,6 +50,9 @@ const getDashboardStats = async (req, res) => {
         activeProjects: projectStats[0].active_projects,
         totalSprints: sprintStats[0].total_sprints,
         totalFiles: fileStats[0].total_files,
+        passedFiles: fileStats[0].passed_files,
+        failedFiles: fileStats[0].failed_files,
+        pendingFiles: fileStats[0].pending_files,
       },
       latestProjects: latestProjects.map((project) => ({
         name: project.name,
@@ -88,6 +95,46 @@ const getProjectActivity = async (req, res) => {
   }
 };
 
+const getLatestTestFiles = async (req, res) => {
+  try {
+    // Get latest test files with their project and sprint information
+    const [latestFiles] = await db.query(`
+      SELECT 
+        tf.file_id,
+        tf.filename,
+        tf.original_filename,
+        tf.status,
+        tf.upload_date,
+        p.project_id,
+        p.name as project_name,
+        s.sprint_id,
+        s.name as sprint_name
+      FROM test_files tf
+      JOIN sprints s ON tf.sprint_id = s.sprint_id
+      JOIN projects p ON s.project_id = p.project_id
+      WHERE tf.status != 'Deleted'
+      ORDER BY tf.upload_date DESC
+      LIMIT 5
+    `);
+
+    res.json({
+      latestTestFiles: latestFiles.map((file) => ({
+        fileId: file.file_id,
+        filename: file.original_filename,
+        status: file.status,
+        uploadDate: file.upload_date,
+        projectId: file.project_id,
+        projectName: file.project_name,
+        sprintId: file.sprint_id,
+        sprintName: file.sprint_name,
+      })),
+    });
+  } catch (error) {
+    console.error("Latest test files error:", error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
 const getTestFileActivity = async (req, res) => {
   try {
     // Get monthly test file activity
@@ -123,4 +170,5 @@ module.exports = {
   getDashboardStats,
   getProjectActivity,
   getTestFileActivity,
+  getLatestTestFiles,
 };

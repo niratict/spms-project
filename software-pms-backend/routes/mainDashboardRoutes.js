@@ -13,4 +13,6 @@ router.get("/project-activity", mainDashboardController.getProjectActivity);
 // New endpoint for test file activity
 router.get("/test-file-activity", mainDashboardController.getTestFileActivity);
 
+router.get("/latest-test-files", mainDashboardController.getLatestTestFiles);
+
 module.exports = router;

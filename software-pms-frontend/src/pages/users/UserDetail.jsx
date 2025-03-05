@@ -12,6 +12,9 @@ import {
   KeyRound,
   Trash2,
   X,
+  User,
+  Mail,
+  Globe,
 } from "lucide-react";
 
 // Environment Configuration
@@ -30,6 +33,7 @@ const UserDetail = () => {
   const [error, setError] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [profileImageError, setProfileImageError] = useState(false);
   const [passwordData, setPasswordData] = useState({
     current_password: "",
     new_password: "",
@@ -138,6 +142,11 @@ const UserDetail = () => {
     }
   };
 
+  // จัดการความล้มเหลวในการโหลดรูปภาพ
+  const handleImageError = () => {
+    setProfileImageError(true);
+  };
+
   // ===== การเรนเดอร์ =====
   // ตรวจสอบการล็อกอิน
   if (!user?.token) {
@@ -164,30 +173,49 @@ const UserDetail = () => {
   // แสดงสถานะโหลดและข้อผิดพลาด
   if (loading)
     return (
-      <div className="text-center p-4 sm:p-6" data-cy="loading-state">
-        กำลังโหลด...
+      <div
+        className="text-center p-4 sm:p-6 min-h-screen bg-gray-100 flex items-center justify-center"
+        data-cy="loading-state"
+      >
+        <div className="bg-white p-8 rounded-xl shadow-lg">
+          <div className="animate-pulse flex flex-col items-center">
+            <div className="rounded-full bg-blue-200 h-24 w-24 mb-4"></div>
+            <div className="h-6 bg-blue-200 rounded w-48 mb-4"></div>
+            <div className="h-4 bg-gray-200 rounded w-64"></div>
+          </div>
+        </div>
       </div>
     );
+
   if (error)
     return (
       <div
-        className="text-center text-red-500 p-4 sm:p-6"
+        className="text-center text-red-500 p-4 sm:p-6 min-h-screen bg-gray-100 flex items-center justify-center"
         data-cy="error-state"
       >
-        {error}
+        <div className="bg-white p-8 rounded-xl shadow-lg">
+          <div className="text-red-500 text-xl font-bold mb-2">ข้อผิดพลาด</div>
+          <div>{error}</div>
+        </div>
       </div>
     );
+
   if (!userData)
     return (
-      <div className="text-center p-4 sm:p-6" data-cy="no-user-state">
-        ไม่พบผู้ใช้
+      <div
+        className="text-center p-4 sm:p-6 min-h-screen bg-gray-100 flex items-center justify-center"
+        data-cy="no-user-state"
+      >
+        <div className="bg-white p-8 rounded-xl shadow-lg">
+          <div className="text-gray-600 text-xl font-bold">ไม่พบผู้ใช้</div>
+        </div>
       </div>
     );
 
   // ===== รายการข้อมูลผู้ใช้ =====
   const userDetailItems = [
     {
-      icon: <Calendar className="text-blue-500" />,
+      icon: <Mail className="text-blue-500" />,
       label: "อีเมล",
       value: userData.email,
       dataCy: "user-email",
@@ -222,14 +250,14 @@ const UserDetail = () => {
 
   return (
     <div
-      className="min-h-screen bg-gray-100 p-3 sm:p-4 md:p-6"
+      className="min-h-screen bg-gray p-3 sm:p-4 md:p-6"
       data-cy="user-detail-page"
     >
       <div className="container mx-auto max-w-4xl space-y-4 sm:space-y-6">
         {/* ปุ่มย้อนกลับ */}
         <button
           onClick={() => navigate("/users/")}
-          className="flex items-center gap-1 sm:gap-2 text-gray-600 hover:text-blue-600 transition-colors mb-2 sm:mb-4"
+          className="flex items-center gap-1 sm:gap-2 text-gray-600 hover:text-blue-600 mb-2 sm:mb-4 bg-white/70 backdrop-blur-sm py-2 px-4 rounded-lg shadow-sm hover:shadow-md transition-all"
           data-cy="back-button"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -238,22 +266,64 @@ const UserDetail = () => {
 
         {/* การ์ดโปรไฟล์ผู้ใช้ */}
         <div
-          className="bg-white rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg overflow-hidden"
+          className="bg-white rounded-xl sm:rounded-2xl shadow-lg overflow-hidden border border-blue-100"
           data-cy="user-profile-card"
         >
-          {/* ส่วนหัวโปรไฟล์ */}
-          <div className="p-4 sm:p-6 bg-gradient-to-r from-blue-500 to-blue-600 text-white">
-            <h1
-              className="text-xl sm:text-2xl md:text-3xl font-bold break-words"
-              data-cy="user-name"
-            >
-              {userData.name}
-            </h1>
+          {/* ส่วนหัวโปรไฟล์พร้อมรูปภาพ */}
+          <div className="p-6 sm:p-8 bg-gradient-to-r from-blue-500 to-blue-600 text-white flex flex-col sm:flex-row items-center sm:items-start gap-4 sm:gap-6">
+            <div className="relative">
+              {/* รูปโปรไฟล์ */}
+              <div
+                className="w-24 h-24 sm:w-32 sm:h-32 rounded-full overflow-hidden border-4 border-white shadow-lg bg-white flex items-center justify-center"
+                data-cy="user-profile-image"
+              >
+                {!profileImageError && userData.profile_image ? (
+                  <img
+                    src={userData.profile_image}
+                    alt={`${userData.name} profile`}
+                    className="w-full h-full object-cover"
+                    onError={handleImageError}
+                  />
+                ) : (
+                  <div className="w-full h-full bg-blue-100 flex items-center justify-center">
+                    <User className="w-12 h-12 sm:w-16 sm:h-16 text-blue-300" />
+                  </div>
+                )}
+              </div>
+              {/* ตัวแสดงบทบาท */}
+              <div
+                className="absolute -bottom-2 right-0 bg-white rounded-full px-2 py-1 text-xs font-bold shadow-md border border-blue-100"
+                style={{ minWidth: "70px", textAlign: "center" }}
+              >
+                <span
+                  className={`${
+                    userData.role === "Admin"
+                      ? "text-red-500"
+                      : "text-green-500"
+                  }`}
+                >
+                  {userData.role}
+                </span>
+              </div>
+            </div>
+
+            <div className="flex-1 text-center sm:text-left">
+              <h1
+                className="text-2xl sm:text-3xl md:text-4xl font-bold break-words mb-2"
+                data-cy="user-name"
+              >
+                {userData.name}
+              </h1>
+              <p className="text-blue-100 flex items-center justify-center sm:justify-start gap-2">
+                <Mail className="w-4 h-4" />
+                <span className="text-sm sm:text-base">{userData.email}</span>
+              </p>
+            </div>
           </div>
 
           {/* ส่วนของปุ่มการทำงาน */}
-          <div className="p-4 sm:p-6">
-            <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4 mb-4 sm:mb-6">
+          <div className="p-4 sm:p-6 border-b border-blue-100">
+            <div className="flex flex-wrap justify-center sm:justify-start gap-2 sm:gap-4">
               {canEdit && (
                 <>
                   <button
@@ -285,38 +355,43 @@ const UserDetail = () => {
                 </button>
               )}
             </div>
+          </div>
 
-            {/* ส่วนแสดงรายละเอียดผู้ใช้ */}
-            <div
-              className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl sm:rounded-2xl shadow-md sm:shadow-lg overflow-hidden"
-              data-cy="user-details-section"
-            >
-              <div className="p-4 sm:p-6 bg-white/70 backdrop-blur-sm">
-                <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4 sm:mb-6 flex items-center">
-                  <Shield className="mr-2 sm:mr-3 text-blue-600 w-5 h-5 sm:w-6 sm:h-6" />
-                  ข้อมูลผู้ใช้
-                </h2>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
-                  {userDetailItems.map((detail, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-white rounded-lg sm:rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all"
-                      data-cy={detail.dataCy}
-                    >
-                      <div className="p-2 sm:p-3 bg-blue-50 rounded-full flex-shrink-0">
-                        {detail.icon}
-                      </div>
-                      <div className="min-w-0 flex-1">
-                        <p className="text-xs sm:text-sm text-gray-500">
-                          {detail.label}
-                        </p>
-                        <p className="font-semibold text-gray-800 text-sm sm:text-base break-words">
-                          {detail.value}
-                        </p>
-                      </div>
-                    </div>
-                  ))}
+          {/* ส่วนแสดงรายละเอียดผู้ใช้ */}
+          <div className="p-4 sm:p-6" data-cy="user-details-section">
+            <h2 className="text-xl sm:text-2xl font-bold text-blue-800 mb-4 sm:mb-6 flex items-center">
+              <Shield className="mr-2 sm:mr-3 text-blue-600 w-5 h-5 sm:w-6 sm:h-6" />
+              ข้อมูลผู้ใช้
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 md:gap-6">
+              {userDetailItems.map((detail, index) => (
+                <div
+                  key={index}
+                  className="flex items-center space-x-3 sm:space-x-4 p-3 sm:p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg sm:rounded-xl shadow-sm hover:shadow-md hover:scale-[1.02] transition-all border border-blue-100"
+                  data-cy={detail.dataCy}
+                >
+                  <div className="p-2 sm:p-3 bg-white rounded-full flex-shrink-0 shadow-sm border border-blue-100">
+                    {detail.icon}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-gray-500">
+                      {detail.label}
+                    </p>
+                    <p className="font-semibold text-gray-800 text-sm sm:text-base break-words">
+                      {detail.value}
+                    </p>
+                  </div>
                 </div>
+              ))}
+            </div>
+          </div>
+
+          {/* ส่วนท้าย Card */}
+          <div className="p-4 sm:p-6 bg-gradient-to-b from-blue-50 to-indigo-100 border-t border-blue-100">
+            <div className="flex justify-center">
+              <div className="text-sm text-blue-500 font-medium flex items-center gap-2">
+                <Globe className="w-4 h-4" />
+                <span>ข้อมูลผู้ใช้งานระบบ</span>
               </div>
             </div>
           </div>
@@ -328,34 +403,42 @@ const UserDetail = () => {
           isOpen={showDeleteModal}
           onRequestClose={() => setShowDeleteModal(false)}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          overlayClassName="fixed inset-0 bg-black/50"
+          overlayClassName="fixed inset-0 bg-black/50 backdrop-blur-sm"
           data-cy="delete-user-modal"
         >
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl max-w-md w-full p-4 sm:p-6 relative">
             <button
               onClick={() => setShowDeleteModal(false)}
-              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-800"
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-800 transition-colors"
               data-cy="close-delete-modal"
             >
               <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-3 sm:mb-4">
+            <div className="flex items-center justify-center mb-4 text-red-500">
+              <Trash2 className="w-12 h-12" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-3 sm:mb-4 text-center">
               ลบผู้ใช้
             </h2>
-            <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base">
-              คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?
+            <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base text-center">
+              คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้ <strong>{userData.name}</strong>
+              ?
+              <br />
+              <span className="text-red-500 text-xs">
+                การกระทำนี้ไม่สามารถย้อนกลับได้
+              </span>
             </p>
-            <div className="flex justify-end space-x-2 sm:space-x-3">
+            <div className="flex justify-center space-x-2 sm:space-x-3">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="bg-gray-200 text-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
+                className="bg-gray-200 text-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 transition-colors"
                 data-cy="cancel-delete"
               >
                 ยกเลิก
               </button>
               <button
                 onClick={handleDelete}
-                className="bg-red-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50"
+                className="bg-red-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition-colors"
                 data-cy="confirm-delete"
               >
                 ยืนยันการลบ
@@ -369,18 +452,21 @@ const UserDetail = () => {
           isOpen={showPasswordModal}
           onRequestClose={() => setShowPasswordModal(false)}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          overlayClassName="fixed inset-0 bg-black/50"
+          overlayClassName="fixed inset-0 bg-black/50 backdrop-blur-sm"
           data-cy="change-password-modal"
         >
           <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl max-w-md w-full p-4 sm:p-6 relative">
             <button
               onClick={() => setShowPasswordModal(false)}
-              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-800"
+              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-800 transition-colors"
               data-cy="close-password-modal"
             >
               <X className="w-5 h-5 sm:w-6 sm:h-6" />
             </button>
-            <h2 className="text-xl sm:text-2xl font-bold text-blue-600 mb-3 sm:mb-4">
+            <div className="flex items-center justify-center mb-4 text-blue-500">
+              <KeyRound className="w-12 h-12" />
+            </div>
+            <h2 className="text-xl sm:text-2xl font-bold text-blue-600 mb-3 sm:mb-4 text-center">
               เปลี่ยนรหัสผ่าน
             </h2>
             <form
@@ -394,58 +480,70 @@ const UserDetail = () => {
                   <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                     รหัสผ่านปัจจุบัน
                   </label>
-                  <input
-                    type="password"
-                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    required
-                    value={passwordData.current_password}
-                    onChange={(e) =>
-                      setPasswordData({
-                        ...passwordData,
-                        current_password: e.target.value,
-                      })
-                    }
-                    data-cy="current-password-input"
-                  />
+                  <div className="relative">
+                    <input
+                      type="password"
+                      className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10"
+                      required
+                      value={passwordData.current_password}
+                      onChange={(e) =>
+                        setPasswordData({
+                          ...passwordData,
+                          current_password: e.target.value,
+                        })
+                      }
+                      data-cy="current-password-input"
+                    />
+                    <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                  </div>
                 </div>
               )}
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   รหัสผ่านใหม่
                 </label>
-                <input
-                  type="password"
-                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                  minLength={6}
-                  value={passwordData.new_password}
-                  onChange={(e) =>
-                    setPasswordData({
-                      ...passwordData,
-                      new_password: e.target.value,
-                    })
-                  }
-                  data-cy="new-password-input"
-                />
+                <div className="relative">
+                  <input
+                    type="password"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10"
+                    required
+                    minLength={6}
+                    value={passwordData.new_password}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        new_password: e.target.value,
+                      })
+                    }
+                    data-cy="new-password-input"
+                  />
+                  <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                </div>
+                <p className="text-xs text-gray-500 mt-1">
+                  รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร
+                </p>
               </div>
               <div>
                 <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
                   ยืนยันรหัสผ่านใหม่
                 </label>
-                <input
-                  type="password"
-                  className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  required
-                  minLength={6}
-                  value={passwordData.confirm_password}
-                  onChange={(e) =>
-                    setPasswordData({
-                      ...passwordData,
-                      confirm_password: e.target.value,
-                    })
-                  }
-                  data-cy="confirm-password-input"
-                />
+                <div className="relative">
+                  <input
+                    type="password"
+                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10"
+                    required
+                    minLength={6}
+                    value={passwordData.confirm_password}
+                    onChange={(e) =>
+                      setPasswordData({
+                        ...passwordData,
+                        confirm_password: e.target.value,
+                      })
+                    }
+                    data-cy="confirm-password-input"
+                  />
+                  <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                </div>
               </div>
               <div className="flex justify-end space-x-2 sm:space-x-3 mt-4 sm:mt-6">
                 <button
@@ -458,14 +556,14 @@ const UserDetail = () => {
                       confirm_password: "",
                     });
                   }}
-                  className="bg-gray-200 text-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50"
+                  className="bg-gray-200 text-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 transition-colors"
                   data-cy="cancel-password-change"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
-                  className="bg-blue-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+                  className="bg-blue-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors"
                   data-cy="submit-password-change"
                 >
                   เปลี่ยนรหัสผ่าน
@@ -485,19 +583,19 @@ const globalTailwindClasses = `
   .btn-primary {
     @apply bg-blue-500 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-blue-600 
            focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 
-           transform transition-all hover:scale-105;
+           transform transition-all hover:scale-105 shadow-md;
   }
   
   .btn-secondary {
     @apply bg-gray-200 text-gray-800 px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-gray-300 
            focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 
-           transform transition-all hover:scale-105;
+           transform transition-all hover:scale-105 shadow-md;
   }
   
   .btn-danger {
     @apply bg-red-500 text-white px-2 sm:px-4 py-1.5 sm:py-2 rounded-lg hover:bg-red-600 
            focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 
-           transform transition-all hover:scale-105;
+           transform transition-all hover:scale-105 shadow-md;
   }
 }
 `;

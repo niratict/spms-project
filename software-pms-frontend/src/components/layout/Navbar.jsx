@@ -171,7 +171,7 @@ export default function EnhancedNavbar() {
   const getNavigationItems = (role) => {
     // เมนูพื้นฐานที่ทุกบทบาทสามารถเข้าถึงได้
     const items = [
-      { name: "หน้าหลัก", href: "/dashboard", icon: HomeIcon },
+      { name: "หน้าหลัก", href: "/mainpage", icon: HomeIcon },
       {
         name: "ผลการทดสอบ",
         href: "/test-dashboard",
@@ -309,7 +309,7 @@ export default function EnhancedNavbar() {
                   {/* โลโก้ของระบบที่มีการเคลื่อนไหว */}
                   <div className="flex flex-shrink-0 items-center">
                     <Link
-                      to="/dashboard"
+                      to="/mainpage"
                       className="group flex items-center space-x-2"
                       data-cy="app-logo"
                     >

@@ -96,13 +96,11 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
     dataCy,
   }) => (
     <div
-      className={`bg-gradient-to-br ${bgColor} p-2 sm:p-3 md:p-4 rounded-xl shadow border ${borderColor} transition-all duration-300 hover:shadow-md`}
+      className={`bg-gradient-to-br ${bgColor} p-3 md:p-4 rounded-xl shadow border ${borderColor} transition-all duration-300 hover:shadow-md flex flex-col h-full`}
       data-cy={dataCy}
     >
       <div className="flex items-start justify-between mb-1">
-        <div
-          className={`text-2xs xs:text-xs sm:text-sm ${textColor} font-medium truncate`}
-        >
+        <div className={`text-xs sm:text-sm ${textColor} font-medium truncate`}>
           {title}
         </div>
         <div
@@ -111,20 +109,20 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
             .replace("to-", "")} rounded-full p-1`}
         >
           {React.cloneElement(icon, {
-            className: `w-3 h-3 xs:w-3.5 xs:h-3.5 sm:w-4 sm:h-4 ${icon.props.className}`,
+            className: `w-4 h-4 sm:w-5 sm:h-5 ${icon.props.className}`,
           })}
         </div>
       </div>
       <div
-        className={`text-base xs:text-lg sm:text-xl md:text-2xl font-bold ${textColor.replace(
+        className={`text-xl sm:text-2xl md:text-3xl font-bold ${textColor.replace(
           "-700",
           "-800"
-        )}`}
+        )} mt-auto`}
         data-cy={`stat-value-${dataCy}`}
       >
         {value}
         {subValue !== undefined && (
-          <span className="text-2xs xs:text-xs sm:text-sm font-normal ml-1">
+          <span className="text-xs sm:text-sm font-normal ml-1">
             {subValue}
           </span>
         )}
@@ -134,7 +132,7 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
 
   return (
     <section
-      className="bg-white shadow rounded-xl p-5 mb-5 transition-all hover:shadow-md"
+      className="bg-white shadow rounded-xl p-4 sm:p-5 mb-5 transition-all hover:shadow-md"
       data-cy="test-stats-dashboard"
     >
       <div
@@ -142,11 +140,11 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
         onClick={onToggle}
         data-cy="toggle-dashboard"
       >
-        <h2 className="text-xl font-bold text-gray-800 flex items-center">
-          <Target className="w-5 h-5 mr-2 text-blue-500" />
-          <span>สถิติไฟล์ทดสอบของ Sprint</span>
+        <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center">
+          <Target className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-500 flex-shrink-0" />
+          <span className="truncate">สถิติไฟล์ทดสอบของ Sprint</span>
         </h2>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 ml-2 flex-shrink-0">
           {/* เพิ่มตัวเลือกสำหรับแสดงสถานะให้สอดคล้องกับ Sprint Section */}
           {isVisible && (
             <span className="hidden md:inline text-sm text-blue-600 font-medium">
@@ -169,11 +167,11 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
       >
         <div>
           {/* Progress bar แสดงภาพรวม */}
-          <div className="mb-3 md:mb-6" data-cy="progress-bar">
-            <div className="text-2xs xs:text-xs sm:text-sm text-gray-700 mb-1 font-medium">
+          <div className="mb-4 md:mb-6" data-cy="progress-bar">
+            <div className="text-xs sm:text-sm text-gray-700 mb-1 font-medium">
               ภาพรวมการทดสอบ
             </div>
-            <div className="h-2 xs:h-3 sm:h-4 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-3 sm:h-4 w-full bg-gray-200 rounded-full overflow-hidden">
               <div
                 className="h-full bg-green-500 float-left transition-all duration-500 ease-in-out"
                 style={{ width: `${stats.passPercentage || 0}%` }}
@@ -193,103 +191,119 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
 
             {/* คำอธิบายสี */}
             <div
-              className="flex flex-wrap gap-3 xs:gap-4 sm:gap-6 text-2xs xs:text-xs mt-1 xs:mt-2 justify-center sm:justify-start"
+              className="flex flex-wrap gap-4 text-xs mt-2 justify-center sm:justify-start"
               data-cy="color-legend"
             >
-              <div className="flex items-center justify-center">
-                <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 sm:w-3 sm:h-3 bg-green-500 rounded-full mr-1 xs:mr-1.5 sm:mr-2"></div>
+              <div className="flex items-center">
+                <div className="w-2.5 h-2.5 bg-green-500 rounded-full mr-1.5"></div>
                 <span>ผ่าน</span>
               </div>
-              <div className="flex items-center justify-center">
-                <div className="w-1.5 h-1.5 xs:w-2 xs:h-2 sm:w-3 sm:h-3 bg-red-500 rounded-full mr-1 xs:mr-1.5 sm:mr-2"></div>
+              <div className="flex items-center">
+                <div className="w-2.5 h-2.5 bg-red-500 rounded-full mr-1.5"></div>
                 <span>ไม่ผ่าน</span>
               </div>
             </div>
           </div>
 
-          {/* แสดงสถิติหลักให้เด่นชัด */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
-            {/* สถิติหลัก: ไฟล์ทั้งหมด */}
-            <div>
-              <StatCard
-                title="ไฟล์ทั้งหมด"
-                value={stats.totalFiles || 0}
-                bgColor="from-blue-50 to-indigo-50"
-                borderColor="border-blue-100"
-                textColor="text-blue-700"
-                icon={<FileText className="text-blue-600" />}
-                dataCy="stat-card-file-count"
-              />
+          {/* แสดงสถิติแบบกริด */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-4">
+            {/* ไฟล์ทั้งหมด */}
+            <div className="col-span-1">
+              <div className="bg-blue-50 rounded-xl p-3 shadow-sm border border-blue-100">
+                <div className="text-xs text-blue-700 font-medium mb-1">
+                  ไฟล์ทั้งหมด
+                </div>
+                <div
+                  className="text-2xl font-bold text-blue-800"
+                  data-cy="stat-file-count"
+                >
+                  {stats.totalFiles || 0}
+                </div>
+              </div>
             </div>
 
-            {/* สถิติหลัก: การทดสอบทั้งหมด */}
-            <div>
-              <StatCard
-                title="การทดสอบทั้งหมด"
-                value={aggregateStats.totalTests || 0}
-                bgColor="from-cyan-50 to-blue-50"
-                borderColor="border-cyan-100"
-                textColor="text-cyan-700"
-                icon={<Beaker className="text-cyan-600" />}
-                dataCy="stat-card-tests-total"
-              />
+            {/* ชุดทดสอบ */}
+            <div className="col-span-1">
+              <div className="bg-purple-50 rounded-xl p-3 shadow-sm border border-purple-100">
+                <div className="text-xs text-purple-700 font-medium mb-1">
+                  ชุดทดสอบ
+                </div>
+                <div
+                  className="text-2xl font-bold text-purple-800"
+                  data-cy="stat-test-suites"
+                >
+                  {aggregateStats.totalSuites || 0}
+                </div>
+              </div>
             </div>
 
-            {/* สถิติหลัก: ชุดทดสอบ */}
-            <div>
-              <StatCard
-                title="ชุดทดสอบ"
-                value={aggregateStats.totalSuites || 0}
-                bgColor="from-purple-50 to-violet-50"
-                borderColor="border-purple-100"
-                textColor="text-purple-700"
-                icon={<BarChart2 className="text-purple-600" />}
-                dataCy="stat-card-test-suites"
-              />
+            {/* การทดสอบทั้งหมด */}
+            <div className="col-span-2">
+              <div className="bg-cyan-50 rounded-xl p-3 shadow-sm border border-cyan-100">
+                <div className="text-xs text-cyan-700 font-medium mb-1">
+                  การทดสอบทั้งหมด
+                </div>
+                <div
+                  className="text-2xl font-bold text-cyan-800"
+                  data-cy="stat-tests-total"
+                >
+                  {aggregateStats.totalTests || 0}
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* แสดงผลลัพธ์การทดสอบ */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {/* แถวสุดท้ายของการ์ด - ผ่าน/ไม่ผ่าน/อัตราความสำเร็จ */}
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
             {/* ผ่านการทดสอบ */}
-            <div>
-              <StatCard
-                title="ผ่านการทดสอบ"
-                value={stats.passCount || 0}
-                subValue={`(${stats.passPercentage || 0}%)`}
-                bgColor="from-green-50 to-emerald-50"
-                borderColor="border-green-100"
-                textColor="text-green-700"
-                icon={<Check className="text-green-600" />}
-                dataCy="stat-card-tests-passed"
-              />
+            <div className="col-span-1">
+              <div className="bg-green-50 rounded-xl p-3 shadow-sm border border-green-100">
+                <div className="text-xs text-green-700 font-medium mb-1">
+                  ผ่านการทดสอบ
+                </div>
+                <div
+                  className="text-2xl font-bold text-green-800 flex items-end"
+                  data-cy="stat-tests-passed"
+                >
+                  {stats.passCount || 0}
+                  <span className="text-xs font-normal ml-1">
+                    ({stats.passPercentage || 0}%)
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* ไม่ผ่านการทดสอบ */}
-            <div>
-              <StatCard
-                title="ไม่ผ่านการทดสอบ"
-                value={stats.failCount || 0}
-                subValue={`(${stats.failPercentage || 0}%)`}
-                bgColor="from-red-50 to-rose-50"
-                borderColor="border-red-100"
-                textColor="text-red-700"
-                icon={<X className="text-red-600" />}
-                dataCy="stat-card-tests-failed"
-              />
+            <div className="col-span-1">
+              <div className="bg-red-50 rounded-xl p-3 shadow-sm border border-red-100">
+                <div className="text-xs text-red-700 font-medium mb-1">
+                  ไม่ผ่านการทดสอบ
+                </div>
+                <div
+                  className="text-2xl font-bold text-red-800 flex items-end"
+                  data-cy="stat-tests-failed"
+                >
+                  {stats.failCount || 0}
+                  <span className="text-xs font-normal ml-1">
+                    ({stats.failPercentage || 0}%)
+                  </span>
+                </div>
+              </div>
             </div>
 
             {/* อัตราความสำเร็จ */}
-            <div>
-              <StatCard
-                title="อัตราความสำเร็จ"
-                value={`${stats.successRate || 0}%`}
-                bgColor="from-emerald-50 to-teal-50"
-                borderColor="border-emerald-100"
-                textColor="text-emerald-700"
-                icon={<Percent className="text-emerald-600" />}
-                dataCy="stat-card-success-rate"
-              />
+            <div className="col-span-2">
+              <div className="bg-emerald-50 rounded-xl p-3 shadow-sm border border-emerald-100">
+                <div className="text-xs text-emerald-700 font-medium mb-1">
+                  อัตราความสำเร็จ
+                </div>
+                <div
+                  className="text-2xl font-bold text-emerald-800"
+                  data-cy="stat-success-rate"
+                >
+                  {stats.successRate || 0}%
+                </div>
+              </div>
             </div>
           </div>
         </div>

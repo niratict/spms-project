@@ -1,5 +1,6 @@
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
+const path = require("path");
 
 // สร้างผู้ใช้งานใหม่ (สำหรับ Admin เท่านั้น)
 const createUser = async (req, res) => {
@@ -71,12 +72,24 @@ const getAllUsers = async (req, res) => {
         name,
         email,
         role,
+        profile_image,
         created_at,
         updated_at,
         (SELECT COUNT(*) FROM action_logs WHERE user_id = users.user_id) as activity_count
       FROM users
       ORDER BY created_at DESC
     `);
+
+    // เพิ่ม URL สมบูรณ์สำหรับรูปโปรไฟล์
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    users.forEach((user) => {
+      if (user.profile_image) {
+        // ถ้ามี URL เต็มอยู่แล้ว ไม่ต้องเปลี่ยน
+        if (!user.profile_image.startsWith("http")) {
+          user.profile_image = `${baseUrl}/api/uploads/profiles/${user.profile_image}`;
+        }
+      }
+    });
 
     res.json(users);
   } catch (error) {
@@ -102,6 +115,7 @@ const getUserById = async (req, res) => {
         name,
         email,
         role,
+        profile_image,
         created_at,
         updated_at
       FROM users 
@@ -112,6 +126,12 @@ const getUserById = async (req, res) => {
 
     if (!user.length) {
       return res.status(404).json({ message: "User not found" });
+    }
+
+    // เพิ่ม URL สมบูรณ์สำหรับรูปโปรไฟล์
+    const baseUrl = `${req.protocol}://${req.get("host")}`;
+    if (user[0].profile_image && !user[0].profile_image.startsWith("http")) {
+      user[0].profile_image = `${baseUrl}/api/uploads/profiles/${user[0].profile_image}`;
     }
 
     // ถ้าเป็น Admin ให้ดึงข้อมูลเพิ่มเติม

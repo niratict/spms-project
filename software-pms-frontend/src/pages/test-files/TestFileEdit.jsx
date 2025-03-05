@@ -31,6 +31,18 @@ const TestFileEdit = () => {
     filename: "",
   });
 
+  // ฟังก์ชันสำหรับแปลงข้อความ error จากภาษาอังกฤษเป็นภาษาไทย
+  const translateError = (errorMsg) => {
+    // ตรวจสอบและแปลงข้อความเฉพาะ
+    if (errorMsg === "This file has already been uploaded to another sprint") {
+      return "ไฟล์นี้ถูกอัพโหลดไปยัง sprint อื่นแล้ว";
+    }
+    // เพิ่มเงื่อนไขสำหรับข้อความ error อื่นๆ ที่ต้องการแปลเพิ่มเติมได้ที่นี่
+
+    // หากไม่ตรงกับเงื่อนไขใดๆ ให้ใช้ข้อความ error เดิม
+    return errorMsg;
+  };
+
   // ดึงข้อมูลไฟล์ทดสอบเมื่อโหลดหน้า
   useEffect(() => {
     const fetchTestFile = async () => {
@@ -46,7 +58,9 @@ const TestFileEdit = () => {
           filename: response.data.filename,
         });
       } catch (err) {
-        setError(err.response?.data?.message || "Failed to fetch test file");
+        const errorMsg =
+          err.response?.data?.message || "Failed to fetch test file";
+        setError(translateError(errorMsg));
       } finally {
         setLoading(false);
       }
@@ -125,7 +139,9 @@ const TestFileEdit = () => {
       // นำทางกลับไปยังหน้ารายละเอียดไฟล์
       navigate(`/test-files/${id}`);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update test file");
+      const errorMsg =
+        err.response?.data?.message || "Failed to update test file";
+      setError(translateError(errorMsg));
     } finally {
       setSaving(false);
     }

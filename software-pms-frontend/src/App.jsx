@@ -14,7 +14,7 @@ import Layout from "./components/layout/Layout";
 import Login from "./pages/auth/Login";
 
 // นำเข้าหน้าแดชบอร์ดหลัก
-import Dashboard from "./pages/dashboard/Dashboard";
+import MainPage from "./pages/main/MainPage";
 import TestDashboard from "./pages/testdashboard/TestDashboard";
 import Profile from "./pages/profile/Profile";
 
@@ -60,8 +60,8 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
     return children;
   }
 
-  // ถ้าผู้ใช้ไม่มีสิทธิ์ ให้ไปหน้าแดชบอร์ด
-  return <Navigate to="/dashboard" replace />;
+  // ถ้าผู้ใช้ไม่มีสิทธิ์ ให้ไปหน้าหลัก
+  return <Navigate to="/mainpage" replace />;
 };
 
 // คอมโพเนนต์สำหรับจัดการเส้นทางทั้งหมดในแอพ
@@ -71,8 +71,8 @@ const AppRoutes = () => {
       {/* เส้นทางสำหรับหน้าล็อกอิน */}
       <Route path="/login" element={<Login />} />
       
-      {/* เส้นทางหลัก ให้ไปยังแดชบอร์ด */}
-      <Route path="/" element={<Navigate to="/dashboard" replace />} />
+      {/* เส้นทางหลัก ให้ไปยังหน้าหลัก */}
+      <Route path="/" element={<Navigate to="/mainpage" replace />} />
 
       {/* เส้นทางที่ต้องล็อกอินก่อนเข้าถึง */}
       <Route
@@ -83,8 +83,8 @@ const AppRoutes = () => {
               <Routes>
                 {/* --- หน้าที่ทุกคนเข้าถึงได้ --- */}
                 
-                {/* แดชบอร์ดหลัก */}
-                <Route path="/dashboard" element={<Dashboard />} />
+                {/* หน้าหลัก */}
+                <Route path="/mainpage" element={<MainPage />} />
                 
                 {/* แดชบอร์ดสำหรับการทดสอบ */}
                 <Route path="/test-dashboard" element={<TestDashboard />} />
@@ -245,7 +245,7 @@ const AppRoutes = () => {
                 {/* จัดการเส้นทางที่ไม่ได้ระบุ */}
                 <Route
                   path="*"
-                  element={<Navigate to="/dashboard" replace />}
+                  element={<Navigate to="/mainpage" replace />}
                 />
               </Routes>
             </Layout>
