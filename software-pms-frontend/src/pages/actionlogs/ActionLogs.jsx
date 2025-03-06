@@ -22,6 +22,7 @@ const ActionLogs = () => {
   const [error, setError] = useState(null);
   const [actionTypes, setActionTypes] = useState([]);
   const [targetTables, setTargetTables] = useState([]);
+  const [projects, setProjects] = useState({}); // เพิ่มสถานะสำหรับเก็บข้อมูลโปรเจกต์
 
   // --------- สถานะสำหรับการแบ่งหน้าและการกรอง ---------
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,29 +37,55 @@ const ActionLogs = () => {
     target_table: "",
     start_date: "",
     end_date: "",
-    limit: 10,
+    limit: 5,
   });
 
-  // แมปปิ้งประเภทการดำเนินการเป็นภาษาไทย
+  // แมปปิ้งประเภทการดำเนินการเป็นภาษาไทยและจัดเรียงตามความสำคัญ
   const actionTypeMapping = {
     create: "สร้าง",
-    delete: "ลบ",
     update: "อัพเดต",
+    delete: "ลบ",
     upload: "อัพโหลด",
     update_profile_image: "อัพโหลดรูปโปรไฟล์",
+    delete_profile_image: "ลบรูปโปรไฟล์",
+    password_change: "เปลี่ยนรหัสผ่าน",
+    assign: "มอบหมาย",
+    remove: "เลิกมอบหมาย",
   };
 
-  // แมปปิ้งตารางเป้าหมายเป็นภาษาไทย
+  // กำหนดลำดับความสำคัญของประเภทการดำเนินการ
+  const actionTypePriority = [
+    "create",
+    "update",
+    "delete",
+    "upload",
+    "assign",
+    "remove",
+    "update_profile_image",
+    "delete_profile_image",
+    "password_change",
+  ];
+
+  // แมปปิ้งตารางเป้าหมายเป็นภาษาไทยและจัดเรียงตามความสำคัญ
   const targetTableMapping = {
     projects: "โปรเจกต์",
     sprints: "สปรินต์",
     test_files: "ไฟล์ทดสอบ",
     users: "ผู้ใช้",
+    project_members: "สมาชิกในโปรเจกต์",
   };
+
+  // กำหนดลำดับความสำคัญของตารางเป้าหมาย
+  const targetTablePriority = [
+    "projects",
+    "project_members",
+    "sprints",
+    "test_files",
+    "users",
+  ];
 
   // --------- ฟังก์ชันจัดรูปแบบรายละเอียด ---------
   // แสดงรายละเอียดการดำเนินการในรูปแบบที่อ่านง่าย
-  // ฟังก์ชันจัดรูปแบบรายละเอียด (ปรับปรุง)
   const formatDetails = (details, targetTable, actionType) => {
     if (!details) return "-";
 
@@ -80,9 +107,15 @@ const ActionLogs = () => {
         delete displayDetails.password;
       }
 
+      // ลบข้อมูล member ถ้าเป้าหมายเป็น project_members
+      if (targetTable === "project_members" && displayDetails.member) {
+        delete displayDetails.member;
+      }
+
       // สร้างแผนที่สำหรับแปลงชื่อฟิลด์ภาษาอังกฤษเป็นภาษาไทย
       const fieldNameMapping = {
         name: "ชื่อ",
+        user_name: "ชื่อผู้ใช้งาน",
         end_date: "วันที่สิ้นสุด",
         sprint_id: "รหัสสปรินต์",
         created_at: "วันที่สร้าง",
@@ -276,8 +309,32 @@ const ActionLogs = () => {
             headers: { Authorization: `Bearer ${user?.token}` },
           }),
         ]);
-        setActionTypes(typesRes.data);
-        setTargetTables(tablesRes.data);
+
+        // จัดเรียงประเภทการดำเนินการตามลำดับความสำคัญ
+        const sortedTypes = [...typesRes.data].sort((a, b) => {
+          const indexA = actionTypePriority.indexOf(a);
+          const indexB = actionTypePriority.indexOf(b);
+          // ถ้าไม่มีในรายการให้อยู่ท้ายสุด
+          return (
+            (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
+          );
+        });
+
+        // จัดเรียงตารางเป้าหมายตามลำดับความสำคัญ
+        const sortedTables = [...tablesRes.data].sort((a, b) => {
+          const indexA = targetTablePriority.indexOf(a);
+          const indexB = targetTablePriority.indexOf(b);
+          // ถ้าไม่มีในรายการให้อยู่ท้ายสุด
+          return (
+            (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
+          );
+        });
+
+        setActionTypes(sortedTypes);
+        setTargetTables(sortedTables);
+
+        // ดึงข้อมูลโปรเจกต์เพื่อใช้ในการแสดงชื่อโปรเจกต์
+        fetchProjects();
       } catch (err) {
         if (err.response?.status === 401) {
           logout();
@@ -290,6 +347,25 @@ const ActionLogs = () => {
       fetchFilterOptions();
     }
   }, [user, logout, navigate]);
+
+  // ฟังก์ชันสำหรับดึงข้อมูลโปรเจกต์ทั้งหมด
+  const fetchProjects = async () => {
+    try {
+      const response = await axios.get(`${API_BASE_URL}/api/projects`, {
+        headers: { Authorization: `Bearer ${user?.token}` },
+      });
+
+      // สร้าง map ของ project_id เป็น project_name
+      const projectMap = {};
+      response.data.forEach((project) => {
+        projectMap[project.project_id] = project.name;
+      });
+
+      setProjects(projectMap);
+    } catch (err) {
+      console.error("ไม่สามารถดึงข้อมูลโปรเจกต์ได้", err);
+    }
+  };
 
   // --------- ปรับช่วงวันที่ให้ครอบคลุมทั้งวัน ---------
   // ปรับวันที่เริ่มต้นและสิ้นสุดให้ครอบคลุมทั้งวัน
@@ -341,7 +417,24 @@ const ActionLogs = () => {
           }
         );
 
-        setLogs(response.data.logs);
+        // ถ้าเป็น project_members ให้แยก project_id ออกมา
+        const enhancedLogs = response.data.logs.map((log) => {
+          // หาข้อมูล project_id จาก details สำหรับ project_members
+          if (
+            log.target_table === "project_members" &&
+            log.details &&
+            log.details.project_id
+          ) {
+            return {
+              ...log,
+              project_id: log.details.project_id,
+              project_name: projects[log.details.project_id] || null,
+            };
+          }
+          return log;
+        });
+
+        setLogs(enhancedLogs);
         setTotalLogs(response.data.total);
         setError(null);
       } catch (err) {
@@ -363,7 +456,7 @@ const ActionLogs = () => {
     if (user?.token) {
       fetchLogs();
     }
-  }, [user, currentPage, filters, logout, navigate]);
+  }, [user, currentPage, filters, logout, navigate, projects]);
 
   // --------- การจัดการเปลี่ยนแปลงตัวกรอง ---------
   // จัดการเปลี่ยนแปลงในตัวกรองและรีเซ็ตหน้าปัจจุบัน

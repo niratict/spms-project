@@ -114,7 +114,7 @@ const getLatestTestFiles = async (req, res) => {
       JOIN projects p ON s.project_id = p.project_id
       WHERE tf.status != 'Deleted'
       ORDER BY tf.upload_date DESC
-      LIMIT 5
+      LIMIT 6
     `);
 
     res.json({

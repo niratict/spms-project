@@ -20,19 +20,21 @@ const USERS_PER_PAGE = 6;
 const DEFAULT_AVATAR =
   "https://images.unsplash.com/photo-1586374579358-9d19d632b6df?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"; // รูปโปรไฟล์เริ่มต้น
 
-// กำหนดสีตามบทบาทผู้ใช้
-const ROLE_COLORS = {
-  Admin: "bg-red-100 text-red-800 border border-red-200",
-  Tester: "bg-green-100 text-green-800 border border-green-200",
-  Viewer: "bg-blue-100 text-blue-800 border border-blue-200",
-};
+  // กำหนดสีตามบทบาทผู้ใช้
+  const ROLE_COLORS = {
+    Admin: "bg-red-100 text-red-800 border border-red-200",
+    Tester: "bg-green-100 text-green-800 border border-green-200",
+    Viewer: "bg-blue-100 text-blue-800 border border-blue-200",
+    "Product Owner": "bg-orange-100 text-orange-800 border border-orange-200",
+  };
 
-// กำหนดไอคอนสำหรับแต่ละบทบาท
-const ROLE_ICONS = {
-  Admin: "⚙️",
-  Tester: "🧑‍💻",
-  Viewer: "👁️",
-};
+  // กำหนดไอคอนสำหรับแต่ละบทบาท
+  const ROLE_ICONS = {
+    Admin: "⚙️",
+    Tester: "🧑‍💻",
+    Viewer: "👁️",
+    "Product Owner": "🧑‍💼",
+  };
 
 const Users = () => {
   const { user, logout } = useAuth();
@@ -127,7 +129,7 @@ const Users = () => {
 
   // คำนวณจำนวนหน้าทั้งหมด
   const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
-  const roleOptions = ["Admin", "Tester", "Viewer"];
+  const roleOptions = ["Admin", "Product Owner", "Tester", "Viewer"];
 
   // แสดงสถานะกำลังโหลด
   if (loading) {

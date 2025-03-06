@@ -299,7 +299,11 @@ const UserDetail = () => {
                   className={`${
                     userData.role === "Admin"
                       ? "text-red-500"
-                      : "text-green-500"
+                      : userData.role === "Product Owner"
+                      ? "text-orange-500"
+                      : userData.role === "Tester"
+                      ? "text-green-500"
+                      : "text-blue-400"
                   }`}
                 >
                   {userData.role}

@@ -9,15 +9,7 @@ import {
   Folder,
   FolderOpen,
 } from "lucide-react";
-
-// ฟังก์ชั่นสำหรับจัดรูปแบบข้อความผิดพลาด
-const formatError = (err) => {
-  if (!err) return null;
-  if (typeof err === "string") return err;
-  if (err.message) return err.message;
-  if (Object.keys(err).length === 0) return "No error details available";
-  return JSON.stringify(err, null, 2);
-};
+import ErrorHandler from "./ErrorHandler";
 
 // คอมโพเนนต์แสดงกรณีทดสอบแต่ละรายการ
 const TestCase = ({ test }) => {
@@ -68,21 +60,47 @@ const TestCase = ({ test }) => {
           >
             {test.fullTitle || test.title}
           </p>
-          {/* แสดงข้อความผิดพลาดเฉพาะกรณีทดสอบที่ไม่ผ่าน */}
           {!isPassed && test.err && (
             <div
-              className="mt-2 p-2 sm:p-3 bg-red-50 rounded-lg border border-red-200 overflow-x-auto"
-              data-cy="error-container"
+              className="mt-2 bg-red-50 border border-red-200 rounded-lg overflow-hidden"
+              data-cy="error-details"
             >
-              <p className="text-xs sm:text-sm text-red-700 font-medium">
-                Error Message:
-              </p>
-              <pre
-                className="mt-1 text-xs text-red-600 whitespace-pre-wrap overflow-x-auto max-w-full"
-                data-cy="error-message"
-              >
-                {formatError(test.err)}
-              </pre>
+              <div className="p-3 bg-red-100 border-b border-red-200 flex items-center">
+                <XCircle className="text-red-600 h-5 w-5 mr-2" />
+                <span className="text-sm font-semibold text-red-800">
+                  รายละเอียดข้อผิดพลาด
+                </span>
+              </div>
+
+              <div className="p-3">
+                {(() => {
+                  const { formattedError } = ErrorHandler.handleError(test.err);
+                  const errorDetails = formattedError
+                    .split("\n")
+                    .map((detail) => {
+                      const [label, value] = detail.split(": ");
+                      return { label, value };
+                    });
+
+                  return (
+                    <div className="space-y-2">
+                      {errorDetails.map(({ label, value }, index) => (
+                        <div
+                          key={index}
+                          className="grid grid-cols-4 gap-2 items-start"
+                        >
+                          <span className="text-xs font-medium text-red-700 col-span-1">
+                            {label}
+                          </span>
+                          <span className="text-xs text-red-600 col-span-3 break-words">
+                            {value}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  );
+                })()}
+              </div>
             </div>
           )}
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs sm:text-sm text-gray-600">
@@ -100,6 +118,7 @@ const TestCase = ({ test }) => {
                 หมดเวลา
               </div>
             )}
+
             {test.skipped && (
               <div
                 className="px-2 py-1 sm:px-3 rounded-full bg-gray-100 text-gray-800 whitespace-nowrap"

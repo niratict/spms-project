@@ -24,6 +24,7 @@ const mainDashboardRoutes = require("./routes/mainDashboardRoutes");
 const userRoutes = require("./routes/userRoutes");
 const actionLogRoutes = require("./routes/actionLogRoutes");
 const profileRoutes = require("./routes/profileRoutes");
+const projectMemberRoutes = require("./routes/projectMemberRoutes");
 
 // API Route Mounting
 app.use("/api/auth", authRoutes);
@@ -35,6 +36,7 @@ app.use("/api/main-dashboard", mainDashboardRoutes);
 app.use("/api/users", userRoutes);
 app.use("/api/action-logs", actionLogRoutes);
 app.use("/api/profile", profileRoutes);
+app.use("/api/project-members", projectMemberRoutes);
 
 // 404 Handler - For undefined routes
 app.use((req, res) => {

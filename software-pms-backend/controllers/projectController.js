@@ -36,36 +36,68 @@ const createProject = async (req, res) => {
       photoPath = req.file.filename;
     }
 
-    const [result] = await db.query(
-      "INSERT INTO projects (name, description, photo, start_date, end_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
-      [
-        name,
-        description,
-        photoPath,
-        start_date,
-        end_date,
-        "Active",
-        req.user.name,
-      ]
-    );
+    // ต้องเป็น Admin หรือ Product Owner เท่านั้นที่สามารถสร้างโปรเจกต์ได้
+    if (req.user.role !== "Admin" && req.user.role !== "Product Owner") {
+      return res.status(403).json({
+        message: "Only Admin or Product Owner can create projects",
+      });
+    }
 
-    // บันทึก action log
-    await db.query(
-      "INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) VALUES (?, ?, ?, ?, ?)",
-      [
-        req.user.user_id,
-        "create",
-        "projects",
-        result.insertId,
-        JSON.stringify({ ...req.body, photo: photoPath }),
-      ]
-    );
+    const connection = await db.getConnection();
 
-    res.status(201).json({
-      message: "Project created successfully",
-      project_id: result.insertId,
-      photo: photoPath,
-    });
+    try {
+      await connection.beginTransaction();
+
+      // Insert project
+      const [result] = await connection.query(
+        "INSERT INTO projects (name, description, photo, start_date, end_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        [
+          name,
+          description,
+          photoPath,
+          start_date,
+          end_date,
+          "Active",
+          req.user.name,
+        ]
+      );
+
+      const projectId = result.insertId;
+
+      // ถ้าผู้สร้างเป็น Product Owner ให้เพิ่มเป็นสมาชิกของโปรเจกต์ด้วย
+      if (req.user.role === "Product Owner") {
+        await connection.query(
+          `INSERT INTO project_members (project_id, user_id, role, assigned_by, assigned_at) 
+           VALUES (?, ?, 'Product Owner', ?, CURRENT_TIMESTAMP)`,
+          [projectId, req.user.user_id, req.user.user_id]
+        );
+      }
+
+      // บันทึก action log
+      await connection.query(
+        "INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) VALUES (?, ?, ?, ?, ?)",
+        [
+          req.user.user_id,
+          "create",
+          "projects",
+          projectId,
+          JSON.stringify({ ...req.body, photo: photoPath }),
+        ]
+      );
+
+      await connection.commit();
+
+      res.status(201).json({
+        message: "Project created successfully",
+        project_id: projectId,
+        photo: photoPath,
+      });
+    } catch (error) {
+      await connection.rollback();
+      throw error;
+    } finally {
+      connection.release();
+    }
   } catch (error) {
     // ถ้ามีข้อผิดพลาด ให้ลบไฟล์รูปภาพที่อัพโหลดไว้
     if (req.file) {
@@ -80,17 +112,75 @@ const createProject = async (req, res) => {
 // ดึงรายการ Project ทั้งหมด
 const getAllProjects = async (req, res) => {
   try {
-    // ดึงข้อมูล projects พร้อมจำนวน sprints และรูปภาพ
-    const [projects] = await db.query(`
-      SELECT p.*, 
-        COUNT(DISTINCT s.sprint_id) as sprint_count,
-        COUNT(DISTINCT CASE WHEN tf.status = 'Pass' THEN tf.file_id END) as passed_tests,
-        COUNT(DISTINCT CASE WHEN tf.status = 'Fail' THEN tf.file_id END) as failed_tests
-      FROM projects p
-      LEFT JOIN sprints s ON p.project_id = s.project_id
-      LEFT JOIN test_files tf ON s.sprint_id = tf.sprint_id
-      GROUP BY p.project_id
-    `);
+    let query = "";
+    let params = [];
+
+    // ถ้าไม่ใช่ Admin ให้แสดงเฉพาะโปรเจกต์ที่ผู้ใช้มีสิทธิ์
+    if (req.user.role !== "Admin") {
+      query = `
+        SELECT p.*, 
+          COUNT(DISTINCT s.sprint_id) as sprint_count,
+          COUNT(DISTINCT CASE WHEN tf.status = 'Pass' THEN tf.file_id END) as passed_tests,
+          COUNT(DISTINCT CASE WHEN tf.status = 'Fail' THEN tf.file_id END) as failed_tests
+        FROM projects p
+        JOIN project_members pm ON p.project_id = pm.project_id
+        LEFT JOIN sprints s ON p.project_id = s.project_id
+        LEFT JOIN test_files tf ON s.sprint_id = tf.sprint_id
+        WHERE pm.user_id = ?
+        GROUP BY p.project_id
+      `;
+      params = [req.user.user_id];
+    } else {
+      // สำหรับ Admin แสดงทุกโปรเจกต์
+      query = `
+        SELECT p.*, 
+          COUNT(DISTINCT s.sprint_id) as sprint_count,
+          COUNT(DISTINCT CASE WHEN tf.status = 'Pass' THEN tf.file_id END) as passed_tests,
+          COUNT(DISTINCT CASE WHEN tf.status = 'Fail' THEN tf.file_id END) as failed_tests
+        FROM projects p
+        LEFT JOIN sprints s ON p.project_id = s.project_id
+        LEFT JOIN test_files tf ON s.sprint_id = tf.sprint_id
+        GROUP BY p.project_id
+      `;
+    }
+
+    const [projects] = await db.query(query, params);
+
+    // เพิ่มข้อมูลสิทธิ์สำหรับแต่ละโปรเจกต์
+    if (req.user.role !== "Admin") {
+      const [permissions] = await db.query(
+        `SELECT project_id, can_manage_project, can_manage_files 
+         FROM project_permissions 
+         WHERE user_id = ?`,
+        [req.user.user_id]
+      );
+
+      const permissionMap = {};
+      permissions.forEach((p) => {
+        permissionMap[p.project_id] = {
+          can_manage_project: p.can_manage_project === 1,
+          can_manage_files: p.can_manage_files === 1,
+        };
+      });
+
+      projects.forEach((project) => {
+        if (permissionMap[project.project_id]) {
+          project.can_manage_project =
+            permissionMap[project.project_id].can_manage_project;
+          project.can_manage_files =
+            permissionMap[project.project_id].can_manage_files;
+        } else {
+          project.can_manage_project = false;
+          project.can_manage_files = false;
+        }
+      });
+    } else {
+      // Admin มีสิทธิ์ทั้งหมด
+      projects.forEach((project) => {
+        project.can_manage_project = true;
+        project.can_manage_files = true;
+      });
+    }
 
     res.json(projects);
   } catch (error) {

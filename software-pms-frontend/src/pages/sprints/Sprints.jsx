@@ -10,6 +10,7 @@ import {
   FolderX,
   FileText,
   BarChart2,
+  FolderKanban,
   Timer,
 } from "lucide-react";
 
@@ -137,7 +138,7 @@ const Sprints = () => {
           data-cy="project-selection-section"
         >
           <h2 className="text-xl sm:text-2xl font-bold text-gray-800 mb-4 sm:mb-6 flex items-center">
-            <Target className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-blue-500" />
+            <FolderKanban className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-blue-500" />
             เลือกโปรเจกต์
           </h2>
 

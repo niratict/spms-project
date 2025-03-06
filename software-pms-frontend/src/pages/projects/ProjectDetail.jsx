@@ -13,6 +13,8 @@ import {
   CheckCircle,
   AlertTriangle,
   Info,
+  Shield,
+  MoreVertical,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -85,6 +87,71 @@ const DeleteErrorModal = ({ isOpen, onClose, sprintCount }) => {
   );
 };
 
+// ====== คอมโพเนนต์เมนูแบบ Dropdown สำหรับอุปกรณ์มือถือ ======
+const MobileActionsMenu = ({ onEdit, onDelete, onManagePermissions }) => {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        data-cy="mobile-actions-menu"
+        onClick={() => setIsOpen(!isOpen)}
+        className="p-2 rounded-full hover:bg-gray-100 transition-colors"
+      >
+        <MoreVertical className="w-6 h-6 text-gray-700" />
+      </button>
+
+      {isOpen && (
+        <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-lg bg-white shadow-lg ring-1 ring-black ring-opacity-5 animate-fadeIn">
+          <div className="py-1">
+            <button
+              data-cy="mobile-manage-permissions"
+              onClick={() => {
+                onManagePermissions();
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-4 py-3 flex items-center gap-2 hover:bg-gray-50 text-gray-700"
+            >
+              <Shield className="w-5 h-5 text-purple-600" />
+              จัดการสิทธิ์
+            </button>
+            <button
+              data-cy="mobile-edit-project"
+              onClick={() => {
+                onEdit();
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-4 py-3 flex items-center gap-2 hover:bg-gray-50 text-gray-700"
+            >
+              <Edit className="w-5 h-5 text-blue-600" />
+              แก้ไขโปรเจกต์
+            </button>
+            <button
+              data-cy="mobile-delete-project"
+              onClick={() => {
+                onDelete();
+                setIsOpen(false);
+              }}
+              className="w-full text-left px-4 py-3 flex items-center gap-2 hover:bg-gray-50 text-gray-700"
+            >
+              <Trash2 className="w-5 h-5 text-red-600" />
+              ลบโปรเจกต์
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Overlay เพื่อปิด dropdown เมื่อคลิกที่อื่น */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 z-0"
+          onClick={() => setIsOpen(false)}
+        ></div>
+      )}
+    </div>
+  );
+};
+
 // ====== คอมโพเนนต์รายการสปรินต์ ======
 const SprintItem = ({ sprint, onNavigate }) => {
   // ฟังก์ชันกำหนดสีตามสถานะ
@@ -153,9 +220,9 @@ const ProjectDetail = () => {
   const getProjectStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case "completed":
-        return "bg-emerald-100 text-emerald-800 border-emerald-300";
+        return "bg-blue-500 text-white border-blue-300";
       case "on hold":
-        return "bg-amber-100 text-amber-800 border-amber-300";
+        return "bg-gray-100 text-gray-800 border-gray-300";
       default:
         return "bg-green-100 text-green-800 border-green-300";
     }
@@ -255,7 +322,7 @@ const ProjectDetail = () => {
   return (
     <div
       data-cy="project-detail-page"
-      className="min-h-screen bg-gray-50 py-8 px-4"
+      className="min-h-screen bg-gray-50 py-4 md:py-8 px-4"
     >
       {/* โมดัลยืนยันการลบ */}
       <DeleteConfirmModal
@@ -280,39 +347,60 @@ const ProjectDetail = () => {
             className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            กลับสู่โปรเจกต์
+            <span className="hidden sm:inline">กลับสู่โปรเจกต์</span>
           </button>
-          <div className="flex space-x-4">
+
+          {/* ปุ่มสำหรับหน้าจอขนาดใหญ่ */}
+          <div className="hidden sm:flex space-x-3">
+            <button
+              data-cy="manage-permissions"
+              onClick={() => navigate(`/projects/${id}/permissions`)}
+              className="flex items-center gap-2 bg-purple-500 text-white px-3 py-2 rounded-lg hover:bg-purple-600 transition-colors text-sm md:text-base"
+            >
+              <Shield className="w-4 h-4 md:w-5 md:h-5" />
+              จัดการสิทธิ์
+            </button>
             <button
               data-cy="edit-project"
               onClick={() => navigate(`/projects/${id}/edit`)}
-              className="flex items-center gap-2 bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600 transition-colors"
+              className="flex items-center gap-2 bg-blue-500 text-white px-3 py-2 rounded-lg hover:bg-blue-600 transition-colors text-sm md:text-base"
             >
-              <Edit className="w-5 h-5" />
+              <Edit className="w-4 h-4 md:w-5 md:h-5" />
               แก้ไขโปรเจกต์
             </button>
             <button
               data-cy="delete-project"
               onClick={() => setShowDeleteModal(true)}
-              className="flex items-center gap-2 bg-red-500 text-white px-4 py-2 rounded-lg hover:bg-red-600 transition-colors"
+              className="flex items-center gap-2 bg-red-500 text-white px-3 py-2 rounded-lg hover:bg-red-600 transition-colors text-sm md:text-base"
             >
-              <Trash2 className="w-5 h-5" />
+              <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
               ลบโปรเจกต์
             </button>
+          </div>
+
+          {/* เมนู Dropdown สำหรับอุปกรณ์มือถือ */}
+          <div className="sm:hidden">
+            <MobileActionsMenu
+              onManagePermissions={() =>
+                navigate(`/projects/${id}/permissions`)
+              }
+              onEdit={() => navigate(`/projects/${id}/edit`)}
+              onDelete={() => setShowDeleteModal(true)}
+            />
           </div>
         </div>
 
         {/* คาร์ดรายละเอียดโปรเจกต์ */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
           {/* ส่วนหัวโปรเจกต์ */}
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6">
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold text-gray-800">
+          <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-4 md:p-6">
+            <div className="flex flex-wrap justify-between items-center gap-3">
+              <h1 className="text-2xl md:text-3xl font-bold text-gray-800">
                 โปรเจกต์ {project.name}
               </h1>
               <span
                 data-cy="project-status"
-                className={`px-4 py-2 rounded-full text-sm font-medium border ${getProjectStatusColor(
+                className={`px-3 py-1 md:px-4 md:py-2 rounded-full text-sm font-medium border ${getProjectStatusColor(
                   project.status
                 )}`}
               >
@@ -322,9 +410,9 @@ const ProjectDetail = () => {
           </div>
 
           {/* เนื้อหารายละเอียด */}
-          <div className="p-6 grid md:grid-cols-2 gap-8">
+          <div className="p-4 md:p-6 grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
             {/* ข้อมูลโปรเจกต์ */}
-            <div>
+            <div className="order-2 md:order-1">
               <h2 className="text-xl font-semibold mb-4 border-b pb-2">
                 รายละเอียด
               </h2>
@@ -340,10 +428,10 @@ const ProjectDetail = () => {
                   </span>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mt-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4">
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <div className="flex items-center gap-3 mb-2">
-                      <Calendar className="w-6 h-6 text-blue-500" />
+                      <Calendar className="w-5 h-5 text-blue-500" />
                       <h3 className="font-semibold text-gray-700">
                         วันเริ่มต้น
                       </h3>
@@ -361,7 +449,7 @@ const ProjectDetail = () => {
                   </div>
                   <div className="bg-gray-50 p-4 rounded-lg border border-gray-200">
                     <div className="flex items-center gap-3 mb-2">
-                      <Calendar className="w-6 h-6 text-blue-500" />
+                      <Calendar className="w-5 h-5 text-blue-500" />
                       <h3 className="font-semibold text-gray-700">
                         วันสิ้นสุด
                       </h3>
@@ -379,16 +467,16 @@ const ProjectDetail = () => {
             </div>
 
             {/* รูปภาพโปรเจกต์ */}
-            <div>
+            <div className="order-1 md:order-2">
               {project.photo ? (
                 <div
                   data-cy="project-image"
-                  className="rounded-xl overflow-hidden shadow-lg hover:scale-105 transition-transform duration-300"
+                  className="rounded-xl overflow-hidden shadow-lg h-56 md:h-64 lg:h-72 hover:scale-105 transition-transform duration-300"
                 >
                   <img
                     src={`${API_BASE_URL}/api/uploads/projects/${project.photo}`}
                     alt={project.name}
-                    className="w-full h-64 object-cover"
+                    className="w-full h-full object-cover"
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = "/placeholder-image.png";
@@ -398,7 +486,7 @@ const ProjectDetail = () => {
               ) : (
                 <div
                   data-cy="project-no-image"
-                  className="bg-gray-100 rounded-xl h-64 flex items-center justify-center border-2 border-dashed border-gray-300"
+                  className="bg-gray-100 rounded-xl h-56 md:h-64 lg:h-72 flex items-center justify-center border-2 border-dashed border-gray-300"
                 >
                   <p className="text-gray-500 flex items-center gap-2">
                     <Info className="w-6 h-6" />
@@ -410,15 +498,15 @@ const ProjectDetail = () => {
           </div>
 
           {/* ส่วนสปรินต์ */}
-          <div className="p-6 border-t">
+          <div className="p-4 md:p-6 border-t">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-2xl font-semibold">Sprints</h2>
+              <h2 className="text-xl md:text-2xl font-semibold">Sprints</h2>
             </div>
 
             {project.sprints && project.sprints.length > 0 ? (
               <div
                 data-cy="sprint-list"
-                className="grid md:grid-cols-2 lg:grid-cols-3 gap-4"
+                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
               >
                 {project.sprints.map((sprint) => (
                   <SprintItem
@@ -431,7 +519,7 @@ const ProjectDetail = () => {
             ) : (
               <div
                 data-cy="no-sprints"
-                className="text-center bg-gray-50 p-8 rounded-xl border border-gray-200"
+                className="text-center bg-gray-50 p-6 md:p-8 rounded-xl border border-gray-200"
               >
                 <Info className="mx-auto w-12 h-12 text-gray-500 mb-4" />
                 <h3 className="text-lg font-semibold text-gray-700 mb-2">

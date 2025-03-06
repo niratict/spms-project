@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   PieChart,
   Pie,
@@ -26,6 +26,7 @@ import {
   CheckCircle2,
   XCircle,
   PieChart as PieChartIcon,
+  RefreshCw,
 } from "lucide-react";
 import SprintStackedChart from "./SprintStackedChart";
 import TestResultsList from "./TestResultsList";
@@ -107,6 +108,74 @@ export default function TestDashboard() {
   });
   const [error, setError] = useState(null);
   const itemsPerPage = 3;
+
+  // เพิ่ม state สำหรับ refresh
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // เพิ่มฟังก์ชัน refresh ที่สามารถใช้ได้กับทุก section
+  const refreshData = useCallback(async () => {
+    // ตรวจสอบว่ามี project ที่เลือกหรือไม่
+    if (selectedProject !== "all" && user) {
+      setIsRefreshing(true);
+      try {
+        // ดึงข้อมูลใหม่ด้วย Promise.all เหมือนเดิม
+        const [sprintsResponse, sprintResultsResponse, sprintStackedResponse] =
+          await Promise.all([
+            dashboardApi.getSprints(selectedProject, user.token),
+            dashboardApi.getSprintResults(selectedProject, user.token),
+            dashboardApi.getSprintStackedChartData(selectedProject, user.token),
+          ]);
+
+        // อัปเดต state ต่างๆ
+        setSprints(sprintsResponse.data);
+        setSprintResults(sprintResultsResponse.data);
+        setSprintStackedData(sprintStackedResponse.data);
+
+        // หากมี sprint ที่เลือกอยู่ ให้ดึงผลการทดสอบของ sprint นั้น
+        if (selectedSprint !== "all") {
+          await fetchTestResults(selectedSprint);
+        } else {
+          await fetchAllSprintResults(selectedProject);
+        }
+      } catch (error) {
+        console.error("Error refreshing data:", error);
+        setError(
+          error.response?.data?.message || "Failed to refresh dashboard data"
+        );
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+  }, [selectedProject, selectedSprint, user]);
+
+  // เรียกใช้การ refresh เมื่อ refreshTrigger เปลี่ยน
+  useEffect(() => {
+    if (refreshTrigger > 0) {
+      refreshData();
+    }
+  }, [refreshTrigger, refreshData]);
+
+  // เพิ่มปุ่ม Refresh ในส่วนของการเลือก Project และ Sprint
+  const RefreshButton = () => (
+    <button
+      onClick={() => setRefreshTrigger((prev) => prev + 1)}
+      disabled={selectedProject === "all" || isRefreshing}
+      className={`p-2 sm:p-3 rounded-lg transition-all duration-300 ${
+        selectedProject === "all" || isRefreshing
+          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+          : "bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700"
+      }`}
+      title="Refresh Data"
+      data-cy="refresh-dashboard"
+    >
+      <RefreshCw
+        className={`h-4 w-4 sm:h-5 sm:w-5 ${
+          isRefreshing ? "animate-spin" : ""
+        }`}
+      />
+    </button>
+  );
 
   // === ดึงข้อมูลโปรเจกต์เมื่อโหลดหน้า === //
   useEffect(() => {
@@ -859,6 +928,7 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
                     </option>
                   </select>
                 </div>
+                <RefreshButton />
               </div>
             </div>
 
@@ -955,7 +1025,7 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
                                 <>
                                   <XCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                                   <span className="whitespace-nowrap">
-                                    ล้มเหลว {failCount} กรณี
+                                    ผิดพลาด {failCount} กรณี
                                   </span>
                                 </>
                               )}

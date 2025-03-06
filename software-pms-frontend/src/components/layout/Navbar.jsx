@@ -190,6 +190,13 @@ export default function EnhancedNavbar() {
           { name: "บันทึกการดำเนินการ", href: "/action-logs", icon: ClockIcon }
         );
         break;
+      case "Product Owner":
+        items.push(
+          { name: "โปรเจกต์", href: "/projects", icon: FolderIcon },
+          { name: "สปรินต์", href: "/sprints", icon: RocketLaunchIcon },
+          { name: "ไฟล์ทดสอบ", href: "/test-files", icon: DocumentTextIcon }
+        );
+        break;
       case "Tester":
         items.push({
           name: "ไฟล์ทดสอบ",

@@ -12,6 +12,7 @@ import {
   Calendar,
   UserCircle,
   Trash2,
+  AlertTriangle,
 } from "lucide-react";
 import Modal from "react-modal";
 import axios from "axios";
@@ -60,6 +61,8 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showImagePreviewModal, setShowImagePreviewModal] = useState(false);
+  const [showDeleteImageConfirmModal, setShowDeleteImageConfirmModal] =
+    useState(false);
   const [actionLoading, setActionLoading] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [showPassword, setShowPassword] = useState({
@@ -190,6 +193,7 @@ const Profile = () => {
       });
       setImagePreview(null);
       await fetchProfile();
+      setShowDeleteImageConfirmModal(false);
     } catch (err) {
       setError(err.response?.data?.message || "Failed to delete image");
     } finally {
@@ -366,7 +370,7 @@ const Profile = () => {
                   </label>
                   {imagePreview && (
                     <button
-                      onClick={handleDeleteImage}
+                      onClick={() => setShowDeleteImageConfirmModal(true)}
                       className="bg-red-500 p-2 sm:p-3 rounded-full hover:bg-red-600 transition-colors shadow-lg"
                       data-cy="delete-image-btn"
                     >
@@ -387,6 +391,45 @@ const Profile = () => {
                   </button>
                 )}
               </div>
+
+              {/* โมดัลยืนยันการลบรูปภาพ */}
+              <Modal
+                isOpen={showDeleteImageConfirmModal}
+                onRequestClose={() => setShowDeleteImageConfirmModal(false)}
+                style={modalStyles}
+                data-cy="delete-image-confirm-modal"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-center mb-4">
+                    <AlertTriangle className="h-12 w-12 text-yellow-500 mr-4" />
+                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+                      ต้องการลบรูปภาพใช่หรือไม่?
+                    </h2>
+                  </div>
+
+                  <p className="text-center text-sm sm:text-base text-gray-600 mb-4">
+                    คุณแน่ใจหรือว่าต้องการลบรูปภาพโปรไฟล์?
+                  </p>
+
+                  <div className="flex gap-4 pt-4">
+                    <button
+                      onClick={handleDeleteImage}
+                      disabled={actionLoading}
+                      className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
+                      data-cy="confirm-delete-image"
+                    >
+                      {actionLoading ? "กำลังลบ..." : "ลบ"}
+                    </button>
+                    <button
+                      onClick={() => setShowDeleteImageConfirmModal(false)}
+                      className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                      data-cy="cancel-delete-image"
+                    >
+                      ยกเลิก
+                    </button>
+                  </div>
+                </div>
+              </Modal>
 
               {/* ข้อมูลพื้นฐานของผู้ใช้ */}
               <div className="flex flex-col space-y-2 sm:space-y-3 text-center md:text-left md:pt-2">

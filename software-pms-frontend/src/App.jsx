@@ -23,6 +23,7 @@ import Projects from "./pages/projects/Projects";
 import CreateProject from "./pages/projects/CreateProject";
 import ProjectDetail from "./pages/projects/ProjectDetail";
 import ProjectEdit from "./pages/projects/ProjectEdit";
+import ProjectPermissions from "./pages/projects/ProjectPermissions ";
 
 // นำเข้าหน้าจัดการสปรินท์
 import Sprints from "./pages/sprints/Sprints";
@@ -98,7 +99,7 @@ const AppRoutes = () => {
                 <Route
                   path="/projects"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Product Owner"]}>
                       <Projects />
                     </ProtectedRoute>
                   }
@@ -106,7 +107,7 @@ const AppRoutes = () => {
                 <Route
                   path="/projects/create"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Product Owner"]}>
                       <CreateProject />
                     </ProtectedRoute>
                   }
@@ -114,7 +115,7 @@ const AppRoutes = () => {
                 <Route
                   path="/projects/:id"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Product Owner"]}>
                       <ProjectDetail />
                     </ProtectedRoute>
                   }
@@ -122,8 +123,16 @@ const AppRoutes = () => {
                 <Route
                   path="/projects/:id/edit"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Product Owner"]}>
                       <ProjectEdit />
+                    </ProtectedRoute>
+                  }
+                />
+                <Route
+                  path="/projects/:id/permissions"
+                  element={
+                    <ProtectedRoute allowedRoles={["Admin", "Product Owner"]}>
+                      <ProjectPermissions />
                     </ProtectedRoute>
                   }
                 />
@@ -132,7 +141,7 @@ const AppRoutes = () => {
                 <Route
                   path="/sprints"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Product Owner"]}>
                       <Sprints />
                     </ProtectedRoute>
                   }
@@ -140,7 +149,7 @@ const AppRoutes = () => {
                 <Route
                   path="/sprints/create/:projectId"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Product Owner"]}>
                       <CreateSprint />
                     </ProtectedRoute>
                   }
@@ -148,7 +157,7 @@ const AppRoutes = () => {
                 <Route
                   path="/sprints/:id"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Product Owner"]}>
                       <SprintDetail />
                     </ProtectedRoute>
                   }
@@ -156,7 +165,7 @@ const AppRoutes = () => {
                 <Route
                   path="/sprints/:id/edit"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Product Owner"]}>
                       <SprintEdit />
                     </ProtectedRoute>
                   }
@@ -212,7 +221,7 @@ const AppRoutes = () => {
                 <Route
                   path="/test-files"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Tester", "Product Owner"]}>
                       <TestFiles />
                     </ProtectedRoute>
                   }
@@ -220,7 +229,7 @@ const AppRoutes = () => {
                 <Route
                   path="/test-files/create/:sprintId"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Tester", "Product Owner"]}>
                       <CreateTestFile />
                     </ProtectedRoute>
                   }
@@ -228,7 +237,7 @@ const AppRoutes = () => {
                 <Route
                   path="/test-files/:id"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Tester", "Product Owner"]}>
                       <TestFileDetail />
                     </ProtectedRoute>
                   }
@@ -236,7 +245,7 @@ const AppRoutes = () => {
                 <Route
                   path="/test-files/:id/edit"
                   element={
-                    <ProtectedRoute allowedRoles={["Admin", "Tester"]}>
+                    <ProtectedRoute allowedRoles={["Admin", "Tester", "Product Owner"]}>
                       <TestFileEdit />
                     </ProtectedRoute>
                   }
