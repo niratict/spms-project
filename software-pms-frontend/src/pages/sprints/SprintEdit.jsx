@@ -1,7 +1,14 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import { Edit, X, Save, Calendar, AlertCircle } from "lucide-react";
+import {
+  Edit,
+  X,
+  Save,
+  Calendar,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
@@ -10,6 +17,45 @@ import "react-day-picker/dist/style.css";
 import ExistingSprintsList from "./ExistingSprintsList";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+// โมดัลสำหรับยืนยันการสร้างหรือยกเลิก
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      data-cy="confirm-modal"
+    >
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="text-center">
+          <CheckCircle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-blue-500 mb-3 md:mb-4" />
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+            {title}
+          </h2>
+          <p className="text-gray-600 mb-4 md:mb-6">{message}</p>
+        </div>
+        <div className="flex justify-center space-x-3 md:space-x-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            data-cy="confirm-cancel"
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors"
+            data-cy="confirm-save"
+          >
+            <Save className="w-4 h-4 md:w-5 md:h-5" />
+            {title.includes("ยกเลิก") ? "ยกเลิก" : "สร้าง"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const SprintEdit = () => {
   // ------------- ตัวแปรพื้นฐาน -------------
@@ -21,11 +67,16 @@ const SprintEdit = () => {
   const [sprint, setSprint] = useState(null); // ข้อมูลสปรินต์ที่กำลังแก้ไข
   const [existingSprints, setExistingSprints] = useState([]); // ข้อมูลสปรินต์ทั้งหมดของโปรเจค
   const [isLatestSprint, setIsLatestSprint] = useState(false); // เช็คว่าเป็นสปรินต์ล่าสุดหรือไม่
+  const [originalDateRange, setOriginalDateRange] = useState({
+    from: undefined,
+    to: undefined,
+  }); // เก็บวันที่เดิมไว้เพื่อตรวจสอบการเปลี่ยนแปลง
 
   // ------------- สถานะการแสดงผล -------------
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showCancelConfirmModal, setShowCancelConfirmModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // ------------- สถานะข้อมูลวันที่ -------------
@@ -67,10 +118,12 @@ const SprintEdit = () => {
         setIsLatestSprint(currentSprintNumber === latestSprintNumber);
 
         // ตั้งค่าช่วงวันที่เริ่มต้น
-        setDateRange({
+        const initialDateRange = {
           from: new Date(sprintData.start_date),
           to: new Date(sprintData.end_date),
-        });
+        };
+        setDateRange(initialDateRange);
+        setOriginalDateRange(initialDateRange); // เก็บค่าเริ่มต้นไว้เพื่อตรวจสอบการเปลี่ยนแปลง
       } catch (err) {
         setError(err.response?.data?.message || "ไม่สามารถดึงข้อมูลสปรินต์ได้");
       } finally {
@@ -97,6 +150,38 @@ const SprintEdit = () => {
       from: range.from,
       to: range.to,
     });
+  };
+
+  // ------------- ตรวจสอบว่ามีการเปลี่ยนแปลงวันที่หรือไม่ -------------
+  const hasDateChanged = () => {
+    if (
+      !dateRange.from ||
+      !dateRange.to ||
+      !originalDateRange.from ||
+      !originalDateRange.to
+    ) {
+      return false;
+    }
+
+    return (
+      dateRange.from.getTime() !== originalDateRange.from.getTime() ||
+      dateRange.to.getTime() !== originalDateRange.to.getTime()
+    );
+  };
+
+  // ------------- การจัดการยกเลิกฟอร์ม -------------
+  const handleCancel = () => {
+    if (hasDateChanged()) {
+      setShowCancelConfirmModal(true);
+    } else {
+      navigate(`/sprints/${id}`);
+    }
+  };
+
+  // ------------- การยืนยันการยกเลิกการแก้ไข -------------
+  const confirmCancel = () => {
+    setShowCancelConfirmModal(false);
+    navigate(`/sprints/${id}`);
   };
 
   // ------------- การบันทึกข้อมูล -------------
@@ -260,7 +345,7 @@ const SprintEdit = () => {
               </h2>
             </div>
             <button
-              onClick={() => navigate(`/sprints/${id}`)}
+              onClick={handleCancel}
               className="text-gray-500 hover:text-gray-700 transition-colors"
               data-cy="close-edit-form-btn"
             >
@@ -312,7 +397,7 @@ const SprintEdit = () => {
             <div className="flex justify-end space-x-2 sm:space-x-4 pt-2 sm:pt-4">
               <button
                 type="button"
-                onClick={() => navigate(`/sprints/${id}`)}
+                onClick={handleCancel}
                 className="px-3 sm:px-6 py-2 sm:py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors text-sm sm:text-base"
                 data-cy="cancel-edit-btn"
               >
@@ -443,6 +528,20 @@ const SprintEdit = () => {
             </div>
           </div>
         )}
+
+        {/* ------------- โมดัลยืนยันการยกเลิกการแก้ไข ------------- */}
+        <ConfirmModal
+          isOpen={showCancelConfirmModal}
+          onClose={() => setShowCancelConfirmModal(false)}
+          onConfirm={confirmCancel}
+          title="ยืนยันการยกเลิก"
+          message={
+            <>
+              คุณได้เลือกช่วงวันที่สปรินต์แล้ว <br />
+              คุณต้องการยกเลิกการสร้างสปรินต์ใช่หรือไม่?
+            </>
+          }
+        />
       </div>
     </div>
   );

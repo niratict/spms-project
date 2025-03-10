@@ -426,19 +426,26 @@ const TestFiles = () => {
                 {projects.map((project) => (
                   <div
                     key={project.project_id}
-                    onClick={() => handleProjectSelect(project)}
+                    onClick={() => {
+                      // Toggle selection when clicking on the same project
+                      if (selectedProject?.project_id === project.project_id) {
+                        handleProjectSelect(null); // Deselect project
+                      } else {
+                        handleProjectSelect(project); // Select new project
+                      }
+                    }}
                     data-cy={`project-card-${project.project_id}`}
                     className={`
-                      cursor-pointer relative overflow-hidden
-                      border-2 rounded-lg p-4
-                      transition-all duration-200 
-                      hover:shadow-md hover:scale-[1.01]
-                      ${
-                        selectedProject?.project_id === project.project_id
-                          ? "border-blue-500 bg-blue-50 shadow"
-                          : "border-gray-200 hover:border-blue-300"
-                      }
-                    `}
+              cursor-pointer relative overflow-hidden
+              border-2 rounded-lg p-4
+              transition-all duration-200 
+              hover:shadow-md hover:scale-[1.01]
+              ${
+                selectedProject?.project_id === project.project_id
+                  ? "border-blue-500 bg-blue-50 shadow"
+                  : "border-gray-200 hover:border-blue-300"
+              }
+            `}
                   >
                     {selectedProject?.project_id === project.project_id && (
                       <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 to-indigo-600"></div>
@@ -526,19 +533,26 @@ const TestFiles = () => {
                   {sprints.map((sprint) => (
                     <div
                       key={sprint.sprint_id}
-                      onClick={() => handleSprintSelect(sprint)}
+                      onClick={() => {
+                        // Toggle selection when clicking on the same sprint
+                        if (selectedSprint?.sprint_id === sprint.sprint_id) {
+                          handleSprintSelect(null); // Deselect sprint
+                        } else {
+                          handleSprintSelect(sprint); // Select new sprint
+                        }
+                      }}
                       data-cy={`sprint-item-${sprint.sprint_id}`}
                       className={`
-                        cursor-pointer relative overflow-hidden
-                        border-2 rounded-lg p-4
-                        transition-all duration-200
-                        hover:shadow-md hover:scale-[1.01]
-                        ${
-                          selectedSprint?.sprint_id === sprint.sprint_id
-                            ? "border-green-500 bg-green-50 shadow"
-                            : "border-gray-200 hover:border-green-300"
-                        }
-                      `}
+                cursor-pointer relative overflow-hidden
+                border-2 rounded-lg p-4
+                transition-all duration-200
+                hover:shadow-md hover:scale-[1.01]
+                ${
+                  selectedSprint?.sprint_id === sprint.sprint_id
+                    ? "border-green-500 bg-green-50 shadow"
+                    : "border-gray-200 hover:border-green-300"
+                }
+              `}
                     >
                       {selectedSprint?.sprint_id === sprint.sprint_id && (
                         <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 to-teal-500"></div>

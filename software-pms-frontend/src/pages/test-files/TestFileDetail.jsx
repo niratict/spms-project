@@ -433,7 +433,7 @@ const TestFileDetail = () => {
           isOpen={showDeleteModal}
           onRequestClose={() => setShowDeleteModal(false)}
           className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto p-4"
-          overlayClassName="fixed inset-0 bg-black bg-opacity-70"
+          overlayClassName="fixed inset-0 bg-black/60"
           data-cy="delete-modal"
         >
           <div className="bg-white rounded-xl shadow-xl p-4 sm:p-6 w-full max-w-xs sm:max-w-md">

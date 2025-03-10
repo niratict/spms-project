@@ -2,7 +2,16 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
-import { ArrowLeft, Plus, Calendar, AlertCircle, Lock, X } from "lucide-react";
+import {
+  ArrowLeft,
+  Plus,
+  Calendar,
+  AlertCircle,
+  Lock,
+  X,
+  CheckCircle,
+  Save,
+} from "lucide-react";
 import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
@@ -10,6 +19,45 @@ import "react-day-picker/dist/style.css";
 import ExistingSprintsList from "./ExistingSprintsList";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+// โมดัลสำหรับยืนยันการสร้างหรือยกเลิก
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      data-cy="confirm-modal"
+    >
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="text-center">
+          <CheckCircle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-blue-500 mb-3 md:mb-4" />
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+            {title}
+          </h2>
+          <p className="text-gray-600 mb-4 md:mb-6">{message}</p>
+        </div>
+        <div className="flex justify-center space-x-3 md:space-x-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            data-cy="confirm-cancel"
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors"
+            data-cy="confirm-save"
+          >
+            <Save className="w-4 h-4 md:w-5 md:h-5" />
+            {title.includes("ยกเลิก") ? "ยกเลิก" : "สร้าง"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const CreateSprint = () => {
   const navigate = useNavigate();
@@ -27,6 +75,10 @@ const CreateSprint = () => {
     to: undefined,
   });
   const [numberOfMonths, setNumberOfMonths] = useState(2);
+
+  // สถานะสำหรับโมดัลยืนยัน
+  const [showCreateConfirm, setShowCreateConfirm] = useState(false);
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false);
 
   // เลื่อนไปด้านบนสุดของหน้าเมื่อคอมโพเนนต์ถูกโหลด
   useEffect(() => {
@@ -85,22 +137,40 @@ const CreateSprint = () => {
 
   // ฟังก์ชันจัดการการกลับไปยังหน้าก่อนหน้า
   const handleBack = () => {
+    // ถ้ามีการเลือกวันที่แล้ว ให้แสดงโมดัลยืนยันการยกเลิก
+    if (dateRange.from || dateRange.to) {
+      setShowCancelConfirm(true);
+    } else {
+      // ถ้ายังไม่ได้เลือกวันที่ สามารถกลับได้เลย
+      navigateBack();
+    }
+  };
+
+  // ฟังก์ชันนำทางกลับไปหน้าสปรินต์หลัก
+  const navigateBack = () => {
     navigate("/sprints", {
       state: { selectedProjectId: parseInt(projectId) },
     });
   };
 
-  // ฟังก์ชันสำหรับการสร้างสปรินต์ใหม่
-  const handleSubmit = async (e) => {
+  // ฟังก์ชันสำหรับการเตรียมสร้างสปรินต์ใหม่
+  const handleSubmit = (e) => {
     e.preventDefault();
-    setError(null);
-    setLoading(true);
 
     if (!dateRange.from || !dateRange.to) {
       setError("Please select both start and end dates");
-      setLoading(false);
       return;
     }
+
+    // แสดงโมดัลยืนยันการสร้างสปรินต์
+    setShowCreateConfirm(true);
+  };
+
+  // ฟังก์ชันสำหรับการสร้างสปรินต์ใหม่หลังจากยืนยัน
+  const confirmCreateSprint = async () => {
+    setError(null);
+    setLoading(true);
+    setShowCreateConfirm(false);
 
     try {
       // แก้ไขปัญหา timezone โดยตั้งเวลาเป็น 12:00 น. ในเวลาท้องถิ่น
@@ -191,9 +261,7 @@ const CreateSprint = () => {
           data-cy="back-button"
         >
           <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-          <span className="text-sm sm:text-base">
-            กลับไปที่หน้าเลือกสปรินต์
-          </span>
+          <span className="text-sm sm:text-base">กลับไปหน้าเลือกสปรินต์</span>
         </button>
 
         <div className="bg-white rounded-xl sm:rounded-2xl shadow-lg sm:shadow-2xl overflow-hidden">
@@ -387,6 +455,39 @@ const CreateSprint = () => {
           </div>
         </div>
       )}
+
+      {/* โมดัลยืนยันการสร้างสปรินต์ */}
+      <ConfirmModal
+        isOpen={showCreateConfirm}
+        onClose={() => setShowCreateConfirm(false)}
+        onConfirm={confirmCreateSprint}
+        title="ยืนยันการสร้างสปรินต์"
+        message={
+          <>
+            คุณต้องการสร้าง {nextSprintName} <br />
+            ในช่วงวันที่{" "}
+            {dateRange.from
+              ? dateRange.from.toLocaleDateString("th-TH")
+              : ""} -{" "}
+            {dateRange.to ? dateRange.to.toLocaleDateString("th-TH") : ""}{" "}
+            ใช่หรือไม่?
+          </>
+        }
+      />
+
+      {/* โมดัลยืนยันการยกเลิก */}
+      <ConfirmModal
+        isOpen={showCancelConfirm}
+        onClose={() => setShowCancelConfirm(false)}
+        onConfirm={navigateBack}
+        title="ยืนยันการยกเลิก"
+        message={
+          <>
+            คุณได้เลือกช่วงวันที่สปรินต์แล้ว <br />
+            คุณต้องการยกเลิกการสร้างสปรินต์ใช่หรือไม่?
+          </>
+        }
+      />
     </div>
   );
 };

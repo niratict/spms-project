@@ -149,7 +149,7 @@ const SprintDetail = () => {
             onClick={handleBackToSprints}
             className="w-full py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
           >
-            กลับสู่หน้าสปรินต์
+            กลับไปหน้าเลือกโปรเจกต์
           </button>
         </div>
       </div>
@@ -175,7 +175,7 @@ const SprintDetail = () => {
               className="flex items-center gap-2 text-blue-600 hover:text-blue-800 transition-colors"
             >
               <ArrowLeft className="w-6 h-6" />
-              <span className="font-semibold">กลับสู่หน้าสปรินต์</span>
+              <span className="font-semibold">กลับไปหน้าเลือกโปรเจกต์</span>
             </button>
 
             <div className="flex space-x-4">
@@ -277,24 +277,31 @@ const SprintDetail = () => {
 
       {/* Delete Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 text-center">
-            <Trash2 className="mx-auto w-16 h-16 text-red-500 mb-4" />
-            <h2 className="text-2xl font-bold text-gray-900 mb-4">ลบสปรินต์</h2>
-            <p className="text-gray-600 mb-6">
-              คุณแน่ใจหรือไม่ว่าต้องการลบสปรินต์นี้?
-            </p>
-            <div className="flex justify-center space-x-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-6 animate-fadeIn">
+            <div className="text-center">
+              <Trash2 className="mx-auto h-16 w-16 text-red-500 mb-4" />
+              <h2 className="text-2xl font-bold text-gray-800 mb-3">
+                ยืนยันการลบสปรินต์
+              </h2>
+              <p className="text-gray-600 mb-6">
+                คุณแน่ใจหรือไม่ว่าต้องการลบสปรินต์นี้?
+              </p>
+            </div>
+            <div className="flex space-x-4">
               <button
+                data-cy="delete-modal-cancel"
                 onClick={() => setShowDeleteModal(false)}
-                className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200"
+                className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 ยกเลิก
               </button>
               <button
+                data-cy="delete-modal-confirm"
                 onClick={handleDelete}
-                className="px-6 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600"
+                className="flex-1 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
               >
+                <Trash2 className="w-5 h-5" />
                 ลบสปรินต์
               </button>
             </div>

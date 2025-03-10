@@ -8,6 +8,9 @@ import {
   CheckCircle,
   AlertCircle,
   AlertTriangle,
+  Save,
+  ChevronLeft,
+  FileUp,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 
@@ -27,6 +30,13 @@ const TestFileEdit = () => {
   const [fileError, setFileError] = useState(null); // ข้อผิดพลาดของไฟล์
   const [selectedFile, setSelectedFile] = useState(null); // ไฟล์ที่เลือกใหม่
   const [showConfirmModal, setShowConfirmModal] = useState(false); // แสดง/ซ่อนหน้าต่างยืนยัน
+  const [existingFiles, setExistingFiles] = useState([]); // ไฟล์ที่มีอยู่ในระบบทั้งหมด
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false); // แสดง/ซ่อนหน้าต่างยืนยันไฟล์ซ้ำในสปรินต์เดียวกัน
+  const [showErrorDialog, setShowErrorDialog] = useState(false); // แสดง/ซ่อนหน้าต่างแจ้งเตือนไฟล์ซ้ำในสปรินต์อื่น
+  const [existingSprintName, setExistingSprintName] = useState(null); // ชื่อสปรินต์ที่มีไฟล์ซ้ำ
+  const [existingProjectName, setExistingProjectName] = useState(null); // ชื่อโปรเจกต์ที่มีไฟล์ซ้ำ
+  const [pendingFileId, setPendingFileId] = useState(null); // ID ของไฟล์ซ้ำในสปรินต์เดียวกัน
+  const [isUpdateMode, setIsUpdateMode] = useState(false); // สถานะการอัพเดตไฟล์
   const [formData, setFormData] = useState({
     filename: "",
   });
@@ -43,20 +53,30 @@ const TestFileEdit = () => {
     return errorMsg;
   };
 
-  // ดึงข้อมูลไฟล์ทดสอบเมื่อโหลดหน้า
+  // ดึงข้อมูลไฟล์ทดสอบและไฟล์ที่มีอยู่เมื่อโหลดหน้า
   useEffect(() => {
-    const fetchTestFile = async () => {
+    const fetchData = async () => {
       try {
-        const response = await axios.get(
+        // ดึงข้อมูลไฟล์ทดสอบที่กำลังแก้ไข
+        const fileResponse = await axios.get(
           `${API_BASE_URL}/api/test-files/${id}`,
           {
             headers: { Authorization: `Bearer ${user.token}` },
           }
         );
-        setTestFile(response.data);
+        setTestFile(fileResponse.data);
         setFormData({
-          filename: response.data.filename,
+          filename: fileResponse.data.filename,
         });
+
+        // ดึงข้อมูลไฟล์ทั้งหมดในระบบ
+        const filesResponse = await axios.get(
+          `${API_BASE_URL}/api/test-files`,
+          {
+            headers: { Authorization: `Bearer ${user.token}` },
+          }
+        );
+        setExistingFiles(filesResponse.data);
       } catch (err) {
         const errorMsg =
           err.response?.data?.message || "Failed to fetch test file";
@@ -66,8 +86,34 @@ const TestFileEdit = () => {
       }
     };
 
-    if (user && id) fetchTestFile();
+    if (user && id) fetchData();
   }, [id, user]);
+
+  // ตรวจสอบว่าไฟล์มีอยู่แล้วหรือไม่
+  const checkExistingFile = (file) => {
+    const existingFile = existingFiles.find(
+      (ef) =>
+        ef.original_filename === file.name &&
+        ef.status !== "Deleted" &&
+        ef.file_id !== parseInt(id)
+    );
+
+    if (existingFile) {
+      if (existingFile.sprint_id === testFile.sprint_id) {
+        // ไฟล์มีอยู่แล้วในสปรินต์เดียวกัน - แสดงหน้าต่างยืนยันการอัพเดต
+        setPendingFileId(existingFile.file_id);
+        setShowConfirmDialog(true);
+        return "SAME_SPRINT";
+      } else {
+        // ไฟล์มีอยู่แล้วในสปรินต์อื่น - แสดงหน้าต่างแจ้งเตือนข้อผิดพลาด
+        setExistingSprintName(existingFile.sprint_name);
+        setExistingProjectName(existingFile.project_name);
+        setShowErrorDialog(true);
+        return "DIFFERENT_SPRINT";
+      }
+    }
+    return "NEW_FILE";
+  };
 
   // ฟังก์ชันตรวจสอบและเลือกไฟล์
   const handleFileChange = (event) => {
@@ -94,11 +140,17 @@ const TestFileEdit = () => {
       return;
     }
 
-    setSelectedFile(file);
+    const fileStatus = checkExistingFile(file);
+    if (fileStatus === "NEW_FILE" || fileStatus === "SAME_SPRINT") {
+      setSelectedFile(file);
+    } else {
+      setSelectedFile(null);
+    }
   };
 
   // ฟังก์ชันเปิดหน้าต่างยืนยันการบันทึก
-  const handleSubmitConfirm = () => {
+  const handleSubmitConfirm = (e) => {
+    e.preventDefault();
     setShowConfirmModal(true);
   };
 
@@ -125,16 +177,17 @@ const TestFileEdit = () => {
       submitData.append("filename", formData.filename);
 
       // ส่งข้อมูลไปยัง API
-      await axios.put(
-        `${API_BASE_URL}/api/test-files/${id}/upload`,
-        submitData,
-        {
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      );
+      const endpoint =
+        isUpdateMode && pendingFileId
+          ? `${API_BASE_URL}/api/test-files/update/${pendingFileId}`
+          : `${API_BASE_URL}/api/test-files/${id}/upload`;
+
+      await axios.put(endpoint, submitData, {
+        headers: {
+          Authorization: `Bearer ${user.token}`,
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       // นำทางกลับไปยังหน้ารายละเอียดไฟล์
       navigate(`/test-files/${id}`);
@@ -144,7 +197,14 @@ const TestFileEdit = () => {
       setError(translateError(errorMsg));
     } finally {
       setSaving(false);
+      setIsUpdateMode(false);
     }
+  };
+
+  // จัดการการยืนยันการอัพเดตไฟล์ที่มีอยู่
+  const handleConfirmUpdate = () => {
+    setShowConfirmDialog(false);
+    setIsUpdateMode(true);
   };
 
   // แสดงตัวโหลดขณะกำลังดึงข้อมูล
@@ -183,130 +243,66 @@ const TestFileEdit = () => {
     <>
       {/* หน้าแก้ไขไฟล์ทดสอบ */}
       <div
-        className="min-h-screen bg-gray-50 py-6 sm:py-8 md:py-12"
+        className="min-h-screen bg-gray-50 flex flex-col"
         data-cy="test-file-edit-page"
       >
-        <div className="container mx-auto max-w-2xl px-4">
-          {/* ส่วนหัวและปุ่มกลับ */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
-            <button
-              onClick={() => navigate(`/test-files/${id}`)}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 transition-colors text-sm sm:text-base"
-              data-cy="back-button"
-            >
-              <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span>กลับไปหน้ารายละเอียด</span>
-            </button>
+        <div className="w-full px-4 sm:px-6 py-6 sm:py-8 mx-auto max-w-lg sm:max-w-xl md:max-w-2xl">
+          {/* ส่วนหัวและปุ่มย้อนกลับ */}
+          <button
+            onClick={() => navigate(`/test-files/${id}`)}
+            className="flex items-center text-gray-600 hover:text-gray-800 mb-4 sm:mb-6 transition-colors"
+            data-cy="back-button"
+          >
+            <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5 mr-1 sm:mr-2" />
+            <span className="text-sm sm:text-base font-medium">
+              กลับไปหน้ารายละเอียดไฟล์ทดสอบ
+            </span>
+          </button>
 
-            {/* แสดงสถานะไฟล์ทดสอบ (ไม่สามารถแก้ไขได้) */}
-            {testFile.status === "Pass" ? (
-              <div
-                className="flex items-center gap-2 text-green-600 text-sm sm:text-base"
-                data-cy="status-pass"
-              >
-                <CheckCircle className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span>Passed</span>
-              </div>
-            ) : testFile.status === "Fail" ? (
-              <div
-                className="flex items-center gap-2 text-red-600 text-sm sm:text-base"
-                data-cy="status-fail"
-              >
-                <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span>Failed</span>
-              </div>
-            ) : (
-              <div
-                className="flex items-center gap-2 text-yellow-600 text-sm sm:text-base"
-                data-cy="status-pending"
-              >
-                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6" />
-                <span>Pending</span>
-              </div>
-            )}
-          </div>
-
-          {/* แบบฟอร์มแก้ไขไฟล์ */}
-          <div className="bg-white shadow-xl rounded-xl overflow-hidden">
-            {/* ส่วนหัวแบบฟอร์ม */}
-            <div className="bg-blue-600 text-white p-4 sm:p-6">
-              <h1
-                className="text-xl sm:text-2xl font-bold"
-                data-cy="edit-form-title"
-              >
+          <div className="bg-white shadow-md sm:shadow-xl rounded-xl sm:rounded-2xl overflow-hidden">
+            {/* ส่วนหัวของแบบฟอร์ม */}
+            <div className="bg-blue-50 px-4 sm:px-6 py-4 sm:py-5 border-b border-blue-100">
+              <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
+                <FileUp className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-blue-600" />
                 แก้ไขไฟล์ทดสอบ
-              </h1>
+              </h2>
               <p
-                className="text-blue-100 mt-1 text-sm sm:text-base break-words"
+                className="text-sm text-gray-600 mt-1 break-words"
                 data-cy="edit-file-name"
               >
                 กำลังแก้ไข {testFile.original_filename}
               </p>
             </div>
 
-            {/* เนื้อหาแบบฟอร์ม */}
-            <div className="p-4 sm:p-6 space-y-4 sm:space-y-6">
-              {/* ข้อความแสดงข้อผิดพลาด */}
+            {/* แบบฟอร์มแก้ไขไฟล์ */}
+            <form
+              onSubmit={handleSubmitConfirm}
+              className="p-4 sm:p-6 space-y-4 sm:space-y-6"
+              data-cy="edit-form"
+            >
+              {/* แสดงข้อความแจ้งเตือนข้อผิดพลาด */}
               {error && (
                 <div
-                  className="bg-red-50 border border-red-200 text-red-600 p-3 sm:p-4 rounded-lg flex items-center gap-2 sm:gap-3 text-sm sm:text-base"
+                  className="bg-red-50 border border-red-200 text-red-600 p-3 sm:p-4 rounded-lg flex items-center text-sm sm:text-base"
                   data-cy="error-message"
                 >
-                  <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
-                  <span>{error}</span>
+                  <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5 mr-2 sm:mr-3 text-red-500 flex-shrink-0" />
+                  <span className="font-medium">{error}</span>
                 </div>
               )}
 
-              <div className="space-y-4 sm:space-y-6">
-                {/* ส่วนอัพโหลดไฟล์ */}
+              <div className="space-y-4">
+                {/* ส่วนป้อนชื่อไฟล์ */}
                 <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    อัพโหลดไฟล์ใหม่ (เลือกได้)
-                  </label>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4">
-                    <label className="relative cursor-pointer inline-block">
-                      <input
-                        type="file"
-                        accept="application/json"
-                        onChange={handleFileChange}
-                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                        data-cy="file-upload-input"
-                      />
-                      <div
-                        className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm sm:text-base"
-                        data-cy="file-upload-button"
-                      >
-                        <Upload className="w-4 h-4 sm:w-5 sm:h-5" />
-                        <span>เลือกไฟล์</span>
-                      </div>
-                    </label>
-                    {selectedFile && (
-                      <span
-                        className="text-xs sm:text-sm text-gray-600 truncate max-w-full"
-                        data-cy="selected-file-name"
-                      >
-                        {selectedFile.name}
-                      </span>
-                    )}
-                  </div>
-                  {/* ข้อผิดพลาดของไฟล์ */}
-                  {fileError && (
-                    <p
-                      className="mt-2 text-xs sm:text-sm text-red-500"
-                      data-cy="file-error-message"
-                    >
-                      {fileError}
-                    </p>
-                  )}
-                </div>
-
-                {/* ช่องกรอกชื่อไฟล์ */}
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-2">
-                    ชื่อไฟล์
+                  <label
+                    htmlFor="filename"
+                    className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2"
+                  >
+                    ชื่อไฟล์ <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
+                    id="filename"
                     value={formData.filename}
                     onChange={(e) =>
                       setFormData((prev) => ({
@@ -314,38 +310,134 @@ const TestFileEdit = () => {
                         filename: e.target.value,
                       }))
                     }
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm sm:text-base"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm sm:text-base"
+                    placeholder="ระบุชื่อไฟล์"
+                    required
                     data-cy="filename-input"
                   />
                 </div>
+
+                {/* ส่วนการอัพโหลดไฟล์ */}
+                <div>
+                  <label
+                    htmlFor="testFile"
+                    className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2"
+                  >
+                    อัพโหลดไฟล์ใหม่ (เลือกได้)
+                  </label>
+                  <div className="mt-1">
+                    <input
+                      type="file"
+                      id="testFile"
+                      accept=".json,application/json"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      data-cy="file-input"
+                    />
+                    <label
+                      htmlFor="testFile"
+                      className={`
+                  w-full flex items-center justify-center px-3 sm:px-6 py-3 sm:py-4 
+                  border-2 border-dashed rounded-lg cursor-pointer 
+                  transition-all duration-300
+                  ${
+                    selectedFile
+                      ? "border-green-500 bg-green-50 text-green-700"
+                      : "border-gray-300 hover:border-blue-500 text-gray-600 hover:text-blue-700"
+                  }
+                `}
+                      data-cy="file-drop-area"
+                    >
+                      <FileUp className="mr-2 sm:mr-3 w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0" />
+                      <span className="text-xs sm:text-sm font-medium truncate">
+                        {selectedFile
+                          ? selectedFile.name
+                          : "คลิกเพื่ออัพโหลดไฟล์ใหม่"}
+                      </span>
+                    </label>
+
+                    {/* แสดงข้อความแจ้งเตือนข้อผิดพลาดของไฟล์ */}
+                    {fileError && (
+                      <p
+                        className="mt-2 text-xs sm:text-sm text-red-500 flex items-center"
+                        data-cy="file-error"
+                      >
+                        <AlertTriangle className="mr-1 sm:mr-2 w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                        {fileError}
+                      </p>
+                    )}
+                    <p className="mt-2 text-xs text-gray-500">
+                      อนุญาตให้ใช้เฉพาะไฟล์ JSON ที่ได้จากการทดสอบจาก Cypress
+                      เท่านั้น (ขนาดสูงสุด 5MB)
+                    </p>
+                  </div>
+                </div>
+
+                {/* แสดงสถานะไฟล์ทดสอบ */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2">
+                    สถานะไฟล์ทดสอบ
+                  </label>
+                  <div className="px-3 py-2 border border-gray-200 rounded-lg bg-gray-50">
+                    {testFile.status === "Pass" ? (
+                      <div
+                        className="flex items-center gap-2 text-green-600 text-sm"
+                        data-cy="status-pass"
+                      >
+                        <CheckCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span>Passed</span>
+                      </div>
+                    ) : testFile.status === "Fail" ? (
+                      <div
+                        className="flex items-center gap-2 text-red-600 text-sm"
+                        data-cy="status-fail"
+                      >
+                        <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span>Failed</span>
+                      </div>
+                    ) : (
+                      <div
+                        className="flex items-center gap-2 text-yellow-600 text-sm"
+                        data-cy="status-pending"
+                      >
+                        <AlertTriangle className="w-4 h-4 sm:w-5 sm:h-5" />
+                        <span>Pending</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
 
-              {/* ปุ่มดำเนินการ */}
-              <div className="flex flex-col-reverse sm:flex-row sm:justify-end space-y-reverse space-y-2 sm:space-y-0 sm:space-x-4 pt-4 sm:pt-6">
+              {/* ปุ่มการทำงาน */}
+              <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
                 <button
+                  type="submit"
+                  disabled={saving}
+                  className={`
+              w-full py-2 sm:py-3 rounded-lg text-white text-sm sm:text-base font-semibold transition-all duration-300
+              ${
+                saving
+                  ? "bg-blue-300 cursor-not-allowed"
+                  : "bg-blue-600 hover:bg-blue-700 active:bg-blue-800"
+              }
+            `}
+                  data-cy="save-button"
+                >
+                  {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
+                </button>
+                <button
+                  type="button"
                   onClick={() => navigate(`/test-files/${id}`)}
-                  className="w-full sm:w-auto px-4 py-2 text-center text-gray-600 rounded-lg hover:bg-gray-100 transition-colors text-sm sm:text-base border border-gray-300"
+                  className="
+              w-full py-2 sm:py-3 rounded-lg text-gray-600 bg-gray-100 
+              hover:bg-gray-200 text-sm sm:text-base font-semibold transition-all duration-300
+            "
                   data-cy="cancel-button"
                 >
                   ยกเลิก
                 </button>
-                <button
-                  onClick={handleSubmitConfirm}
-                  disabled={saving}
-                  className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
-                  data-cy="save-button"
-                >
-                  {saving ? (
-                    <>
-                      <span className="animate-spin">↻</span>
-                      Saving...
-                    </>
-                  ) : (
-                    "บันทึก"
-                  )}
-                </button>
               </div>
-            </div>
+            </form>
           </div>
         </div>
       </div>
@@ -353,7 +445,7 @@ const TestFileEdit = () => {
       {/* หน้าต่างยืนยันการบันทึก */}
       {showConfirmModal && (
         <div
-          className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           data-cy="confirm-modal"
           onClick={(e) => {
             // Close modal when clicking backdrop
@@ -362,24 +454,18 @@ const TestFileEdit = () => {
             }
           }}
         >
-          <div className="bg-white rounded-xl shadow-xl max-w-md w-full mx-auto overflow-hidden transform transition-all">
-            {/* ส่วนหัวหน้าต่างยืนยัน */}
-            <div className="bg-blue-50 px-4 sm:px-6 py-3 sm:py-4 border-b border-blue-100">
-              <div className="flex items-center gap-2 sm:gap-3">
-                <AlertTriangle className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                  ยืนยันการเปลี่ยนแปลง
-                </h3>
-              </div>
-            </div>
-
-            {/* เนื้อหาหน้าต่างยืนยัน */}
-            <div className="px-4 sm:px-6 py-3 sm:py-4">
-              <p className="text-gray-600 text-sm sm:text-base">
-                คุณแน่ใจหรือไม่ว่าต้องการบันทึกการเปลี่ยนแปลงนี้ในไฟล์ทดสอบ?
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+            <div className="text-center">
+              <AlertTriangle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-blue-500 mb-3 md:mb-4" />
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+                ยืนยันการเปลี่ยนแปลง
+              </h2>
+              <p className="text-gray-600 mb-3 md:mb-4">
+                คุณแน่ใจหรือไม่ว่าต้องการบันทึกการเปลี่ยนแปลงนี้<br></br>
+                ในไฟล์ทดสอบ?
                 {selectedFile && (
                   <span
-                    className="block mt-2 font-medium text-sm sm:text-base break-words"
+                    className="block mt-2 font-medium break-words"
                     data-cy="confirm-new-file"
                   >
                     คุณกำลังจะอัพโหลดไฟล์ใหม่: {selectedFile.name}
@@ -387,7 +473,7 @@ const TestFileEdit = () => {
                 )}
               </p>
 
-              <div className="mt-3 sm:mt-4 text-xs sm:text-sm text-gray-500">
+              <div className="text-left bg-gray-50 p-3 rounded-lg text-sm text-gray-500 mb-2">
                 <p data-cy="confirm-filename" className="break-words">
                   • ชื่อไฟล์จะเป็น:{" "}
                   <span className="font-medium">{formData.filename}</span>
@@ -395,11 +481,10 @@ const TestFileEdit = () => {
               </div>
             </div>
 
-            {/* ปุ่มในหน้าต่างยืนยัน */}
-            <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 flex flex-col-reverse sm:flex-row sm:justify-end gap-2 sm:gap-3">
+            <div className="flex flex-col sm:flex-row justify-center space-y-2 sm:space-y-0 sm:space-x-3 md:space-x-4">
               <button
                 onClick={() => setShowConfirmModal(false)}
-                className="w-full sm:w-auto px-4 py-2 text-center text-gray-600 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400 text-sm sm:text-base"
+                className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors focus:outline-none focus:ring-2 focus:ring-gray-400"
                 data-cy="confirm-cancel"
               >
                 ยกเลิก
@@ -407,7 +492,7 @@ const TestFileEdit = () => {
               <button
                 onClick={handleSubmit}
                 disabled={saving}
-                className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm sm:text-base"
+                className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 data-cy="confirm-submit"
               >
                 {saving ? (
@@ -416,8 +501,80 @@ const TestFileEdit = () => {
                     กำลังบันทึก...
                   </>
                 ) : (
-                  "ยืนยันการเปลี่ยนแปลง"
+                  <>
+                    <Save className="w-4 h-4 md:w-5 md:h-5" />
+                    ยืนยันการเปลี่ยนแปลง
+                  </>
                 )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* กล่องข้อความแจ้งเตือนไฟล์ซ้ำในสปรินต์อื่น */}
+      {showErrorDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          data-cy="error-dialog"
+        >
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+            <div className="text-center">
+              <AlertTriangle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-red-500 mb-3 md:mb-4" />
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+                ไม่สามารถอัพโหลดไฟล์ได้
+              </h2>
+              <p className="text-gray-600 mb-4 md:mb-6 whitespace-pre-line">
+                ไฟล์ทดสอบนี้ถูกอัพโหลดแล้วใน {existingSprintName} ในโปรเจกต์{" "}
+                <span className="font-medium">{existingProjectName} </span>
+                ไม่สามารถอัพโหลดไฟล์เดียวกันในหลายสปรินต์ได้
+              </p>
+            </div>
+            <div className="flex justify-center">
+              <button
+                onClick={() => setShowErrorDialog(false)}
+                className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
+                data-cy="error-dialog-close"
+              >
+                เข้าใจแล้ว
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* กล่องข้อความยืนยันการอัพเดตไฟล์ */}
+      {showConfirmDialog && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+          data-cy="confirm-dialog"
+        >
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+            <div className="text-center">
+              <CheckCircle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-blue-500 mb-3 md:mb-4" />
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+                ต้องการอัพเดตไฟล์ทดสอบที่มีอยู่?
+              </h2>
+              <p className="text-gray-600 mb-4 md:mb-6">
+                มีไฟล์ทดสอบที่ชื่อเดียวกันอยู่แล้วในสปรินต์นี้<br></br>
+                คุณต้องการอัพเดตไฟล์นี้ด้วยผลลัพธ์ใหม่หรือไม่?
+              </p>
+            </div>
+            <div className="flex justify-center space-x-3 md:space-x-4">
+              <button
+                onClick={() => setShowConfirmDialog(false)}
+                className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                data-cy="confirm-dialog-cancel"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handleConfirmUpdate}
+                className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors"
+                data-cy="confirm-dialog-update"
+              >
+                <Save className="w-4 h-4 md:w-5 md:h-5" />
+                อัพเดตไฟล์
               </button>
             </div>
           </div>

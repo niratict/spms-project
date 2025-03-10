@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
-import Modal from "react-modal";
 import { useAuth } from "../../context/AuthContext";
 import {
   ArrowLeft,
@@ -11,37 +10,137 @@ import {
   Mail,
   Edit,
   Trash2,
+  CheckCircle,
+  Save,
 } from "lucide-react";
 
 // ตั้งค่า URL ของ API จาก environment variables
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-// กำหนด root element สำหรับ Modal
-Modal.setAppElement("#root");
+// Component Modal ที่ใช้ร่วมกัน
+const ConfirmModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  title,
+  message,
+  icon,
+  confirmText,
+  confirmIcon,
+  isLoading,
+  color = "blue",
+  dataCy,
+}) => {
+  if (!isOpen) return null;
 
-// สไตล์สำหรับ Modal ทั้งหมด
-const modalStyles = {
-  content: {
-    position: "absolute",
-    top: "50%",
-    left: "50%",
-    transform: "translate(-50%, -50%)",
-    width: "90%", // เปลี่ยนเป็น percent แทนค่าตายตัว
-    maxWidth: "400px", // เพิ่ม maxWidth สำหรับหน้าจอใหญ่
-    padding: "20px", // ปรับให้เล็กลงบนมือถือ
-    borderRadius: "8px",
-    boxShadow: "0 4px 6px rgba(0, 0, 0, 0.1)",
-    backgroundColor: "white",
-    maxHeight: "90vh", // ปรับความสูงสูงสุดตาม viewport
-    overflow: "auto", // เพิ่ม scroll เมื่อเนื้อหาเกินขนาด
-  },
-  overlay: {
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    zIndex: 50,
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      data-cy={dataCy || "confirm-modal"}
+    >
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="text-center">
+          {icon}
+          <h2 className={`text-xl md:text-2xl font-bold text-gray-800 mb-2`}>
+            {title}
+          </h2>
+          <p className="text-gray-600 mb-4 md:mb-6">{message}</p>
+        </div>
+        <div className="flex justify-center space-x-3 md:space-x-4">
+          <button
+            onClick={onClose}
+            disabled={isLoading}
+            className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+            data-cy="confirm-cancel"
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={isLoading}
+            className={`px-4 py-2 md:px-6 md:py-2 bg-${color}-500 text-white rounded-lg hover:bg-${color}-600 flex items-center gap-2 transition-colors disabled:opacity-50`}
+            data-cy="confirm-save"
+          >
+            {confirmIcon}
+            {isLoading ? "กำลังดำเนินการ..." : confirmText}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Component ฟอร์มเปลี่ยนรหัสผ่าน
+const PasswordForm = ({
+  passwordData,
+  handlePasswordChange,
+  passwordError,
+}) => {
+  const { user } = useAuth();
+
+  return (
+    <div className="space-y-3 md:space-y-4 pt-2">
+      {/* แสดงข้อความแจ้งเตือนเมื่อมีข้อผิดพลาดเกี่ยวกับรหัสผ่าน */}
+      {passwordError && (
+        <div
+          className="bg-red-50 border border-red-200 p-3 rounded-lg flex items-center space-x-2 md:space-x-3"
+          data-cy="password-error"
+        >
+          <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+          <span className="text-sm md:text-base text-red-700">
+            {passwordError}
+          </span>
+        </div>
+      )}
+
+      {/* ฟิลด์รหัสผ่านปัจจุบัน (แสดงเฉพาะเมื่อไม่ใช่ Admin) */}
+      {user.role !== "Admin" && (
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            รหัสผ่านปัจจุบัน
+          </label>
+          <input
+            type="password"
+            name="current_password"
+            value={passwordData.current_password}
+            onChange={handlePasswordChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200"
+            data-cy="current-password-input"
+          />
+        </div>
+      )}
+
+      {/* ฟิลด์รหัสผ่านใหม่ */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          รหัสผ่านใหม่
+        </label>
+        <input
+          type="password"
+          name="new_password"
+          value={passwordData.new_password}
+          onChange={handlePasswordChange}
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200"
+          data-cy="new-password-input"
+        />
+      </div>
+
+      {/* ฟิลด์ยืนยันรหัสผ่านใหม่ */}
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          ยืนยันรหัสผ่านใหม่
+        </label>
+        <input
+          type="password"
+          name="confirm_password"
+          value={passwordData.confirm_password}
+          onChange={handlePasswordChange}
+          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200"
+          data-cy="confirm-password-input"
+        />
+      </div>
+    </div>
+  );
 };
 
 const UserEdit = () => {
@@ -60,10 +159,21 @@ const UserEdit = () => {
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
+
+  // สถานะการแก้ไขข้อมูล
+  const [isDataChanged, setIsDataChanged] = useState(false);
 
   // ข้อมูลฟอร์มสำหรับแก้ไขข้อมูลผู้ใช้
   const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    role: "",
+  });
+
+  // ข้อมูลออริจินัลสำหรับตรวจสอบการเปลี่ยนแปลง
+  const [originalFormData, setOriginalFormData] = useState({
     name: "",
     email: "",
     role: "",
@@ -86,11 +196,15 @@ const UserEdit = () => {
         });
         const userData = response.data;
         setUserData(userData);
-        setFormData({
+
+        const initialData = {
           name: userData.name,
           email: userData.email,
           role: userData.role,
-        });
+        };
+
+        setFormData(initialData);
+        setOriginalFormData(initialData);
       } catch (err) {
         setError(err.response?.data?.message || "ไม่สามารถดึงข้อมูลผู้ใช้ได้");
       } finally {
@@ -101,10 +215,21 @@ const UserEdit = () => {
     if (user && id) fetchUser();
   }, [id, user]);
 
+  // ตรวจสอบการเปลี่ยนแปลงข้อมูล
+  useEffect(() => {
+    const hasChanges =
+      JSON.stringify(formData) !== JSON.stringify(originalFormData);
+    setIsDataChanged(hasChanges);
+  }, [formData, originalFormData]);
+
   // --------- EVENT HANDLERS ---------
   // จัดการการกลับไปหน้าก่อนหน้า
   const handleBackNavigation = () => {
-    navigate(`/users/${id}`);
+    if (isDataChanged) {
+      setShowCancelModal(true);
+    } else {
+      navigate(`/users/${id}`);
+    }
   };
 
   // จัดการการเปลี่ยนแปลงข้อมูลในฟอร์มแก้ไขผู้ใช้
@@ -387,6 +512,7 @@ const UserEdit = () => {
                   onClick={() => setShowConfirmModal(true)}
                   className="flex-1 md:flex-none flex items-center justify-center px-3 md:px-4 py-2 text-sm md:text-base bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
                   data-cy="save-changes-button"
+                  disabled={!isDataChanged}
                 >
                   <Edit className="w-4 h-4 mr-1 md:mr-2 flex-shrink-0" />
                   บันทึกการเปลี่ยนแปลง
@@ -399,184 +525,108 @@ const UserEdit = () => {
 
       {/* --------- MODALS --------- */}
       {/* Modal ยืนยันการบันทึกการเปลี่ยนแปลง */}
-      <Modal
+      <ConfirmModal
         isOpen={showConfirmModal}
-        onRequestClose={() => !actionLoading && setShowConfirmModal(false)}
-        style={modalStyles}
-        contentLabel="Confirm Save Modal"
-        className="focus:outline-none"
-        data-cy="confirm-save-modal"
-      >
-        <div className="space-y-4">
-          <div className="text-center">
-            <h2 className="text-lg md:text-xl font-bold text-gray-800 mb-2">
-              ยืนยันการเปลี่ยนแปลง
-            </h2>
-            <p className="text-sm md:text-base text-gray-600">
-              คุณแน่ใจหรือไม่ว่าต้องการบันทึกการเปลี่ยนแปลงข้อมูลผู้ใช้นี้?
-            </p>
-          </div>
-          <div className="flex justify-center space-x-3 md:space-x-4 pt-3 md:pt-4">
-            <button
-              onClick={() => setShowConfirmModal(false)}
-              disabled={actionLoading}
-              className="px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50"
-              data-cy="confirm-cancel"
-            >
-              ยกเลิก
-            </button>
-            <button
-              onClick={handleSubmit}
-              disabled={actionLoading}
-              className="px-3 md:px-4 py-2 text-sm md:text-base bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
-              data-cy="confirm-save"
-            >
-              {actionLoading ? "กำลังบันทึก..." : "ยืนยัน"}
-            </button>
-          </div>
-        </div>
-      </Modal>
+        onClose={() => !actionLoading && setShowConfirmModal(false)}
+        onConfirm={handleSubmit}
+        title="ยืนยันการเปลี่ยนแปลง"
+        message="คุณแน่ใจหรือไม่ว่าต้องการบันทึกการเปลี่ยนแปลงนี้?"
+        icon={
+          <CheckCircle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-blue-500 mb-3 md:mb-4" />
+        }
+        confirmText="บันทึก"
+        confirmIcon={<Save className="w-4 h-4 md:w-5 md:h-5" />}
+        isLoading={actionLoading}
+        dataCy="confirm-save-modal"
+      />
 
       {/* Modal เปลี่ยนรหัสผ่าน */}
-      <Modal
-        isOpen={showPasswordModal}
-        onRequestClose={() => !actionLoading && setShowPasswordModal(false)}
-        style={modalStyles}
-        contentLabel="Change Password Modal"
-        className="focus:outline-none"
-        data-cy="password-modal"
-      >
-        <div className="space-y-4">
-          <div className="text-center">
-            <h2 className="text-lg md:text-xl font-bold text-gray-800 mb-2">
-              เปลี่ยนรหัสผ่าน
-            </h2>
-            <p className="text-sm md:text-base text-gray-600">
-              กรุณากรอกรหัสผ่านปัจจุบันและรหัสผ่านใหม่
-            </p>
-          </div>
-
-          {/* แสดงข้อความแจ้งเตือนเมื่อมีข้อผิดพลาดเกี่ยวกับรหัสผ่าน */}
-          {passwordError && (
-            <div
-              className="bg-red-50 border border-red-200 p-3 rounded-lg flex items-center space-x-2 md:space-x-3"
-              data-cy="password-error"
-            >
-              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
-              <span className="text-sm md:text-base text-red-700">
-                {passwordError}
-              </span>
-            </div>
-          )}
-
-          <div className="space-y-3 md:space-y-4 pt-2">
-            {/* ฟิลด์รหัสผ่านปัจจุบัน (แสดงเฉพาะเมื่อไม่ใช่ Admin) */}
-            {user.role !== "Admin" && (
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  รหัสผ่านปัจจุบัน
-                </label>
-                <input
-                  type="password"
-                  name="current_password"
-                  value={passwordData.current_password}
-                  onChange={handlePasswordChange}
-                  className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200"
-                  data-cy="current-password-input"
-                />
-              </div>
-            )}
-
-            {/* ฟิลด์รหัสผ่านใหม่ */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                รหัสผ่านใหม่
-              </label>
-              <input
-                type="password"
-                name="new_password"
-                value={passwordData.new_password}
-                onChange={handlePasswordChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200"
-                data-cy="new-password-input"
-              />
+      {showPasswordModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          data-cy="password-modal"
+        >
+          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+            <div className="text-center">
+              <Lock className="mx-auto h-12 w-12 md:h-16 md:w-16 text-blue-500 mb-3 md:mb-4" />
+              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+                เปลี่ยนรหัสผ่าน
+              </h2>
+              <p className="text-gray-600 mb-4 md:mb-6">
+                กรุณากรอกข้อมูลเพื่อเปลี่ยนรหัสผ่านของผู้ใช้
+              </p>
             </div>
 
-            {/* ฟิลด์ยืนยันรหัสผ่านใหม่ */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                ยืนยันรหัสผ่านใหม่
-              </label>
-              <input
-                type="password"
-                name="confirm_password"
-                value={passwordData.confirm_password}
-                onChange={handlePasswordChange}
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200"
-                data-cy="confirm-password-input"
-              />
-            </div>
-          </div>
+            <PasswordForm
+              passwordData={passwordData}
+              handlePasswordChange={handlePasswordChange}
+              passwordError={passwordError}
+            />
 
-          <div className="flex justify-center space-x-3 md:space-x-4 pt-3 md:pt-4">
-            <button
-              onClick={() => setShowPasswordModal(false)}
-              disabled={actionLoading}
-              className="px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50"
-              data-cy="password-cancel"
-            >
-              ยกเลิก
-            </button>
-            <button
-              onClick={handlePasswordSubmit}
-              disabled={actionLoading}
-              className="px-3 md:px-4 py-2 text-sm md:text-base bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors disabled:opacity-50"
-              data-cy="password-save"
-            >
-              {actionLoading ? "กำลังอัปเดต..." : "อัปเดตรหัสผ่าน"}
-            </button>
+            <div className="flex justify-center space-x-3 md:space-x-4">
+              <button
+                onClick={() => setShowPasswordModal(false)}
+                disabled={actionLoading}
+                className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors disabled:opacity-50"
+                data-cy="password-cancel"
+              >
+                ยกเลิก
+              </button>
+              <button
+                onClick={handlePasswordSubmit}
+                disabled={actionLoading}
+                className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors disabled:opacity-50"
+                data-cy="password-save"
+              >
+                <Lock className="w-4 h-4 md:w-5 md:h-5" />
+                {actionLoading ? "กำลังอัปเดต..." : "อัปเดต"}
+              </button>
+            </div>
           </div>
         </div>
-      </Modal>
+      )}
 
       {/* Modal ลบผู้ใช้ */}
-      <Modal
+      <ConfirmModal
         isOpen={showDeleteModal}
-        onRequestClose={() => !actionLoading && setShowDeleteModal(false)}
-        style={modalStyles}
-        contentLabel="Delete User Modal"
-        className="focus:outline-none"
-        data-cy="delete-modal"
-      >
-        <div className="space-y-4">
-          <div className="text-center">
-            <h2 className="text-lg md:text-xl font-bold text-red-600 mb-2">
-              ลบผู้ใช้
-            </h2>
-            <p className="text-sm md:text-base text-gray-600">
-              คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?
-            </p>
-          </div>
-          <div className="flex justify-center space-x-3 md:space-x-4 pt-3 md:pt-4">
-            <button
-              onClick={() => setShowDeleteModal(false)}
-              disabled={actionLoading}
-              className="px-3 md:px-4 py-2 text-sm md:text-base border border-gray-300 rounded-md hover:bg-gray-100 transition-colors disabled:opacity-50"
-              data-cy="delete-cancel"
-            >
-              ยกเลิก
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={actionLoading}
-              className="px-3 md:px-4 py-2 text-sm md:text-base bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors disabled:opacity-50"
-              data-cy="delete-confirm"
-            >
-              {actionLoading ? "กำลังลบ..." : "ลบ"}
-            </button>
-          </div>
-        </div>
-      </Modal>
+        onClose={() => !actionLoading && setShowDeleteModal(false)}
+        onConfirm={handleDelete}
+        title="ยืนยันการลบผู้ใช้"
+        message="คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?"
+        icon={
+          <Trash2 className="mx-auto h-12 w-12 md:h-16 md:w-16 text-red-500 mb-3 md:mb-4" />
+        }
+        confirmText="ลบผู้ใช้"
+        confirmIcon={<Trash2 className="w-4 h-4 md:w-5 md:h-5" />}
+        color="red"
+        isLoading={actionLoading}
+        dataCy="delete-modal"
+      />
+
+      {/* Modal ยกเลิกการแก้ไข */}
+      <ConfirmModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={() => {
+          setShowCancelModal(false);
+          navigate(`/users/${id}`);
+        }}
+        title="ยกเลิกการแก้ไข"
+        message={
+          <>
+            ข้อมูลที่คุณแก้ไขจะไม่ถูกบันทึก
+            <br />
+            คุณแน่ใจหรือไม่ว่าต้องการยกเลิกการแก้ไข?
+          </>
+        }
+        icon={
+          <AlertCircle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-yellow-500 mb-3 md:mb-4" />
+        }
+        confirmText="ยกเลิกการแก้ไข"
+        confirmIcon={<ArrowLeft className="w-4 h-4 md:w-5 md:h-5" />}
+        color="yellow"
+        dataCy="cancel-confirm-modal"
+      />
     </div>
   );
 };

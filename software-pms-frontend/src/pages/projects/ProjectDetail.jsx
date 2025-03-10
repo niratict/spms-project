@@ -15,6 +15,7 @@ import {
   Info,
   Shield,
   MoreVertical,
+  FolderX,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -24,7 +25,7 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-6 animate-fadeIn">
         <div className="text-center">
           <Trash2 className="mx-auto h-16 w-16 text-red-500 mb-4" />
@@ -33,7 +34,6 @@ const DeleteConfirmModal = ({ isOpen, onClose, onConfirm }) => {
           </h2>
           <p className="text-gray-600 mb-6">
             คุณแน่ใจหรือไม่ว่าต้องการลบโปรเจกต์นี้?
-            ข้อมูลทั้งหมดจะถูกลบอย่างถาวร
           </p>
         </div>
         <div className="flex space-x-4">
@@ -63,14 +63,14 @@ const DeleteErrorModal = ({ isOpen, onClose, sprintCount }) => {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
       <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-6 animate-fadeIn">
         <div className="text-center">
           <AlertTriangle className="mx-auto h-16 w-16 text-yellow-500 mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-3">
             ไม่สามารถลบโปรเจกต์ได้
           </h2>
-          <p className="text-gray-600 mb-6">
+          <p className="text-gray-600">
             ไม่สามารถลบโปรเจกต์นี้ได้ เนื่องจากมี {sprintCount}{" "}
             {sprintCount === 1 ? "สปรินต์" : "สปรินต์"} ที่กำลังดำเนินการ
           </p>
@@ -347,7 +347,7 @@ const ProjectDetail = () => {
             className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
-            <span className="hidden sm:inline">กลับสู่โปรเจกต์</span>
+            <span className="hidden sm:inline">กลับไปหน้าเลือกโปรเจกต์</span>
           </button>
 
           {/* ปุ่มสำหรับหน้าจอขนาดใหญ่ */}
@@ -500,7 +500,7 @@ const ProjectDetail = () => {
           {/* ส่วนสปรินต์ */}
           <div className="p-4 md:p-6 border-t">
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl md:text-2xl font-semibold">Sprints</h2>
+              <h2 className="text-xl md:text-2xl font-semibold">สปรินต์</h2>
             </div>
 
             {project.sprints && project.sprints.length > 0 ? (
@@ -519,14 +519,14 @@ const ProjectDetail = () => {
             ) : (
               <div
                 data-cy="no-sprints"
-                className="text-center bg-gray-50 p-6 md:p-8 rounded-xl border border-gray-200"
+                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
               >
-                <Info className="mx-auto w-12 h-12 text-gray-500 mb-4" />
-                <h3 className="text-lg font-semibold text-gray-700 mb-2">
-                  ยังไม่มี Sprint
-                </h3>
-                <p className="text-gray-600 mb-4">
-                  Sprint จะปรากฏที่นี่เมื่อถูกสร้างขึ้น
+                <FolderX className="w-12 h-12 text-gray-400 mb-3" />
+                <h2 className="text-lg font-medium text-gray-700 mb-2">
+                  ยังไม่มีสปรินต์ในโปรเจกต์นี้
+                </h2>
+                <p className="text-sm text-gray-500 text-center">
+                  สปรินต์จะปรากฏที่นี่เมื่อถูกสร้างขึ้น
                 </p>
               </div>
             )}

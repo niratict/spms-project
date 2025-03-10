@@ -13,6 +13,9 @@ import {
   Upload,
   X,
   Image,
+  AlertTriangle,
+  Save,
+  CheckCircle,
 } from "lucide-react";
 import { DayPicker } from "react-day-picker";
 
@@ -171,6 +174,89 @@ const DateRangePickerModal = ({
   );
 };
 
+// โมดัลสำหรับยืนยันการสร้างข้อมูลโปรเจกต์
+const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      data-cy="confirm-modal"
+    >
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="text-center">
+          <CheckCircle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-blue-500 mb-3 md:mb-4" />
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+            {title}
+          </h2>
+          <p className="text-gray-600 mb-4 md:mb-6">{message}</p>
+        </div>
+        <div className="flex justify-center space-x-3 md:space-x-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            data-cy="confirm-cancel"
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors"
+            data-cy="confirm-save"
+          >
+            <Save className="w-4 h-4 md:w-5 md:h-5" />
+            สร้าง
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// =====================================
+// CancelConfirmModal Component
+// =====================================
+
+const CancelConfirmModal = ({ isOpen, onClose, onConfirm }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      data-cy="cancel-confirm-modal"
+    >
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="text-center">
+          <AlertTriangle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-yellow-500 mb-3 md:mb-4" />
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+            ยืนยันการยกเลิก
+          </h2>
+          <p className="text-gray-600 mb-4 md:mb-6">
+            คุณมีข้อมูลที่ยังไม่ได้บันทึก การยกเลิกจะทำให้ข้อมูล<br></br>
+            ทั้งหมดหายไปต้องการยกเลิกหรือไม่?
+          </p>
+        </div>
+        <div className="flex justify-center space-x-3 md:space-x-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            data-cy="cancel-confirmation-no"
+          >
+            ไม่ยกเลิก
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 md:px-6 md:py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            data-cy="cancel-confirmation-yes"
+          >
+            ยกเลิก
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // =====================================
 // Main CreateProject Component
 // =====================================
@@ -184,6 +270,12 @@ const CreateProject = () => {
   const [error, setError] = useState(null);
   const [previewImage, setPreviewImage] = useState(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [validationErrors, setValidationErrors] = useState({
+    name: false,
+    dateRange: false,
+  });
 
   // เพิ่มสถานะเพื่อตรวจสอบขนาดหน้าจอ
   const [isMobile, setIsMobile] = useState(window.innerWidth < 640);
@@ -206,6 +298,17 @@ const CreateProject = () => {
     end_date: "",
     photo: null,
   });
+
+  // ตรวจสอบว่ามีการกรอกข้อมูลบางส่วนหรือไม่
+  const hasAnyData = () => {
+    return (
+      formData.name !== "" ||
+      formData.description !== "" ||
+      formData.start_date !== "" ||
+      formData.end_date !== "" ||
+      formData.photo !== null
+    );
+  };
 
   // ======== ฟังก์ชันสำหรับแสดงผลช่วงวันที่ ========
   const displayDateRange = () => {
@@ -233,6 +336,11 @@ const CreateProject = () => {
       ...prev,
       [name]: value,
     }));
+
+    // ลบข้อความแจ้งเตือน validation error เมื่อผู้ใช้แก้ไขข้อมูล
+    if (name === "name" && value.trim() !== "") {
+      setValidationErrors((prev) => ({ ...prev, name: false }));
+    }
   };
 
   // จัดการการอัปโหลดรูปภาพ
@@ -241,13 +349,13 @@ const CreateProject = () => {
     if (file) {
       // ตรวจสอบขนาดไฟล์ต้องไม่เกิน 5MB
       if (file.size > 5 * 1024 * 1024) {
-        setError("Image size must be less than 5MB");
+        setError("ขนาดไฟล์ภาพต้องไม่เกิน 5MB");
         return;
       }
 
       // ตรวจสอบประเภทไฟล์ต้องเป็นรูปภาพเท่านั้น
       if (!file.type.startsWith("image/")) {
-        setError("Only image files are allowed");
+        setError("อนุญาตเฉพาะไฟล์รูปภาพเท่านั้น");
         return;
       }
 
@@ -269,10 +377,37 @@ const CreateProject = () => {
     setPreviewImage(null);
   };
 
+  // จัดการการยกเลิก
+  const handleCancelClick = () => {
+    if (hasAnyData()) {
+      setShowCancelModal(true);
+    } else {
+      navigate("/projects");
+    }
+  };
+
+  // ตรวจสอบความถูกต้องของข้อมูล
+  const validateForm = () => {
+    const errors = {
+      name: formData.name.trim() === "",
+      dateRange: !formData.start_date || !formData.end_date,
+    };
+
+    setValidationErrors(errors);
+
+    return !Object.values(errors).some((error) => error);
+  };
+
   // บันทึกข้อมูลโปรเจกต์
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
+
+    // ตรวจสอบข้อมูลก่อนส่ง
+    if (!validateForm()) {
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -313,12 +448,12 @@ const CreateProject = () => {
     >
       {/* ปุ่มย้อนกลับ */}
       <button
-        onClick={() => navigate("/projects")}
+        onClick={handleCancelClick}
         className="group flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 sm:mb-6 transition-colors"
         data-cy="back-button"
       >
         <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 group-hover:-translate-x-1 transition-transform" />
-        <span className="text-sm sm:text-base">กลับไปที่หน้าเลือกโปรเจกต์</span>
+        <span className="text-sm sm:text-base">กลับไปหน้าเลือกโปรเจกต์</span>
       </button>
 
       <div className="bg-white shadow-lg rounded-xl overflow-hidden">
@@ -402,7 +537,6 @@ const CreateProject = () => {
                           <span className="font-semibold">
                             คลิกเพื่ออัปโหลดรูปภาพ
                           </span>{" "}
-                          หรือลากและวาง
                         </p>
                         <p className="text-xs text-gray-500">
                           PNG, JPG, GIF up to 5MB
@@ -428,7 +562,7 @@ const CreateProject = () => {
                 className="flex items-center gap-2 font-medium text-gray-700 text-sm sm:text-base"
               >
                 <FileText className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500" />
-                ชื่อโปรเจกต์
+                ชื่อโปรเจกต์ <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -437,10 +571,20 @@ const CreateProject = () => {
                 required
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all text-sm sm:text-base"
+                className={`w-full p-2 sm:p-3 border ${
+                  validationErrors.name ? "border-red-500" : "border-gray-300"
+                } rounded-lg focus:ring-2 focus:ring-blue-200 transition-all text-sm sm:text-base`}
                 placeholder="ระบุชื่อโปรเจกต์"
                 data-cy="project-name-input"
               />
+              {validationErrors.name && (
+                <p
+                  className="text-red-500 text-xs sm:text-sm mt-1"
+                  data-cy="name-validation-error"
+                >
+                  กรุณาระบุชื่อโปรเจกต์
+                </p>
+              )}
             </div>
 
             {/* รายละเอียดโปรเจกต์ */}
@@ -467,7 +611,7 @@ const CreateProject = () => {
             <div className="space-y-2">
               <label className="flex items-center gap-2 font-medium text-gray-700 text-sm sm:text-base">
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-purple-500" />
-                ระยะเวลาของโปรเจกต์
+                ระยะเวลาของโปรเจกต์ <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -475,10 +619,22 @@ const CreateProject = () => {
                   readOnly
                   value={displayDateRange()}
                   onClick={() => setShowDatePicker(true)}
-                  className="w-full p-2 sm:p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer text-sm sm:text-base"
+                  className={`w-full p-2 sm:p-3 border ${
+                    validationErrors.dateRange
+                      ? "border-red-500"
+                      : "border-gray-300"
+                  } rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer text-sm sm:text-base`}
                   placeholder="เลือกระยะเวลาโปรเจกต์"
                   data-cy="date-range-input"
                 />
+                {validationErrors.dateRange && (
+                  <p
+                    className="text-red-500 text-xs sm:text-sm mt-1"
+                    data-cy="date-validation-error"
+                  >
+                    กรุณาระบุระยะเวลาโปรเจกต์
+                  </p>
+                )}
               </div>
             </div>
           </div>
@@ -486,7 +642,21 @@ const CreateProject = () => {
           {/* ปุ่มสร้างและยกเลิก */}
           <div className="flex flex-col sm:flex-row gap-3 sm:space-x-4 pt-4 sm:pt-6">
             <button
-              type="submit"
+              type="button"
+              onClick={handleCancelClick}
+              className="flex-1 px-4 sm:px-6 py-2 sm:py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-sm sm:text-base"
+              data-cy="cancel-button"
+            >
+              ยกเลิก
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                // ตรงนี้ควรตรวจสอบ validation ก่อนเปิด modal
+                if (validateForm()) {
+                  setShowConfirmModal(true);
+                }
+              }}
               disabled={loading}
               className="flex-1 flex items-center justify-center gap-2 px-4 sm:px-6 py-2 sm:py-3 text-white bg-blue-500 rounded-lg hover:bg-blue-600 disabled:bg-blue-300 transition-colors text-sm sm:text-base"
               data-cy="submit-button"
@@ -517,14 +687,6 @@ const CreateProject = () => {
               )}
               {loading ? "Creating..." : "สร้างโปรเจกต์"}
             </button>
-            <button
-              type="button"
-              onClick={() => navigate("/projects")}
-              className="flex-1 px-4 sm:px-6 py-2 sm:py-3 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors text-sm sm:text-base"
-              data-cy="cancel-button"
-            >
-              ยกเลิก
-            </button>
           </div>
         </form>
       </div>
@@ -541,7 +703,25 @@ const CreateProject = () => {
             start_date: format(start, "yyyy-MM-dd"),
             end_date: format(end, "yyyy-MM-dd"),
           }));
+          // ลบ validation error เมื่อเลือกวันที่แล้ว
+          setValidationErrors((prev) => ({ ...prev, dateRange: false }));
         }}
+      />
+
+      {/* โมดัลยืนยันการบันทึก */}
+      <ConfirmModal
+        isOpen={showConfirmModal}
+        onClose={() => setShowConfirmModal(false)}
+        onConfirm={handleSubmit}
+        title="ยืนยันการสร้างโปรเจกต์" // แก้ข้อความ
+        message="คุณแน่ใจหรือไม่ว่าต้องการสร้างโปรเจกต์นี้?" // แก้ข้อความ
+      />
+
+      {/* โมดอลยืนยันการยกเลิก */}
+      <CancelConfirmModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={() => navigate("/projects")}
       />
     </div>
   );

@@ -238,7 +238,7 @@ const ProjectPermissions = () => {
             data-cy="back-button"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
-            กลับไปยังโปรเจกต์
+            กลับไปหน้ารายละเอียดโปรเจกต์
           </button>
 
           <div className="bg-red-50 border border-red-200 text-red-800 px-4 py-3 rounded relative mb-4">
@@ -277,7 +277,7 @@ const ProjectPermissions = () => {
             data-cy="back-button"
           >
             <ArrowLeft className="w-4 h-4 mr-1" />
-            กลับไปยังโปรเจกต์
+            กลับไปหน้ารายละเอียดโปรเจกต์
           </button>
 
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 sm:gap-0">
@@ -526,62 +526,41 @@ const ProjectPermissions = () => {
 
         {/* Modal ยืนยันการลบสมาชิก */}
         {deleteModal.show && (
-          <div
-            className="fixed inset-0 z-50 flex items-center justify-center"
-            aria-labelledby="modal-title"
-            role="dialog"
-            aria-modal="true"
-          >
-            {/* Overlay */}
-            <div
-              className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
-              aria-hidden="true"
-            ></div>
-
-            {/* Modal */}
-            <div className="relative inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-              <div className="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex-shrink-0 flex items-center justify-center h-12 w-12 rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <AlertTriangle className="h-6 w-6 text-red-600" />
-                  </div>
-                  <div className="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
-                    <h3
-                      className="text-lg leading-6 font-medium text-gray-900"
-                      id="modal-title"
-                    >
-                      ยืนยันการลบสมาชิก
-                    </h3>
-                    <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        คุณต้องการลบ{" "}
-                        <span className="font-medium text-gray-900">
-                          {deleteModal.user?.name}
-                        </span>{" "}
-                        ที่มีบทบาทเป็น{" "}
-                        <span className="font-medium text-gray-900">
-                          {deleteModal.user?.role}
-                        </span>{" "}
-                        ออกจากโปรเจกต์นี้ใช่หรือไม่?
-                      </p>
-                    </div>
-                  </div>
-                </div>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full p-6 space-y-6 animate-fadeIn">
+              <div className="text-center">
+                <Trash2 className="mx-auto h-16 w-16 text-red-500 mb-4" />
+                <h2 className="text-2xl font-bold text-gray-800 mb-3">
+                  ยืนยันการลบสมาชิก
+                </h2>
+                <p className="text-gray-600 mb-6">
+                  คุณต้องการลบ{" "}
+                  <span className="font-medium text-gray-900">
+                    {deleteModal.user?.name}
+                  </span>{" "}
+                  ที่มีบทบาทเป็น{" "}
+                  <span className="font-medium text-gray-900">
+                    {deleteModal.user?.role}
+                  </span>{" "}
+                  <br />
+                  ออกจากโปรเจกต์นี้?
+                </p>
               </div>
-              <div className="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+              <div className="flex space-x-4">
                 <button
-                  type="button"
-                  className="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-red-600 text-base font-medium text-white hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 sm:ml-3 sm:w-auto sm:text-sm"
-                  onClick={handleRemoveMember}
-                >
-                  ลบสมาชิก
-                </button>
-                <button
-                  type="button"
-                  className="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+                  data-cy="delete-modal-cancel"
                   onClick={closeDeleteModal}
+                  className="flex-1 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
                 >
                   ยกเลิก
+                </button>
+                <button
+                  data-cy="delete-modal-confirm"
+                  onClick={handleRemoveMember}
+                  className="flex-1 py-3 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
+                >
+                  <Trash2 className="w-5 h-5" />
+                  ลบสมาชิก
                 </button>
               </div>
             </div>

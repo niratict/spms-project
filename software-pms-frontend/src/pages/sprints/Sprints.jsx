@@ -218,11 +218,15 @@ const Sprints = () => {
             ) : sprints.length === 0 ? (
               /* แสดงเมื่อไม่มีสปรินต์ */
               <div
-                className="flex flex-col items-center justify-center p-4 sm:p-8 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
+                className="flex flex-col items-center justify-center p-6 border-2 border-dashed border-gray-300 rounded-lg bg-gray-50"
                 data-cy="no-sprints-message"
               >
-                <p className="text-gray-600 mb-4 sm:mb-6 text-center">
-                  ไม่พบสปรินต์ในโปรเจกต์นี้
+                <FolderX className="w-12 h-12 text-gray-400 mb-3" />
+                <h2 className="text-lg font-medium text-gray-700 mb-2">
+                  ยังไม่มีสปรินต์ในโปรเจกต์นี้
+                </h2>
+                <p className="text-sm text-gray-500 text-center mb-2">
+                  สปรินต์จะปรากฏที่นี่เมื่อถูกสร้างขึ้น
                 </p>
                 <button
                   onClick={handleCreateSprint}

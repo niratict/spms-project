@@ -407,46 +407,54 @@ const UserDetail = () => {
           isOpen={showDeleteModal}
           onRequestClose={() => setShowDeleteModal(false)}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          overlayClassName="fixed inset-0 bg-black/50 backdrop-blur-sm"
+          overlayClassName="fixed inset-0 bg-black/50"
           data-cy="delete-user-modal"
         >
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl max-w-md w-full p-4 sm:p-6 relative">
-            <button
-              onClick={() => setShowDeleteModal(false)}
-              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-800 transition-colors"
-              data-cy="close-delete-modal"
-            >
-              <X className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
-            <div className="flex items-center justify-center mb-4 text-red-500">
-              <Trash2 className="w-12 h-12" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-red-600 mb-3 sm:mb-4 text-center">
-              ลบผู้ใช้
-            </h2>
-            <p className="text-gray-600 mb-4 sm:mb-6 text-sm sm:text-base text-center">
-              คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้ <strong>{userData.name}</strong>
-              ?
-              <br />
-              <span className="text-red-500 text-xs">
-                การกระทำนี้ไม่สามารถย้อนกลับได้
-              </span>
-            </p>
-            <div className="flex justify-center space-x-2 sm:space-x-3">
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+            data-cy="delete-modal"
+          >
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6 relative">
               <button
                 onClick={() => setShowDeleteModal(false)}
-                className="bg-gray-200 text-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 transition-colors"
-                data-cy="cancel-delete"
+                className="absolute top-2 md:top-4 right-2 md:right-4 text-gray-500 hover:text-gray-800 transition-colors"
+                data-cy="close-delete-modal"
               >
-                ยกเลิก
+                <X className="w-5 h-5 md:w-6 md:h-6" />
               </button>
-              <button
-                onClick={handleDelete}
-                className="bg-red-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-red-600 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-opacity-50 transition-colors"
-                data-cy="confirm-delete"
-              >
-                ยืนยันการลบ
-              </button>
+
+              <div className="text-center">
+                <Trash2 className="mx-auto h-12 w-12 md:h-16 md:w-16 text-red-500 mb-3 md:mb-4" />
+                <h2 className="text-xl md:text-2xl font-bold text-red-600 mb-2">
+                  ลบผู้ใช้
+                </h2>
+                <p className="text-gray-600 mb-4 md:mb-6">
+                  คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้{" "}
+                  <strong>{userData.name}</strong>?
+                  <br />
+                  <span className="text-red-500 text-xs">
+                    การกระทำนี้ไม่สามารถย้อนกลับได้
+                  </span>
+                </p>
+              </div>
+
+              <div className="flex justify-center space-x-3 md:space-x-4">
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                  data-cy="cancel-delete"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleDelete}
+                  className="px-4 py-2 md:px-6 md:py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+                  data-cy="confirm-delete"
+                >
+                  <Trash2 className="w-4 h-4 md:w-5 md:h-5" />
+                  ยืนยันการลบ
+                </button>
+              </div>
             </div>
           </div>
         </Modal>

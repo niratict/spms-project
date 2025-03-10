@@ -2,7 +2,13 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import axios from "axios";
-import { ChevronLeft, FileUp, AlertTriangle } from "lucide-react";
+import {
+  ChevronLeft,
+  FileUp,
+  AlertTriangle,
+  CheckCircle,
+  Save,
+} from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
@@ -276,7 +282,7 @@ const CreateTestFile = () => {
                     <span className="text-xs sm:text-sm font-medium truncate">
                       {selectedFile
                         ? selectedFile.name
-                        : "คลิกเพื่ออัพโหลดหรือลากและวางไฟล์"}
+                        : "คลิกเพื่ออัพโหลดไฟล์"}
                     </span>
                   </label>
 
@@ -337,27 +343,25 @@ const CreateTestFile = () => {
         {/* กล่องข้อความแจ้งเตือนไฟล์ซ้ำในสปรินต์อื่น */}
         {showErrorDialog && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
             data-cy="error-dialog"
           >
-            <div className="bg-white rounded-lg w-full max-w-xs sm:max-w-md overflow-hidden">
-              <div className="px-4 sm:px-6 py-4">
-                <div className="flex items-center mb-3 sm:mb-4">
-                  <AlertTriangle className="text-red-500 w-5 h-5 mr-2 flex-shrink-0" />
-                  <h3 className="text-base sm:text-lg font-semibold text-gray-900">
-                    ไม่สามารถอัพโหลดไฟล์ได้
-                  </h3>
-                </div>
-                <p className="text-sm sm:text-base text-gray-600 whitespace-pre-line">
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+              <div className="text-center">
+                <AlertTriangle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-red-500 mb-3 md:mb-4" />
+                <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+                  ไม่สามารถอัพโหลดไฟล์ได้
+                </h2>
+                <p className="text-gray-600 mb-4 md:mb-6 whitespace-pre-line">
                   ไฟล์ทดสอบนี้ถูกอัพโหลดแล้วใน {existingSprintName} ในโปรเจกต์{" "}
                   <span className="font-medium">{existingProjectName} </span>
                   ไม่สามารถอัพโหลดไฟล์เดียวกันในหลายสปรินต์ได้
                 </p>
               </div>
-              <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 flex justify-end">
+              <div className="flex justify-center">
                 <button
                   onClick={() => setShowErrorDialog(false)}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-white text-sm sm:text-base bg-blue-600 hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors"
                   data-cy="error-dialog-close"
                 >
                   เข้าใจแล้ว
@@ -370,32 +374,34 @@ const CreateTestFile = () => {
         {/* กล่องข้อความยืนยันการอัพเดตไฟล์ */}
         {showConfirmDialog && (
           <div
-            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
             data-cy="confirm-dialog"
           >
-            <div className="bg-white rounded-lg w-full max-w-xs sm:max-w-md overflow-hidden">
-              <div className="px-4 sm:px-6 py-4">
-                <h3 className="text-base sm:text-lg font-semibold text-gray-900 mb-2">
-                  ต้องการอัพเดตไฟล์ทดสอบที่มีอยู่หรือไม่?
-                </h3>
-                <p className="text-sm sm:text-base text-gray-600">
-                  มีไฟล์ทดสอบที่ชื่อเดียวกันอยู่แล้วในสปรินต์นี้
+            <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+              <div className="text-center">
+                <CheckCircle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-blue-500 mb-3 md:mb-4" />
+                <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+                  ต้องการอัพเดตไฟล์ทดสอบที่มีอยู่?
+                </h2>
+                <p className="text-gray-600 mb-4 md:mb-6">
+                  มีไฟล์ทดสอบที่ชื่อเดียวกันอยู่แล้วในสปรินต์นี้<br></br>
                   คุณต้องการอัพเดตไฟล์นี้ด้วยผลลัพธ์ใหม่หรือไม่?
                 </p>
               </div>
-              <div className="px-4 sm:px-6 py-3 sm:py-4 bg-gray-50 flex justify-end space-x-2 sm:space-x-3">
+              <div className="flex justify-center space-x-3 md:space-x-4">
                 <button
                   onClick={() => setShowConfirmDialog(false)}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-gray-700 text-sm sm:text-base bg-gray-200 hover:bg-gray-300 transition-colors"
+                  className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
                   data-cy="confirm-dialog-cancel"
                 >
                   ยกเลิก
                 </button>
                 <button
                   onClick={handleConfirmUpdate}
-                  className="px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-white text-sm sm:text-base bg-blue-600 hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors"
                   data-cy="confirm-dialog-update"
                 >
+                  <Save className="w-4 h-4 md:w-5 md:h-5" />
                   อัพเดตไฟล์
                 </button>
               </div>

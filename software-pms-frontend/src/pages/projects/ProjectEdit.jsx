@@ -11,6 +11,7 @@ import {
   Activity,
   Image,
   Upload,
+  AlertTriangle,
   X,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
@@ -175,7 +176,7 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
       data-cy="confirm-modal"
     >
       <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
@@ -208,6 +209,50 @@ const ConfirmModal = ({ isOpen, onClose, onConfirm, title, message }) => {
   );
 };
 
+// =====================================
+// CancelConfirmModal Component
+// =====================================
+
+const CancelConfirmModal = ({ isOpen, onClose, onConfirm }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+      data-cy="cancel-confirm-modal"
+    >
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
+        <div className="text-center">
+          <AlertTriangle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-yellow-500 mb-3 md:mb-4" />
+          <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
+            ยืนยันการยกเลิก
+          </h2>
+          <p className="text-gray-600 mb-4 md:mb-6">
+            คุณมีข้อมูลที่ยังไม่ได้บันทึก การยกเลิกจะทำให้ข้อมูล<br></br>
+            ทั้งหมดหายไปต้องการยกเลิกหรือไม่?
+          </p>
+        </div>
+        <div className="flex justify-center space-x-3 md:space-x-4">
+          <button
+            onClick={onClose}
+            className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+            data-cy="cancel-confirmation-no"
+          >
+            ไม่ยกเลิก
+          </button>
+          <button
+            onClick={onConfirm}
+            className="px-4 py-2 md:px-6 md:py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+            data-cy="cancel-confirmation-yes"
+          >
+            ยกเลิก
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ===== MAIN COMPONENT =====
 
 const ProjectEdit = () => {
@@ -222,12 +267,23 @@ const ProjectEdit = () => {
   const [project, setProject] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [imageError, setImageError] = useState(null);
   const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // การจัดการรูปภาพ
   const [previewImage, setPreviewImage] = useState(null);
   const [currentImage, setCurrentImage] = useState(null);
+
+  // เพิ่มตัวแปร originalData เพื่อเก็บข้อมูลดั้งเดิม
+  const [originalData, setOriginalData] = useState({
+    name: "",
+    description: "",
+    start_date: "",
+    end_date: "",
+    photo: null,
+  });
 
   // ข้อมูลฟอร์ม
   const [formData, setFormData] = useState({
@@ -267,13 +323,21 @@ const ProjectEdit = () => {
         const startDate = new Date(projectData.start_date);
         const endDate = new Date(projectData.end_date);
 
-        setFormData({
+        const formattedData = {
           name: projectData.name,
           description: projectData.description,
           start_date: format(startDate, "yyyy-MM-dd"),
           end_date: format(endDate, "yyyy-MM-dd"),
           status: projectData.status,
           photo: null,
+        };
+
+        setFormData(formattedData);
+
+        // ตั้งค่า originalData พร้อมกับข้อมูลเดิมของโปรเจกต์
+        setOriginalData({
+          ...formattedData,
+          photo: projectData.photo || null,
         });
 
         // ตั้งค่ารูปภาพถ้ามี
@@ -300,19 +364,19 @@ const ProjectEdit = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  // จัดการเมื่อมีการอัพโหลดรูปภาพ
+  // จัดการการอัปโหลดรูปภาพ
   const handleImageChange = (e) => {
     const file = e.target.files[0];
     if (file) {
-      // ตรวจสอบขนาดไฟล์
+      // ตรวจสอบขนาดไฟล์ต้องไม่เกิน 5MB
       if (file.size > 5 * 1024 * 1024) {
-        setError("Image size must be less than 5MB");
+        setImageError("ขนาดไฟล์ภาพต้องไม่เกิน 5MB");
         return;
       }
 
-      // ตรวจสอบประเภทไฟล์
+      // ตรวจสอบประเภทไฟล์ต้องเป็นรูปภาพเท่านั้น
       if (!file.type.startsWith("image/")) {
-        setError("Only image files are allowed");
+        setImageError("อนุญาตเฉพาะไฟล์รูปภาพเท่านั้น");
         return;
       }
 
@@ -320,9 +384,8 @@ const ProjectEdit = () => {
         ...prev,
         photo: file,
       }));
-      const newPreviewUrl = URL.createObjectURL(file);
-      setPreviewImage(newPreviewUrl);
-      setError(null);
+      setPreviewImage(URL.createObjectURL(file));
+      setImageError(null); // ล้างข้อผิดพลาดเมื่อสำเร็จ
     }
   };
 
@@ -334,12 +397,55 @@ const ProjectEdit = () => {
     }));
     setPreviewImage(null);
     setCurrentImage(null);
+    setImageError(null); // ล้างข้อผิดพลาดเมื่อลบรูปภาพ
 
     // รีเซ็ตค่า input file
     const fileInput = document.querySelector('input[type="file"]');
     if (fileInput) {
       fileInput.value = "";
     }
+  };
+
+  // ส่วน handleCancelClick ที่ใช้ hasDataChanged
+  const handleCancelClick = () => {
+    if (hasDataChanged()) {
+      setShowCancelModal(true);
+    } else {
+      navigate(`/projects/${id}`);
+    }
+  };
+
+  // ฟังก์ชัน hasDataChanged ที่ถูกต้อง
+  const hasDataChanged = () => {
+    // เปรียบเทียบข้อมูลปัจจุบันกับข้อมูลเดิม
+    return (
+      formData.name !== originalData.name ||
+      formData.description !== originalData.description ||
+      formData.start_date !== originalData.start_date ||
+      formData.end_date !== originalData.end_date ||
+      formData.status !== originalData.status ||
+      isPhotoChanged()
+    );
+  };
+
+  // ฟังก์ชัน isPhotoChanged ที่ถูกต้อง
+  const isPhotoChanged = () => {
+    // กรณีที่เดิมมีรูป แต่ตอนนี้ไม่มีรูป (ลบรูปออก)
+    if (originalData.photo && !currentImage) {
+      return true;
+    }
+
+    // กรณีที่เดิมไม่มีรูป แต่ตอนนี้มีรูป
+    if (!originalData.photo && formData.photo) {
+      return true;
+    }
+
+    // กรณีที่มีการอัปโหลดรูปภาพใหม่
+    if (formData.photo instanceof File) {
+      return true;
+    }
+
+    return false;
   };
 
   // แสดงผลช่วงวันที่เป็นรูปแบบพุทธศักราช
@@ -425,7 +531,7 @@ const ProjectEdit = () => {
         className="text-center p-4 md:p-6 bg-gray-100 rounded-lg mx-4 my-4 md:mx-auto md:my-8 max-w-2xl"
         data-cy="project-not-found"
       >
-        Project not found
+        ไม่พบโปรเจกต์
       </div>
     );
 
@@ -461,7 +567,7 @@ const ProjectEdit = () => {
         data-cy="back-button"
       >
         <ArrowLeft className="w-4 h-4 md:w-5 md:h-5 group-hover:-translate-x-1 transition-transform" />
-        กลับไปหน้ารายละเอียด
+        กลับไปหน้ารายละเอียดโปรเจกต์
       </button>
 
       {/* ฟอร์มแก้ไขโปรเจกต์ */}
@@ -479,15 +585,15 @@ const ProjectEdit = () => {
 
         {/* ฟอร์มสำหรับกรอกข้อมูล */}
         <form className="p-4 md:p-6 space-y-4 md:space-y-6">
-          {/* แสดงข้อความแจ้งเตือนถ้ามีข้อผิดพลาด */}
-          {error && (
+          {/* เพิ่มส่วนแสดงข้อผิดพลาดของรูปภาพ */}
+          {imageError && (
             <div
-              className="bg-red-50 border border-red-200 p-3 md:p-4 rounded-lg flex items-center gap-2 md:gap-3"
-              data-cy="form-error"
+              className="bg-red-50 border border-red-200 p-3 sm:p-4 rounded-lg flex items-center gap-2 sm:gap-3 text-sm sm:text-base"
+              data-cy="image-error-message"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                className="h-5 w-5 md:h-6 md:w-6 text-red-500"
+                className="h-5 w-5 sm:h-6 sm:w-6 text-red-500"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -499,65 +605,63 @@ const ProjectEdit = () => {
                   d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              <span className="text-sm md:text-base text-red-800">{error}</span>
+              <span className="text-red-800">{imageError}</span>
             </div>
           )}
 
-          <div className="space-y-4 md:space-y-6">
-            {/* ส่วนอัพโหลดรูปภาพ */}
-            <div className="space-y-2">
-              <label className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700">
-                <Image className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
-                รูปภาพโปรเจกต์
-              </label>
-              <div className="flex items-center justify-center w-full">
-                <div className="w-full">
-                  {previewImage ? (
-                    <div
-                      className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100"
-                      data-cy="image-preview"
+          {/* ส่วนอัพโหลดรูปภาพ */}
+          <div className="space-y-2">
+            <label className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700">
+              <Image className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
+              รูปภาพโปรเจกต์
+            </label>
+            <div className="flex items-center justify-center w-full">
+              <div className="w-full">
+                {previewImage ? (
+                  <div
+                    className="relative w-full aspect-video rounded-lg overflow-hidden bg-gray-100"
+                    data-cy="image-preview"
+                  >
+                    <img
+                      src={previewImage}
+                      alt="Project"
+                      className="w-full h-full object-contain"
+                    />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
+                      data-cy="remove-image"
                     >
-                      <img
-                        src={previewImage}
-                        alt="Project"
-                        className="w-full h-full object-contain"
-                      />
-                      <button
-                        type="button"
-                        onClick={handleRemoveImage}
-                        className="absolute top-2 right-2 p-1.5 bg-red-500 text-white rounded-full hover:bg-red-600 transition-colors"
-                        data-cy="remove-image"
-                      >
-                        <X className="w-3 h-3 md:w-4 md:h-4" />
-                      </button>
+                      <X className="w-3 h-3 md:w-4 md:h-4" />
+                    </button>
+                  </div>
+                ) : (
+                  <label
+                    className="flex flex-col items-center justify-center w-full h-40 md:h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
+                    data-cy="image-upload-area"
+                  >
+                    <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                      <Upload className="w-8 h-8 md:w-12 md:h-12 text-gray-400 mb-2 md:mb-3" />
+                      <p className="mb-1 md:mb-2 text-xs md:text-sm text-gray-500">
+                        <span className="font-semibold">
+                          คลิกเพื่ออัปโหลดรูปภาพ
+                        </span>{" "}
+                        หรือลากและวาง
+                      </p>
+                      <p className="text-xs text-gray-500">
+                        PNG, JPG, GIF up to 5MB
+                      </p>
                     </div>
-                  ) : (
-                    <label
-                      className="flex flex-col items-center justify-center w-full h-40 md:h-64 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition-colors"
-                      data-cy="image-upload-area"
-                    >
-                      <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                        <Upload className="w-8 h-8 md:w-12 md:h-12 text-gray-400 mb-2 md:mb-3" />
-                        <p className="mb-1 md:mb-2 text-xs md:text-sm text-gray-500">
-                          <span className="font-semibold">
-                            คลิกเพื่ออัปโหลดรูปภาพ
-                          </span>{" "}
-                          หรือลากและวาง
-                        </p>
-                        <p className="text-xs text-gray-500">
-                          PNG, JPG, GIF up to 5MB
-                        </p>
-                      </div>
-                      <input
-                        type="file"
-                        className="hidden"
-                        accept="image/*"
-                        onChange={handleImageChange}
-                        data-cy="image-input"
-                      />
-                    </label>
-                  )}
-                </div>
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      onChange={handleImageChange}
+                      data-cy="image-input"
+                    />
+                  </label>
+                )}
               </div>
             </div>
 
@@ -647,7 +751,7 @@ const ProjectEdit = () => {
           <div className="flex flex-col sm:flex-row gap-3 sm:space-x-4 pt-4 md:pt-6">
             <button
               type="button"
-              onClick={() => navigate(`/projects/${id}`)}
+              onClick={handleCancelClick}
               className="flex-1 px-4 py-2 md:px-6 md:py-3 text-sm md:text-base text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
               data-cy="cancel-button"
             >
@@ -665,6 +769,13 @@ const ProjectEdit = () => {
           </div>
         </form>
       </div>
+
+      {/* โมดอลยืนยันการยกเลิก */}
+      <CancelConfirmModal
+        isOpen={showCancelModal}
+        onClose={() => setShowCancelModal(false)}
+        onConfirm={() => navigate(`/projects/${id}`)}
+      />
     </div>
   );
 };

@@ -13,6 +13,8 @@ import {
   UserCircle,
   Trash2,
   AlertTriangle,
+  Camera,
+  Image,
 } from "lucide-react";
 import Modal from "react-modal";
 import axios from "axios";
@@ -61,6 +63,7 @@ const Profile = () => {
   const [error, setError] = useState(null);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showImagePreviewModal, setShowImagePreviewModal] = useState(false);
+  const [showUploadImageModal, setShowUploadImageModal] = useState(false);
   const [showDeleteImageConfirmModal, setShowDeleteImageConfirmModal] =
     useState(false);
   const [actionLoading, setActionLoading] = useState(false);
@@ -98,6 +101,7 @@ const Profile = () => {
 
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [uploadError, setUploadError] = useState("");
 
   // ดึงข้อมูลโปรไฟล์เมื่อโหลดหน้า
   useEffect(() => {
@@ -120,6 +124,8 @@ const Profile = () => {
         setImagePreview(
           `${API_BASE_URL}/api/uploads/profiles/${profileData.profile_image}`
         );
+      } else {
+        setImagePreview(null);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to fetch profile");
@@ -164,10 +170,12 @@ const Profile = () => {
   const handleImageUpload = async () => {
     if (!selectedImage) return;
 
+    setUploadError("");
+    setActionLoading(true);
+
     const formData = new FormData();
     formData.append("profile_image", selectedImage);
 
-    setActionLoading(true);
     try {
       await axios.put(`${API_BASE_URL}/api/profile/update-image`, formData, {
         headers: {
@@ -177,8 +185,9 @@ const Profile = () => {
       });
       await fetchProfile();
       setSelectedImage(null);
+      setShowUploadImageModal(false);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to upload image");
+      setUploadError(err.response?.data?.message || "Failed to upload image");
     } finally {
       setActionLoading(false);
     }
@@ -255,11 +264,19 @@ const Profile = () => {
 
   // จัดรูปแบบวันที่ให้เป็นภาษาไทย
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString("th-TH", {
-      year: "numeric",
-      month: "numeric",
-      day: "numeric",
-    });
+    const date = new Date(dateString);
+
+    // ดึงค่าวัน เดือน ปี
+    const day = date.getDate();
+    const month = date.getMonth() + 1; // เดือนใน JavaScript เริ่มจาก 0
+    const year = date.getFullYear() + 543; // แปลงเป็นปีพุทธศักราช
+
+    // เพิ่ม 0 ข้างหน้าวันและเดือนที่มีเพียงหลักเดียว
+    const paddedDay = day.toString().padStart(2, "0");
+    const paddedMonth = month.toString().padStart(2, "0");
+
+    // รูปแบบ วัน/เดือน/ปี
+    return `${paddedDay}/${paddedMonth}/${year}`;
   };
 
   // แสดงการโหลดข้อมูล
@@ -323,19 +340,17 @@ const Profile = () => {
             <div className="flex flex-col items-center md:flex-row md:items-start gap-6 mb-6 sm:mb-8">
               {/* ส่วนรูปภาพโปรไฟล์ */}
               <div className="flex flex-col items-center space-y-4">
-                <div className="relative">
+                <div className="relative group">
                   <div
-                    className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg cursor-pointer"
-                    onClick={() =>
-                      imagePreview && setShowImagePreviewModal(true)
-                    }
+                    className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg"
                     data-cy="profile-image"
                   >
                     {imagePreview ? (
                       <img
                         src={imagePreview}
                         alt="Profile"
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover cursor-pointer"
+                        onClick={() => setShowImagePreviewModal(true)}
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-50">
@@ -343,93 +358,22 @@ const Profile = () => {
                       </div>
                     )}
                   </div>
-                </div>
 
-                {/* ปุ่มจัดการรูปภาพโปรไฟล์ */}
-                <div className="flex gap-2">
-                  <label
-                    className="bg-blue-500 p-2 sm:p-3 rounded-full cursor-pointer hover:bg-blue-600 transition-colors shadow-lg"
-                    data-cy="upload-image-btn"
-                  >
-                    <Upload className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="image/jpeg,image/png"
-                      data-cy="image-input"
-                      onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file && file.size <= 5 * 1024 * 1024) {
-                          setSelectedImage(file);
-                          setImagePreview(URL.createObjectURL(file));
-                        } else {
-                          setError("File size must be less than 5MB");
-                        }
-                      }}
-                    />
-                  </label>
-                  {imagePreview && (
-                    <button
-                      onClick={() => setShowDeleteImageConfirmModal(true)}
-                      className="bg-red-500 p-2 sm:p-3 rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                      data-cy="delete-image-btn"
-                    >
-                      <Trash2 className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
-                    </button>
-                  )}
-                </div>
-
-                {/* ปุ่มอัปโหลดรูปภาพใหม่ */}
-                {selectedImage && (
+                  {/* ปุ่มเปลี่ยนรูปภาพ */}
                   <button
-                    onClick={handleImageUpload}
-                    disabled={actionLoading}
-                    className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50 shadow-md w-full max-w-[200px]"
-                    data-cy="confirm-upload-btn"
+                    onClick={() => setShowUploadImageModal(true)}
+                    className="absolute bottom-1 right-1 bg-blue-500 p-2 rounded-full hover:bg-blue-600 transition-colors shadow-md"
+                    data-cy="change-image-btn"
                   >
-                    {actionLoading ? "Uploading..." : "Upload New Image"}
+                    <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                   </button>
-                )}
-              </div>
-
-              {/* โมดัลยืนยันการลบรูปภาพ */}
-              <Modal
-                isOpen={showDeleteImageConfirmModal}
-                onRequestClose={() => setShowDeleteImageConfirmModal(false)}
-                style={modalStyles}
-                data-cy="delete-image-confirm-modal"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-center mb-4">
-                    <AlertTriangle className="h-12 w-12 text-yellow-500 mr-4" />
-                    <h2 className="text-lg sm:text-xl font-bold text-gray-800">
-                      ต้องการลบรูปภาพใช่หรือไม่?
-                    </h2>
-                  </div>
-
-                  <p className="text-center text-sm sm:text-base text-gray-600 mb-4">
-                    คุณแน่ใจหรือว่าต้องการลบรูปภาพโปรไฟล์?
-                  </p>
-
-                  <div className="flex gap-4 pt-4">
-                    <button
-                      onClick={handleDeleteImage}
-                      disabled={actionLoading}
-                      className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50"
-                      data-cy="confirm-delete-image"
-                    >
-                      {actionLoading ? "กำลังลบ..." : "ลบ"}
-                    </button>
-                    <button
-                      onClick={() => setShowDeleteImageConfirmModal(false)}
-                      className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
-                      data-cy="cancel-delete-image"
-                    >
-                      ยกเลิก
-                    </button>
-                  </div>
                 </div>
-              </Modal>
+
+                {/* ข้อความแนะนำการเปลี่ยนรูปโปรไฟล์ */}
+                <div className="text-sm text-gray-500 text-center">
+                  คลิกที่ไอคอนกล้องเพื่อเปลี่ยนรูปโปรไฟล์
+                </div>
+              </div>
 
               {/* ข้อมูลพื้นฐานของผู้ใช้ */}
               <div className="flex flex-col space-y-2 sm:space-y-3 text-center md:text-left md:pt-2">
@@ -562,6 +506,170 @@ const Profile = () => {
           </div>
         </div>
       </div>
+
+      {/* โมดัลอัปโหลดรูปภาพ */}
+      <Modal
+        isOpen={showUploadImageModal}
+        onRequestClose={() => {
+          setShowUploadImageModal(false);
+          setSelectedImage(null);
+          setUploadError("");
+        }}
+        style={modalStyles}
+        data-cy="upload-image-modal"
+      >
+        <div className="space-y-4">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+              เปลี่ยนรูปโปรไฟล์
+            </h2>
+            <button
+              onClick={() => {
+                setShowUploadImageModal(false);
+                setSelectedImage(null);
+                setUploadError("");
+              }}
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors"
+              data-cy="close-upload-modal"
+            >
+              <X className="h-5 w-5 text-gray-500" />
+            </button>
+          </div>
+
+          {/* โมดัลยืนยันการลบรูปภาพ */}
+          <Modal
+            isOpen={showDeleteImageConfirmModal}
+            onRequestClose={() => setShowDeleteImageConfirmModal(false)}
+            style={modalStyles}
+            data-cy="delete-image-confirm-modal"
+          >
+            <div className="space-y-4">
+              <div className="flex flex-col items-center text-center mb-4">
+                <AlertTriangle className="h-12 w-12 text-yellow-500 mb-2" />
+                <h2 className="text-lg sm:text-xl font-bold text-gray-800">
+                  ยืนยันการลบรูปภาพ
+                </h2>
+                <p className="text-sm sm:text-base text-gray-600 mt-2">
+                  คุณต้องการลบรูปโปรไฟล์นี้ใช่หรือไม่?
+                  การดำเนินการนี้ไม่สามารถเรียกคืนได้
+                </p>
+              </div>
+
+              {/* ปุ่มดำเนินการ */}
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowDeleteImageConfirmModal(false)}
+                  className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
+                  data-cy="cancel-delete-btn"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  onClick={handleDeleteImage}
+                  disabled={actionLoading}
+                  className="flex-1 px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                  data-cy="confirm-delete-btn"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {actionLoading ? "กำลังลบ..." : "ยืนยันการลบ"}
+                </button>
+              </div>
+            </div>
+          </Modal>
+
+          {/* แสดงข้อความแจ้งเตือนความผิดพลาดในการอัปโหลด */}
+          {uploadError && (
+            <div
+              className="mb-4 bg-red-50 border border-red-200 rounded-lg p-3 flex items-center gap-2"
+              data-cy="upload-error"
+            >
+              <AlertCircle className="h-4 w-4 text-red-500 flex-shrink-0" />
+              <span className="text-sm text-red-700">{uploadError}</span>
+            </div>
+          )}
+
+          {/* ส่วนแสดงรูปภาพที่เลือก */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-40 h-40 rounded-full overflow-hidden bg-gray-100 border border-gray-200">
+              {selectedImage ? (
+                <img
+                  src={URL.createObjectURL(selectedImage)}
+                  alt="Selected Preview"
+                  className="w-full h-full object-cover"
+                  data-cy="new-image-preview"
+                />
+              ) : imagePreview ? (
+                <img
+                  src={imagePreview}
+                  alt="Current Profile"
+                  className="w-full h-full object-cover"
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                  <UserCircle className="w-20 h-20 text-gray-400" />
+                </div>
+              )}
+            </div>
+
+            {/* ส่วนเลือกและอัปโหลดรูปภาพ */}
+            <div className="w-full space-y-4">
+              <label
+                className="flex items-center justify-center gap-2 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors cursor-pointer"
+                data-cy="choose-image-btn"
+              >
+                <Image className="h-5 w-5" />
+                เลือกรูปภาพ
+                <input
+                  type="file"
+                  className="hidden"
+                  accept="image/jpeg,image/png"
+                  data-cy="image-input"
+                  onChange={(e) => {
+                    const file = e.target.files[0];
+                    if (file) {
+                      if (file.size <= 5 * 1024 * 1024) {
+                        setSelectedImage(file);
+                        setUploadError("");
+                      } else {
+                        setUploadError("ขนาดไฟล์ต้องไม่เกิน 5MB");
+                      }
+                    }
+                  }}
+                />
+              </label>
+
+              <div className="text-sm text-gray-500 text-center">
+                อัปโหลดรูปภาพขนาดไม่เกิน 5MB (.jpg, .png)
+              </div>
+
+              <div className="flex gap-3">
+                {/* ปุ่มลบรูปภาพ (แสดงเฉพาะเมื่อมีรูปภาพอยู่แล้ว) */}
+                {imagePreview && (
+                  <button
+                    onClick={() => {
+                      setShowDeleteImageConfirmModal(true);
+                      setShowUploadImageModal(true);
+                    }}
+                    className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+                    data-cy="delete-image-from-modal-btn"
+                  >
+                    ลบรูปภาพ
+                  </button>
+                )}
+                {/* ปุ่มบันทึกการเปลี่ยนรูปภาพ */}
+                <button
+                  onClick={handleImageUpload}
+                  disabled={!selectedImage || actionLoading}
+                  className="flex-1 px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  data-cy="confirm-upload-btn"
+                >
+                  {actionLoading ? "กำลังอัปโหลด..." : "บันทึกรูปภาพ"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Modal>
 
       {/* โมดัลแสดงรูปภาพขนาดใหญ่ */}
       <Modal

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { Calendar, Filter, ClipboardList } from "lucide-react";
@@ -16,13 +16,15 @@ const ActionLogs = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
 
-  // --------- สถานะสำหรับข้อมูลการดำเนินการ ---------
+  // --------- สถานะสำหรับข้อมูลการดำเนินการและการโหลด ---------
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [actionTypes, setActionTypes] = useState([]);
   const [targetTables, setTargetTables] = useState([]);
-  const [projects, setProjects] = useState({}); // เพิ่มสถานะสำหรับเก็บข้อมูลโปรเจกต์
+  const [projects, setProjects] = useState({});
+  const [isInitialLoad, setIsInitialLoad] = useState(true);
+  const [resourcesLoaded, setResourcesLoaded] = useState(false);
 
   // --------- สถานะสำหรับการแบ่งหน้าและการกรอง ---------
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,7 +88,60 @@ const ActionLogs = () => {
     "users",
   ];
 
-  // --------- ฟังก์ชันจัดรูปแบบรายละเอียด ---------
+  // --------- ฟังก์ชัน Helper ---------
+
+  // ปรับวันที่เริ่มต้นและสิ้นสุดให้ครอบคลุมทั้งวัน
+  const adjustDateRange = useCallback((startDate, endDate) => {
+    if (!startDate && !endDate) return { startDate: "", endDate: "" };
+
+    let adjustedStart = startDate;
+    let adjustedEnd = endDate;
+
+    if (startDate) {
+      adjustedStart = new Date(startDate);
+      adjustedStart.setUTCHours(0, 0, 0, 0);
+      adjustedStart = adjustedStart.toISOString();
+    }
+
+    if (endDate) {
+      adjustedEnd = new Date(endDate);
+      adjustedEnd.setUTCHours(23, 59, 59, 999);
+      adjustedEnd = adjustedEnd.toISOString();
+    }
+
+    return { startDate: adjustedStart, endDate: adjustedEnd };
+  }, []);
+
+  // แปลงวันที่เป็นรูปแบบปฏิทินไทย (วัน/เดือน/พ.ศ.)
+  const formatThaiDate = (date, includeTime = false) => {
+    if (!date) return "";
+    const buddhistYear = parseInt(format(date, "yyyy", { locale: th })) + 543;
+    const dateFormatted = format(date, "dd/MM/") + buddhistYear;
+
+    if (includeTime) {
+      const timeFormatted = format(date, "HH:mm");
+      return dateFormatted;
+    }
+
+    return dateFormatted;
+  };
+
+  // เพิ่มฟังก์ชันใหม่สำหรับแสดงเฉพาะเวลา
+  const formatTime = (date) => {
+    if (!date) return "";
+    return format(date, "HH:mm");
+  };
+
+  // จัดรูปแบบช่วงวันที่สำหรับแสดงผล
+  const formatDateRange = () => {
+    if (!selectedRange.from && !selectedRange.to) return "เลือกช่วงวันที่";
+    if (selectedRange.from && !selectedRange.to)
+      return formatThaiDate(selectedRange.from);
+    return `${formatThaiDate(selectedRange.from)} ถึง ${formatThaiDate(
+      selectedRange.to
+    )}`;
+  };
+
   // แสดงรายละเอียดการดำเนินการในรูปแบบที่อ่านง่าย
   const formatDetails = (details, targetTable, actionType) => {
     if (!details) return "-";
@@ -241,226 +296,176 @@ const ActionLogs = () => {
     return details;
   };
 
-  // --------- ฟังก์ชันจัดรูปแบบวันที่ ---------
-  // แปลงวันที่เป็นรูปแบบปฏิทินไทย (วัน/เดือน/พ.ศ.)
-  const formatThaiDate = (date, includeTime = false) => {
-    if (!date) return "";
-    const buddhistYear = parseInt(format(date, "yyyy", { locale: th })) + 543;
-    const dateFormatted = format(date, "dd/MM/") + buddhistYear;
+  // --------- ฟังก์ชันสำหรับจัดการข้อมูล ---------
 
-    if (includeTime) {
-      const timeFormatted = format(date, "HH:mm:ss");
-      return dateFormatted;
-    }
+  // สร้าง axios instance ที่มี token และการจัดการข้อผิดพลาด
+  const createAuthAxios = useCallback(() => {
+    const authAxios = axios.create({
+      baseURL: API_BASE_URL,
+      headers: { Authorization: `Bearer ${user?.token}` },
+    });
 
-    return dateFormatted;
-  };
-
-  // เพิ่มฟังก์ชันใหม่สำหรับแสดงเฉพาะเวลา
-  const formatTime = (date) => {
-    if (!date) return "";
-    return format(date, "HH:mm:ss");
-  };
-
-  // --------- ฟังก์ชันจัดรูปแบบช่วงวันที่ ---------
-  // จัดรูปแบบช่วงวันที่สำหรับแสดงผล
-  const formatDateRange = () => {
-    if (!selectedRange.from && !selectedRange.to) return "เลือกช่วงวันที่";
-    if (selectedRange.from && !selectedRange.to)
-      return formatThaiDate(selectedRange.from);
-    return `${formatThaiDate(selectedRange.from)} ถึง ${formatThaiDate(
-      selectedRange.to
-    )}`;
-  };
-
-  // --------- การจัดการเลือกช่วงวันที่ ---------
-  // จัดการการเลือกช่วงวันที่และอัปเดตตัวกรอง
-  const handleDateRangeSelect = (range) => {
-    setSelectedRange(range || { from: undefined, to: undefined });
-    if (range?.from) {
-      setFilters((prev) => ({
-        ...prev,
-        start_date: format(range.from, "yyyy-MM-dd"),
-      }));
-    }
-    if (range?.to) {
-      setFilters((prev) => ({
-        ...prev,
-        end_date: format(range.to, "yyyy-MM-dd"),
-      }));
-    }
-    if (!range) {
-      setFilters((prev) => ({
-        ...prev,
-        start_date: "",
-        end_date: "",
-      }));
-    }
-  };
-
-  // --------- ดึงข้อมูลประเภทการดำเนินการและตารางเป้าหมาย ---------
-  // ดึงตัวเลือกสำหรับตัวกรองจาก API
-  useEffect(() => {
-    const fetchFilterOptions = async () => {
-      try {
-        const [typesRes, tablesRes] = await Promise.all([
-          axios.get(`${API_BASE_URL}/api/action-logs/types`, {
-            headers: { Authorization: `Bearer ${user?.token}` },
-          }),
-          axios.get(`${API_BASE_URL}/api/action-logs/tables`, {
-            headers: { Authorization: `Bearer ${user?.token}` },
-          }),
-        ]);
-
-        // จัดเรียงประเภทการดำเนินการตามลำดับความสำคัญ
-        const sortedTypes = [...typesRes.data].sort((a, b) => {
-          const indexA = actionTypePriority.indexOf(a);
-          const indexB = actionTypePriority.indexOf(b);
-          // ถ้าไม่มีในรายการให้อยู่ท้ายสุด
-          return (
-            (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
-          );
-        });
-
-        // จัดเรียงตารางเป้าหมายตามลำดับความสำคัญ
-        const sortedTables = [...tablesRes.data].sort((a, b) => {
-          const indexA = targetTablePriority.indexOf(a);
-          const indexB = targetTablePriority.indexOf(b);
-          // ถ้าไม่มีในรายการให้อยู่ท้ายสุด
-          return (
-            (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB)
-          );
-        });
-
-        setActionTypes(sortedTypes);
-        setTargetTables(sortedTables);
-
-        // ดึงข้อมูลโปรเจกต์เพื่อใช้ในการแสดงชื่อโปรเจกต์
-        fetchProjects();
-      } catch (err) {
-        if (err.response?.status === 401) {
+    // Add response interceptor สำหรับจัดการข้อผิดพลาด 401
+    authAxios.interceptors.response.use(
+      (response) => response,
+      (error) => {
+        if (error.response?.status === 401) {
           logout();
           navigate("/login");
         }
+        return Promise.reject(error);
       }
-    };
+    );
 
-    if (user?.token) {
-      fetchFilterOptions();
-    }
-  }, [user, logout, navigate]);
+    return authAxios;
+  }, [user?.token, logout, navigate]);
 
-  // ฟังก์ชันสำหรับดึงข้อมูลโปรเจกต์ทั้งหมด
-  const fetchProjects = async () => {
+  // ดึงข้อมูลเริ่มต้น (ตัวเลือกตัวกรองและโปรเจกต์)
+  const fetchInitialResources = useCallback(async () => {
+    if (!user?.token || resourcesLoaded) return;
+
     try {
-      const response = await axios.get(`${API_BASE_URL}/api/projects`, {
-        headers: { Authorization: `Bearer ${user?.token}` },
+      setLoading(true);
+      const authAxios = createAuthAxios();
+
+      // ดึงข้อมูลพร้อมกันทั้งหมดในครั้งเดียว
+      const [typesRes, tablesRes, projectsRes] = await Promise.all([
+        authAxios.get("/api/action-logs/types"),
+        authAxios.get("/api/action-logs/tables"),
+        authAxios.get("/api/projects"),
+      ]);
+
+      // จัดเรียงประเภทการดำเนินการตามลำดับความสำคัญ
+      const sortedTypes = [...typesRes.data].sort((a, b) => {
+        const indexA = actionTypePriority.indexOf(a);
+        const indexB = actionTypePriority.indexOf(b);
+        // ถ้าไม่มีในรายการให้อยู่ท้ายสุด
+        return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
+      });
+
+      // จัดเรียงตารางเป้าหมายตามลำดับความสำคัญ
+      const sortedTables = [...tablesRes.data].sort((a, b) => {
+        const indexA = targetTablePriority.indexOf(a);
+        const indexB = targetTablePriority.indexOf(b);
+        // ถ้าไม่มีในรายการให้อยู่ท้ายสุด
+        return (indexA === -1 ? 999 : indexA) - (indexB === -1 ? 999 : indexB);
       });
 
       // สร้าง map ของ project_id เป็น project_name
       const projectMap = {};
-      response.data.forEach((project) => {
+      projectsRes.data.forEach((project) => {
         projectMap[project.project_id] = project.name;
       });
 
+      // อัปเดตสถานะพร้อมกันหลังจากได้รับข้อมูลทั้งหมด
+      setActionTypes(sortedTypes);
+      setTargetTables(sortedTables);
       setProjects(projectMap);
+      setResourcesLoaded(true);
     } catch (err) {
-      console.error("ไม่สามารถดึงข้อมูลโปรเจกต์ได้", err);
+      setError("ไม่สามารถโหลดข้อมูลพื้นฐานได้");
+      console.error("Error loading initial resources:", err);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [
+    user?.token,
+    resourcesLoaded,
+    createAuthAxios,
+    actionTypePriority,
+    targetTablePriority,
+  ]);
 
-  // --------- ปรับช่วงวันที่ให้ครอบคลุมทั้งวัน ---------
-  // ปรับวันที่เริ่มต้นและสิ้นสุดให้ครอบคลุมทั้งวัน
-  const adjustDateRange = (startDate, endDate) => {
-    if (!startDate && !endDate) return { startDate: "", endDate: "" };
-
-    let adjustedStart = startDate;
-    let adjustedEnd = endDate;
-
-    if (startDate) {
-      adjustedStart = new Date(startDate);
-      adjustedStart.setUTCHours(0, 0, 0, 0);
-      adjustedStart = adjustedStart.toISOString();
-    }
-
-    if (endDate) {
-      adjustedEnd = new Date(endDate);
-      adjustedEnd.setUTCHours(23, 59, 59, 999);
-      adjustedEnd = adjustedEnd.toISOString();
-    }
-
-    return { startDate: adjustedStart, endDate: adjustedEnd };
-  };
-
-  // --------- ดึงข้อมูลบันทึกการดำเนินการตามตัวกรอง ---------
   // ดึกบันทึกการดำเนินการจาก API พร้อมตัวกรอง
-  useEffect(() => {
-    const fetchLogs = async () => {
-      try {
-        setLoading(true);
-        const offset = (currentPage - 1) * filters.limit;
+  const fetchLogs = useCallback(async () => {
+    if (!user?.token || !resourcesLoaded) return;
 
-        const { startDate, endDate } = adjustDateRange(
-          filters.start_date,
-          filters.end_date
-        );
+    try {
+      setLoading(true);
+      const authAxios = createAuthAxios();
+      const offset = (currentPage - 1) * filters.limit;
 
-        const queryParams = new URLSearchParams({
-          ...filters,
-          start_date: startDate,
-          end_date: endDate,
-          offset: offset.toString(),
-        });
+      const { startDate, endDate } = adjustDateRange(
+        filters.start_date,
+        filters.end_date
+      );
 
-        const response = await axios.get(
-          `${API_BASE_URL}/api/action-logs?${queryParams}`,
-          {
-            headers: { Authorization: `Bearer ${user?.token}` },
-          }
-        );
+      // สร้าง query params สำหรับ API
+      const queryParams = new URLSearchParams({
+        ...filters,
+        start_date: startDate,
+        end_date: endDate,
+        offset: offset.toString(),
+      });
 
-        // ถ้าเป็น project_members ให้แยก project_id ออกมา
-        const enhancedLogs = response.data.logs.map((log) => {
-          // หาข้อมูล project_id จาก details สำหรับ project_members
-          if (
-            log.target_table === "project_members" &&
-            log.details &&
-            log.details.project_id
-          ) {
-            return {
-              ...log,
-              project_id: log.details.project_id,
-              project_name: projects[log.details.project_id] || null,
-            };
-          }
-          return log;
-        });
+      const response = await authAxios.get(`/api/action-logs?${queryParams}`);
 
-        setLogs(enhancedLogs);
-        setTotalLogs(response.data.total);
-        setError(null);
-      } catch (err) {
-        if (err.response?.status === 401) {
-          logout();
-          navigate("/login");
-          return;
+      // เพิ่มข้อมูลโปรเจกต์เข้าไปใน logs
+      const enhancedLogs = response.data.logs.map((log) => {
+        // หาข้อมูล project_id จาก details สำหรับ project_members
+        if (
+          log.target_table === "project_members" &&
+          log.details &&
+          log.details.project_id
+        ) {
+          return {
+            ...log,
+            project_id: log.details.project_id,
+            project_name: projects[log.details.project_id] || null,
+          };
         }
-        setError(
-          err.response?.data?.message || "การดึงข้อมูลบันทึกการดำเนินการล้มเหลว"
-        );
-        setLogs([]);
-        setTotalLogs(0);
-      } finally {
-        setLoading(false);
-      }
-    };
+        return log;
+      });
 
-    if (user?.token) {
-      fetchLogs();
+      setLogs(enhancedLogs);
+      setTotalLogs(response.data.total);
+      setError(null);
+      setIsInitialLoad(false);
+    } catch (err) {
+      setError(
+        err.response?.data?.message || "การดึงข้อมูลบันทึกการดำเนินการล้มเหลว"
+      );
+      setLogs([]);
+      setTotalLogs(0);
+    } finally {
+      setLoading(false);
     }
-  }, [user, currentPage, filters, logout, navigate, projects]);
+  }, [
+    user?.token,
+    resourcesLoaded,
+    currentPage,
+    filters,
+    createAuthAxios,
+    adjustDateRange,
+    projects,
+  ]);
 
-  // --------- การจัดการเปลี่ยนแปลงตัวกรอง ---------
+  // --------- Event handlers ---------
+
+  // จัดการการเลือกช่วงวันที่และอัปเดตตัวกรอง
+  const handleDateRangeSelect = (range) => {
+    setSelectedRange(range || { from: undefined, to: undefined });
+
+    // อัปเดตตัวกรอง
+    setFilters((prev) => {
+      const newFilters = { ...prev };
+
+      if (range?.from) {
+        newFilters.start_date = format(range.from, "yyyy-MM-dd");
+      } else {
+        newFilters.start_date = "";
+      }
+
+      if (range?.to) {
+        newFilters.end_date = format(range.to, "yyyy-MM-dd");
+      } else {
+        newFilters.end_date = "";
+      }
+
+      return newFilters;
+    });
+  };
+
   // จัดการเปลี่ยนแปลงในตัวกรองและรีเซ็ตหน้าปัจจุบัน
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
@@ -469,7 +474,6 @@ const ActionLogs = () => {
     setError(null);
   };
 
-  // --------- การล้างตัวกรองทั้งหมด ---------
   // ล้างตัวกรองทั้งหมดและรีเซ็ตการแบ่งหน้า
   const clearFilters = () => {
     setFilters({
@@ -484,21 +488,34 @@ const ActionLogs = () => {
     setError(null);
   };
 
+  // --------- useEffect hooks ---------
+
+  // โหลดข้อมูลทรัพยากรเริ่มต้นเมื่อ component mount
+  useEffect(() => {
+    if (user?.token && !resourcesLoaded) {
+      fetchInitialResources();
+    }
+  }, [user?.token, resourcesLoaded, fetchInitialResources]);
+
+  // โหลดข้อมูลบันทึกเมื่อทรัพยากรเริ่มต้นถูกโหลดหรือตัวกรองเปลี่ยน
+  useEffect(() => {
+    if (user?.token && resourcesLoaded) {
+      fetchLogs();
+    }
+  }, [user?.token, resourcesLoaded, currentPage, filters, fetchLogs]);
+
   // --------- คำนวณข้อมูลการแบ่งหน้า ---------
-  // คำนวณจำนวนหน้าทั้งหมดและตรวจสอบว่าสามารถไปยังหน้าถัดไป/ก่อนหน้าได้หรือไม่
   const totalPages = Math.ceil(totalLogs / filters.limit);
   const canGoToNextPage = currentPage < totalPages && logs.length > 0;
   const canGoToPreviousPage = currentPage > 1 && logs.length > 0;
 
   // --------- ตรวจสอบการเข้าสู่ระบบ ---------
-  // ถ้าไม่ได้เข้าสู่ระบบ ให้นำทางไปยังหน้าเข้าสู่ระบบ
   if (!user?.token) {
     return <Navigate to="/login" />;
   }
 
   // --------- แสดงสถานะกำลังโหลด ---------
-  // แสดงตัวบ่งชี้การโหลดระหว่างดึงข้อมูล
-  if (loading) {
+  if (loading && isInitialLoad) {
     return (
       <div
         className="flex justify-center items-center h-screen bg-gray-50"
@@ -789,33 +806,177 @@ const ActionLogs = () => {
 
         {/* --------- การแบ่งหน้า --------- */}
         <div
-          className="flex flex-col sm:flex-row justify-between items-center gap-4 mt-4"
+          className="flex flex-col items-center mt-4"
           data-cy="pagination-container"
         >
           <div
-            className="text-xs sm:text-sm text-gray-700 text-center sm:text-left w-full sm:w-auto"
+            className="text-xs sm:text-sm text-gray-700 mb-2"
             data-cy="pagination-info"
           >
-            แสดง {logs.length > 0 ? (currentPage - 1) * filters.limit + 1 : 0}{" "}
-            ถึง {Math.min(currentPage * filters.limit, totalLogs)} จาก{" "}
+            รายการที่{" "}
+            {logs.length > 0 ? (currentPage - 1) * filters.limit + 1 : 0} ถึง{" "}
+            {Math.min(currentPage * filters.limit, totalLogs)} จากทั้งหมด{" "}
             {totalLogs} รายการ
           </div>
-          <div className="flex space-x-2 w-full sm:w-auto justify-center">
+          <div className="flex items-center space-x-2 justify-center">
+            {/* ปุ่มหน้าแรก */}
+            <button
+              data-cy="first-page"
+              onClick={() => setCurrentPage(1)}
+              disabled={currentPage === 1 || logs.length === 0}
+              className="hidden sm:block px-2 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+            >
+              <span className="sr-only">หน้าแรก</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M13.293 4.293a1 1 0 0 1 0 1.414L7.414 12l5.879 5.293a1 1 0 1 1-1.414 1.414l-7-6a1 1 0 0 1 0-1.414l7-6a1 1 0 0 1 1.414 0z"
+                  clipRule="evenodd"
+                />
+                <path
+                  fillRule="evenodd"
+                  d="M7.293 4.293a1 1 0 0 1 0 1.414L1.414 12l5.879 5.293a1 1 0 1 1-1.414 1.414l-7-6a1 1 0 0 1 0-1.414l7-6a1 1 0 0 1 1.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+
+            {/* ปุ่มก่อนหน้า */}
             <button
               data-cy="previous-page"
               onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
               disabled={!canGoToPreviousPage}
-              className="px-3 sm:px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+              className="px-3 sm:px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm flex items-center"
             >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-4 h-4 mr-1 sm:mr-2"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
               ก่อนหน้า
             </button>
+
+            {/* แสดงปุ่มตัวเลขหน้า - ปรับปรุงตรรกะการแสดงหน้า */}
+            <div className="hidden sm:flex space-x-1">
+              {Array.from({ length: totalPages }).map((_, index) => {
+                const pageNumber = index + 1;
+
+                // ปรับตรรกะการแสดงหน้า
+                // 1. แสดงหน้าแรกเสมอ
+                // 2. แสดงหน้าสุดท้ายเสมอ
+                // 3. แสดงหน้าปัจจุบันและหน้าถัดไปอีก 2 หน้า
+                const isFirstPage = pageNumber === 1;
+                const isLastPage = pageNumber === totalPages;
+                const isWithinRange =
+                  pageNumber >= Math.max(1, currentPage) &&
+                  pageNumber <= Math.min(totalPages, currentPage + 2);
+
+                // เงื่อนไขการแสดงจุดไข่ปลา
+                const showLeftEllipsis = pageNumber === 2 && currentPage > 2;
+                const showRightEllipsis =
+                  pageNumber === totalPages - 1 && currentPage + 2 < totalPages;
+
+                // แสดงหน้าเมื่อเป็นไปตามเงื่อนไข
+                if (isFirstPage || isLastPage || isWithinRange) {
+                  return (
+                    <button
+                      key={pageNumber}
+                      onClick={() => setCurrentPage(pageNumber)}
+                      className={`w-8 h-8 flex items-center justify-center rounded-md text-xs transition-colors duration-200
+                ${
+                  pageNumber === currentPage
+                    ? "bg-blue-600 text-white font-medium shadow-sm"
+                    : "border bg-white text-gray-700 hover:bg-gray-50"
+                }`}
+                      data-cy={`page-number-${pageNumber}`}
+                      aria-current={
+                        pageNumber === currentPage ? "page" : undefined
+                      }
+                    >
+                      {pageNumber}
+                    </button>
+                  );
+                } else if (showLeftEllipsis || showRightEllipsis) {
+                  return (
+                    <div
+                      key={`ellipsis-${pageNumber}`}
+                      className="w-8 h-8 flex items-center justify-center text-gray-500"
+                    >
+                      &hellip;
+                    </div>
+                  );
+                }
+
+                return null;
+              })}
+            </div>
+
+            {/* แสดงตัวแสดงหน้าปัจจุบันบนมือถือ */}
+            <div className="flex sm:hidden items-center px-3 py-1 bg-gray-100 rounded-md text-sm font-medium">
+              <span>
+                {currentPage} / {Math.max(1, totalPages)}
+              </span>
+            </div>
+
+            {/* ปุ่มถัดไป */}
             <button
               data-cy="next-page"
               onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
               disabled={!canGoToNextPage}
-              className="px-3 sm:px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm"
+              className="px-3 sm:px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm flex items-center"
             >
               ถัดไป
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-4 h-4 ml-1 sm:ml-2"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </button>
+
+            {/* ปุ่มหน้าสุดท้าย */}
+            <button
+              data-cy="last-page"
+              onClick={() => setCurrentPage(totalPages)}
+              disabled={currentPage === totalPages || logs.length === 0}
+              className="hidden sm:block px-2 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+            >
+              <span className="sr-only">หน้าสุดท้าย</span>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                className="w-4 h-4"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M6.707 4.293a1 1 0 0 1 1.414 0l7 6a1 1 0 0 1 0 1.414l-7 6a1 1 0 0 1-1.414-1.414L12.586 10 6.707 4.707a1 1 0 0 1 0-1.414z"
+                  clipRule="evenodd"
+                />
+                <path
+                  fillRule="evenodd"
+                  d="M12.707 4.293a1 1 0 0 1 1.414 0l7 6a1 1 0 0 1 0 1.414l-7 6a1 1 0 0 1-1.414-1.414L18.586 10 12.707 4.707a1 1 0 0 1 0-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
             </button>
           </div>
         </div>
