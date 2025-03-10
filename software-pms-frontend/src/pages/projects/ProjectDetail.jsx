@@ -474,7 +474,7 @@ const ProjectDetail = () => {
                   className="rounded-xl overflow-hidden shadow-lg h-56 md:h-64 lg:h-72 hover:scale-105 transition-transform duration-300"
                 >
                   <img
-                    src={`${API_BASE_URL}/api/uploads/projects/${project.photo}`}
+                    src={project.photo}
                     alt={project.name}
                     className="w-full h-full object-cover"
                     onError={(e) => {

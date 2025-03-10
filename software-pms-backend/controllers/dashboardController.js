@@ -3,9 +3,9 @@ const db = require("../config/db");
 const path = require("path");
 const fs = require("fs").promises;
 const { existsSync } = require("fs");
+// ยังคงเก็บ path ของ upload folder ไว้สำหรับการรองรับไฟล์เก่า
 const uploadFolder = path.join(__dirname, "../uploads/test-files");
 
-// Utility function to safely process test results
 // Utility function to safely process test results
 const processTestResults = (jsonContent) => {
   try {
@@ -126,14 +126,6 @@ const dashboardController = {
         WHERE p.status != 'On Hold'
       `);
 
-      /*
-       await db.query(
-        `INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) 
-         VALUES (?, ?, ?, ?, ?)`,
-        [req.user.user_id, "view", "dashboard", null, JSON.stringify(stats[0])]
-      );
-      */
-
       res.json(stats[0]);
     } catch (error) {
       res.status(500).json({ error: error.message });
@@ -155,14 +147,6 @@ const dashboardController = {
         LEFT JOIN test_files tf ON s.sprint_id = tf.sprint_id
         GROUP BY p.project_id
       `);
-
-      /* Disable Actionlog View Dashboard
-      await db.query(
-        `INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) 
-         VALUES (?, ?, ?, ?, ?)`,
-        [req.user.user_id, "view", "projects", null, null]
-      );
-      */
 
       res.json(projects);
     } catch (error) {
@@ -188,58 +172,65 @@ const dashboardController = {
       `,
         [req.params.projectId]
       );
-      /*
-      await db.query(
-        `INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) 
-         VALUES (?, ?, ?, ?, ?)`,
-        [
-          req.user.user_id,
-          "view",
-          "project_sprints",
-          req.params.projectId,
-          null,
-        ]
-      );
-      */
+
       res.json(sprints);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   },
 
-  // Get Project Test Results
+  // Get Project Test Results - อ่านจาก DB แทน
   getProjectTestResults: async (req, res) => {
     const connection = await db.getConnection();
     try {
       const [files] = await connection.execute(
         `
-        SELECT tf.*, 
-          p.name as project_name,
-          s.name as sprint_name
-        FROM test_files tf
-        JOIN sprints s ON tf.sprint_id = s.sprint_id
-        JOIN projects p ON s.project_id = p.project_id
-        WHERE p.project_id = ?
-        ORDER BY tf.upload_date DESC
-      `,
+      SELECT tf.*, 
+        p.name as project_name,
+        s.name as sprint_name,
+        tf.json_content
+      FROM test_files tf
+      JOIN sprints s ON tf.sprint_id = s.sprint_id
+      JOIN projects p ON s.project_id = p.project_id
+      WHERE p.project_id = ?
+      ORDER BY tf.upload_date DESC
+    `,
         [req.params.projectId]
       );
 
-      // Read JSON content for each file
+      // แปลงข้อมูล JSON string เป็น object
       const filesWithContent = await Promise.all(
         files.map(async (file) => {
           try {
-            const filePath = path.join(uploadFolder, file.original_filename);
-            if (existsSync(filePath)) {
-              const content = await fs.readFile(filePath, "utf8");
-              file.json_content = JSON.parse(content);
-            } else {
-              file.json_content = null;
-              console.warn(`File not found: ${filePath}`);
+            if (file.json_content) {
+              if (typeof file.json_content === "string") {
+                file.json_content = JSON.parse(file.json_content);
+              }
+              // ถ้าเป็น object อยู่แล้วก็ใช้ได้เลย
+            }
+            // ถ้าไม่มีข้อมูลใน DB ให้ลองอ่านจากไฟล์เป็น fallback (สำหรับข้อมูลเก่า)
+            else {
+              const filePath = path.join(uploadFolder, file.original_filename);
+              if (existsSync(filePath)) {
+                try {
+                  // ใช้ await fs.readFile แทน fs.readFileSync
+                  const content = await fs.readFile(filePath, "utf8");
+                  file.json_content = JSON.parse(content);
+                } catch (error) {
+                  console.error(
+                    `Error reading file ${file.original_filename}:`,
+                    error
+                  );
+                  file.json_content = null;
+                }
+              } else {
+                console.warn(`File not found: ${filePath}`);
+                file.json_content = null;
+              }
             }
           } catch (error) {
             console.error(
-              `Error reading file ${file.original_filename}:`,
+              `Error parsing JSON for file ${file.file_id}:`,
               error
             );
             file.json_content = null;
@@ -247,19 +238,7 @@ const dashboardController = {
           return file;
         })
       );
-      /*
-      await db.query(
-        `INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) 
-         VALUES (?, ?, ?, ?, ?)`,
-        [
-          req.user.user_id,
-          "view",
-          "project_test_results",
-          req.params.projectId,
-          null,
-        ]
-      );
-      */
+
       res.json(filesWithContent);
     } catch (error) {
       console.error("Error fetching all test results:", error);
@@ -289,19 +268,14 @@ const dashboardController = {
       `,
         [req.params.projectId]
       );
-      /*
-      await db.query(
-        `INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) 
-         VALUES (?, ?, ?, ?, ?)`,
-        [req.user.user_id, "view", "sprint_results", req.params.projectId, null]
-      );
-      */
+
       res.json(results);
     } catch (error) {
       res.status(500).json({ error: error.message });
     }
   },
 
+  // แก้ไขส่วนของ getSprintStackedChartData
   getSprintStackedChartData: async (req, res) => {
     const connection = await db.getConnection();
     try {
@@ -319,7 +293,7 @@ const dashboardController = {
       const sprintData = await Promise.all(
         sprints.map(async (sprint) => {
           const [files] = await connection.execute(
-            `SELECT tf.* 
+            `SELECT tf.*, tf.json_content 
              FROM test_files tf
              WHERE tf.sprint_id = ? AND tf.status != 'Deleted'
              ORDER BY tf.upload_date DESC`,
@@ -336,36 +310,46 @@ const dashboardController = {
             totalDuration: 0,
           };
 
-          await Promise.all(
-            files.map(async (file) => {
-              try {
+          files.forEach((file) => {
+            try {
+              let jsonContent;
+
+              // ถ้ามีข้อมูล JSON ใน DB ให้ใช้จาก DB
+              if (file.json_content) {
+                if (typeof file.json_content === "string") {
+                  jsonContent = JSON.parse(file.json_content);
+                } else {
+                  jsonContent = file.json_content;
+                }
+              }
+              // Fallback: ถ้าไม่มีข้อมูลใน DB ให้ลองอ่านจากไฟล์ (สำหรับข้อมูลเก่า)
+              else {
                 const filePath = path.join(
                   uploadFolder,
                   file.original_filename
                 );
                 if (existsSync(filePath)) {
-                  const content = await fs.readFile(filePath, "utf8");
-                  const jsonContent = JSON.parse(content);
-
-                  const results = processTestResults(jsonContent);
-
-                  // Aggregate results
-                  Object.keys(results).forEach((key) => {
-                    if (key === "duration") {
-                      aggregatedResults.totalDuration += results[key];
-                    } else {
-                      aggregatedResults[key] += results[key];
-                    }
-                  });
+                  const content = fs.readFileSync(filePath, "utf8");
+                  jsonContent = JSON.parse(content);
+                } else {
+                  return; // ข้ามไฟล์นี้ถ้าไม่มีทั้งใน DB และ filesystem
                 }
-              } catch (error) {
-                console.error(
-                  `Error processing file ${file.original_filename}:`,
-                  error
-                );
               }
-            })
-          );
+
+              const results = processTestResults(jsonContent);
+
+              // Aggregate results
+              Object.keys(results).forEach((key) => {
+                if (key === "duration") {
+                  aggregatedResults.totalDuration += results[key];
+                } else {
+                  aggregatedResults[key] += results[key];
+                }
+              });
+            } catch (error) {
+              console.error(`Error processing file ${file.file_id}:`, error);
+            }
+          });
 
           return {
             sprintName: sprint.name,
@@ -393,7 +377,8 @@ const dashboardController = {
         `
         SELECT tf.*, 
           p.name as project_name,
-          s.name as sprint_name
+          s.name as sprint_name,
+          tf.json_content
         FROM test_files tf
         JOIN sprints s ON tf.sprint_id = s.sprint_id
         JOIN projects p ON s.project_id = p.project_id
@@ -403,41 +388,40 @@ const dashboardController = {
         [req.params.sprintId]
       );
 
-      // อ่านข้อมูล JSON สำหรับแต่ละไฟล์
-      const filesWithContent = await Promise.all(
-        files.map(async (file) => {
-          try {
+      // แปลงข้อมูล JSON string เป็น object
+      const filesWithContent = files.map((file) => {
+        try {
+          if (file.json_content) {
+            if (typeof file.json_content === "string") {
+              file.json_content = JSON.parse(file.json_content);
+            }
+            // ถ้าเป็น object อยู่แล้วก็ใช้ได้เลย
+          }
+          // Fallback: ถ้าไม่มีข้อมูลใน DB ให้ลองอ่านจากไฟล์ (สำหรับข้อมูลเก่า)
+          else {
             const filePath = path.join(uploadFolder, file.original_filename);
             if (existsSync(filePath)) {
-              const content = await fs.readFile(filePath, "utf8");
-              file.json_content = JSON.parse(content);
+              try {
+                const content = fs.readFileSync(filePath, "utf8");
+                file.json_content = JSON.parse(content);
+              } catch (error) {
+                console.error(
+                  `Error reading file ${file.original_filename}:`,
+                  error
+                );
+                file.json_content = null;
+              }
             } else {
               file.json_content = null;
-              console.warn(`File not found: ${filePath}`);
             }
-          } catch (error) {
-            console.error(
-              `Error reading file ${file.original_filename}:`,
-              error
-            );
-            file.json_content = null;
           }
-          return file;
-        })
-      );
-      /*
-      await db.query(
-        `INSERT INTO action_logs (user_id, action_type, target_table, target_id, details) 
-         VALUES (?, ?, ?, ?, ?)`,
-        [
-          req.user.user_id,
-          "view",
-          "sprint_test_files",
-          req.params.sprintId,
-          null,
-        ]
-      );
-      */
+        } catch (error) {
+          console.error(`Error parsing JSON for file ${file.file_id}:`, error);
+          file.json_content = null;
+        }
+        return file;
+      });
+
       res.json(filesWithContent);
     } catch (error) {
       console.error("Error fetching test files:", error);

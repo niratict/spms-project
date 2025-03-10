@@ -88,9 +88,15 @@ const Sprints = () => {
 
   // ========== Handler Functions ==========
 
-  // จัดการเมื่อผู้ใช้เลือกโปรเจกต์
+  // จัดการเมื่อผู้ใช้เลือกโปรเจกต์ - แก้ไขให้สามารถเลือกหรือยกเลิกการเลือกได้
   const handleProjectSelect = (project) => {
-    setSelectedProject(project);
+    // ถ้าคลิกที่โปรเจกต์ที่เลือกอยู่แล้ว ให้ยกเลิกการเลือก
+    if (selectedProject?.project_id === project.project_id) {
+      setSelectedProject(null);
+    } else {
+      // ถ้าคลิกที่โปรเจกต์อื่น ให้เลือกโปรเจกต์นั้น
+      setSelectedProject(project);
+    }
     navigate(".", { replace: true, state: {} });
   };
 

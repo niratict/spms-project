@@ -2,20 +2,30 @@
 const db = require("../config/db");
 const bcrypt = require("bcryptjs");
 const multer = require("multer");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
 const path = require("path");
 const fs = require("fs").promises;
 
-// Configure multer for image uploads
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    cb(null, "./uploads/profiles");
-  },
-  filename: (req, file, cb) => {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, `profile-${uniqueSuffix}${path.extname(file.originalname)}`);
+// Configure Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// Setup CloudinaryStorage for multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "profiles",
+    allowed_formats: ["jpg", "jpeg", "png"],
+    transformation: [{ width: 500, height: 500, crop: "limit" }], // Resize image to max 500x500
+    format: "jpg", // Convert all images to jpg
   },
 });
 
+// Configure multer with Cloudinary storage
 const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
@@ -33,19 +43,6 @@ const upload = multer({
   },
 }).single("profile_image");
 
-// Create uploads directory if it doesn't exist
-const ensureUploadDirExists = async () => {
-  const uploadDir = "./uploads/profiles";
-  try {
-    await fs.access(uploadDir);
-  } catch (error) {
-    await fs.mkdir(uploadDir, { recursive: true });
-  }
-};
-
-// Initialize upload directory
-ensureUploadDirExists().catch(console.error);
-
 // Get profile information
 const getProfile = async (req, res) => {
   try {
@@ -56,6 +53,7 @@ const getProfile = async (req, res) => {
         email, 
         role, 
         profile_image,
+        profile_image_public_id,
         created_at,
         updated_at
       FROM users 
@@ -120,28 +118,24 @@ const updateProfileImage = async (req, res) => {
     try {
       // Get old image info
       const [user] = await db.query(
-        "SELECT profile_image FROM users WHERE user_id = ?",
+        "SELECT profile_image, profile_image_public_id FROM users WHERE user_id = ?",
         [req.user.user_id]
       );
 
-      // Delete old image if it exists
-      if (user.length && user[0].profile_image) {
-        const oldImagePath = path.join(
-          "./uploads/profiles",
-          user[0].profile_image
-        );
+      // Delete old image from Cloudinary if it exists
+      if (user.length && user[0].profile_image_public_id) {
         try {
-          await fs.unlink(oldImagePath);
+          await cloudinary.uploader.destroy(user[0].profile_image_public_id);
         } catch (err) {
-          console.error("Error deleting old file:", err);
+          console.error("Error deleting old file from Cloudinary:", err);
         }
       }
 
       // Update database with new image
-      await db.query("UPDATE users SET profile_image = ? WHERE user_id = ?", [
-        req.file.filename,
-        req.user.user_id,
-      ]);
+      await db.query(
+        "UPDATE users SET profile_image = ?, profile_image_public_id = ? WHERE user_id = ?",
+        [req.file.path, req.file.filename, req.user.user_id]
+      );
 
       // Log the action
       await db.query(
@@ -152,22 +146,26 @@ const updateProfileImage = async (req, res) => {
           "users",
           req.user.user_id,
           JSON.stringify({
-            new_image: req.file.filename,
+            new_image: req.file.path,
+            new_image_public_id: req.file.filename,
             old_image: user[0]?.profile_image,
+            old_image_public_id: user[0]?.profile_image_public_id,
           }),
         ]
       );
 
       res.json({
         message: "Profile image updated successfully",
-        filename: req.file.filename,
+        filename: req.file.path,
       });
     } catch (error) {
-      // Clean up uploaded file if database operation fails
-      try {
-        await fs.unlink(req.file.path);
-      } catch (err) {
-        console.error("Error deleting uploaded file:", err);
+      // Delete the uploaded image from Cloudinary if database operation fails
+      if (req.file && req.file.filename) {
+        try {
+          await cloudinary.uploader.destroy(req.file.filename);
+        } catch (err) {
+          console.error("Error deleting uploaded file from Cloudinary:", err);
+        }
       }
       res.status(500).json({ error: error.message });
     }
@@ -178,7 +176,7 @@ const updateProfileImage = async (req, res) => {
 const deleteProfileImage = async (req, res) => {
   try {
     const [user] = await db.query(
-      "SELECT profile_image FROM users WHERE user_id = ?",
+      "SELECT profile_image, profile_image_public_id FROM users WHERE user_id = ?",
       [req.user.user_id]
     );
 
@@ -186,19 +184,20 @@ const deleteProfileImage = async (req, res) => {
       return res.status(404).json({ message: "Profile image not found" });
     }
 
-    const imagePath = path.join("./uploads/profiles", user[0].profile_image);
-
-    // Delete the image file
-    try {
-      await fs.unlink(imagePath);
-    } catch (err) {
-      console.error("Error deleting file:", err);
+    // Delete the image from Cloudinary
+    if (user[0].profile_image_public_id) {
+      try {
+        await cloudinary.uploader.destroy(user[0].profile_image_public_id);
+      } catch (err) {
+        console.error("Error deleting file from Cloudinary:", err);
+      }
     }
 
     // Update database
-    await db.query("UPDATE users SET profile_image = NULL WHERE user_id = ?", [
-      req.user.user_id,
-    ]);
+    await db.query(
+      "UPDATE users SET profile_image = NULL, profile_image_public_id = NULL WHERE user_id = ?",
+      [req.user.user_id]
+    );
 
     // Log the action
     await db.query(
@@ -208,7 +207,10 @@ const deleteProfileImage = async (req, res) => {
         "delete_profile_image",
         "users",
         req.user.user_id,
-        JSON.stringify({ deleted_image: user[0].profile_image }),
+        JSON.stringify({
+          deleted_image: user[0].profile_image,
+          deleted_image_public_id: user[0].profile_image_public_id,
+        }),
       ]
     );
 

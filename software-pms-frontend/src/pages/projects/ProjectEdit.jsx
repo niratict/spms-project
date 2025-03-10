@@ -343,9 +343,7 @@ const ProjectEdit = () => {
         // ตั้งค่ารูปภาพถ้ามี
         if (projectData.photo) {
           setCurrentImage(projectData.photo);
-          setPreviewImage(
-            `${API_BASE_URL}/api/uploads/projects/${projectData.photo}`
-          );
+          setPreviewImage(projectData.photo); // ใช้ URL โดยตรงแทนการเติม path นำหน้า
         }
       } catch (err) {
         setError(err.response?.data?.message || "Failed to fetch project");

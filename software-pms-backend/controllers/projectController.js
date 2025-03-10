@@ -1,19 +1,29 @@
 const db = require("../config/db");
-const fs = require("fs").promises;
-const path = require("path");
 const multer = require("multer");
+const cloudinary = require("cloudinary").v2;
+const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const fs = require("fs");
+const path = require("path");
 
-// กำหนดการตั้งค่า multer สำหรับอัพโหลดรูปภาพ
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, "uploads/projects/");
-  },
-  filename: function (req, file, cb) {
-    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, "project-" + uniqueSuffix + path.extname(file.originalname));
+// ตั้งค่า Cloudinary
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET,
+});
+
+// กำหนดการตั้งค่า CloudinaryStorage สำหรับ multer
+const storage = new CloudinaryStorage({
+  cloudinary: cloudinary,
+  params: {
+    folder: "projects",
+    allowed_formats: ["jpg", "jpeg", "png", "gif"],
+    transformation: [{ width: 1000, crop: "limit" }], // ปรับขนาดภาพเป็นความกว้างสูงสุด 1000px
+    format: "jpg", // แปลงรูปภาพทั้งหมดเป็น jpg
   },
 });
 
+// ตั้งค่า multer สำหรับอัพโหลดรูปภาพ
 const upload = multer({
   storage: storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // จำกัดขนาดไฟล์ 5MB
@@ -21,7 +31,7 @@ const upload = multer({
     if (file.mimetype.startsWith("image/")) {
       cb(null, true);
     } else {
-      cb(new Error("Only image files are allowed!"), false);
+      cb(new Error("รองรับเฉพาะไฟล์รูปภาพเท่านั้น"), false);
     }
   },
 });
@@ -31,15 +41,19 @@ const createProject = async (req, res) => {
   try {
     const { name, description, start_date, end_date } = req.body;
     let photoPath = null;
+    let photoPublicId = null;
 
+    // ตรวจสอบว่ามีการอัพโหลดรูปภาพหรือไม่
     if (req.file) {
-      photoPath = req.file.filename;
+      photoPath = req.file.path; // Cloudinary URL
+      photoPublicId = req.file.filename; // Cloudinary public ID
     }
 
     // ต้องเป็น Admin หรือ Product Owner เท่านั้นที่สามารถสร้างโปรเจกต์ได้
     if (req.user.role !== "Admin" && req.user.role !== "Product Owner") {
       return res.status(403).json({
-        message: "Only Admin or Product Owner can create projects",
+        message:
+          "เฉพาะ Admin หรือ Product Owner เท่านั้นที่สามารถสร้างโปรเจกต์ได้",
       });
     }
 
@@ -48,13 +62,14 @@ const createProject = async (req, res) => {
     try {
       await connection.beginTransaction();
 
-      // Insert project
+      // เพิ่มคอลัมน์ photo_public_id เพื่อเก็บ public ID ของ Cloudinary
       const [result] = await connection.query(
-        "INSERT INTO projects (name, description, photo, start_date, end_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?)",
+        "INSERT INTO projects (name, description, photo, photo_public_id, start_date, end_date, status, created_by) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
         [
           name,
           description,
           photoPath,
+          photoPublicId,
           start_date,
           end_date,
           "Active",
@@ -81,35 +96,37 @@ const createProject = async (req, res) => {
           "create",
           "projects",
           projectId,
-          JSON.stringify({ ...req.body, photo: photoPath }),
+          JSON.stringify({
+            ...req.body,
+            photo: photoPath,
+            photo_public_id: photoPublicId,
+          }),
         ]
       );
 
       await connection.commit();
 
       res.status(201).json({
-        message: "Project created successfully",
+        message: "สร้างโปรเจกต์สำเร็จ",
         project_id: projectId,
         photo: photoPath,
       });
     } catch (error) {
       await connection.rollback();
+      // ถ้ามีข้อผิดพลาด และมีการอัพโหลดรูปภาพ ให้ลบรูปภาพออกจาก Cloudinary
+      if (photoPublicId) {
+        await cloudinary.uploader.destroy(photoPublicId).catch(() => {});
+      }
       throw error;
     } finally {
       connection.release();
     }
   } catch (error) {
-    // ถ้ามีข้อผิดพลาด ให้ลบไฟล์รูปภาพที่อัพโหลดไว้
-    if (req.file) {
-      await fs
-        .unlink(path.join("uploads/projects/", req.file.filename))
-        .catch(() => {});
-    }
     res.status(500).json({ error: error.message });
   }
 };
 
-// ดึงรายการ Project ทั้งหมด
+// ดึงรายการ Project ทั้งหมด (ไม่มีการเปลี่ยนแปลงในส่วนนี้)
 const getAllProjects = async (req, res) => {
   try {
     let query = "";
@@ -188,7 +205,7 @@ const getAllProjects = async (req, res) => {
   }
 };
 
-// ดึงข้อมูล Project ตาม ID
+// ดึงข้อมูล Project ตาม ID (ไม่มีการเปลี่ยนแปลงในส่วนนี้)
 const getProjectById = async (req, res) => {
   try {
     const [project] = await db.query(
@@ -197,7 +214,7 @@ const getProjectById = async (req, res) => {
     );
 
     if (!project.length) {
-      return res.status(404).json({ message: "Project not found" });
+      return res.status(404).json({ message: "ไม่พบโปรเจกต์" });
     }
 
     // ดึงข้อมูล sprints ที่เกี่ยวข้อง
@@ -214,6 +231,7 @@ const getProjectById = async (req, res) => {
   }
 };
 
+// อัพเดท Project
 const updateProject = async (req, res) => {
   try {
     const { name, description, start_date, end_date, status } = req.body;
@@ -225,44 +243,48 @@ const updateProject = async (req, res) => {
     );
 
     if (!project.length) {
-      return res.status(404).json({ message: "Project not found" });
+      return res.status(404).json({ message: "ไม่พบโปรเจกต์" });
     }
 
     let photoPath = project[0].photo;
+    let photoPublicId = project[0].photo_public_id;
 
     // ถ้ามีการอัพโหลดรูปใหม่
     if (req.file) {
-      // ลบรูปเก่า (ถ้ามี)
-      if (project[0].photo) {
-        try {
-          await fs.unlink(path.join("uploads/projects/", project[0].photo));
-        } catch (err) {
-          console.error("Error deleting old image:", err);
-          // ไม่ต้อง return error เพราะถ้าลบไม่ได้ก็ไม่เป็นไร
-        }
+      // ลบรูปเก่าออกจาก Cloudinary (ถ้ามี)
+      if (project[0].photo_public_id) {
+        await cloudinary.uploader
+          .destroy(project[0].photo_public_id)
+          .catch((err) => {
+            console.error("Error deleting old image from Cloudinary:", err);
+          });
       }
-      photoPath = req.file.filename;
+
+      photoPath = req.file.path; // Cloudinary URL
+      photoPublicId = req.file.filename; // Cloudinary public ID
     }
 
-    // เพิ่มการตรวจสอบว่าถ้าส่ง photo มาเป็น null ให้ลบรูปเก่าออก
-    if (req.body.photo === null && project[0].photo) {
-      try {
-        await fs.unlink(path.join("uploads/projects/", project[0].photo));
-        photoPath = null;
-      } catch (err) {
-        console.error("Error deleting image:", err);
-      }
+    // ถ้าส่ง photo มาเป็น null ให้ลบรูปเก่าออก
+    if (req.body.photo === null && project[0].photo_public_id) {
+      await cloudinary.uploader
+        .destroy(project[0].photo_public_id)
+        .catch((err) => {
+          console.error("Error deleting image from Cloudinary:", err);
+        });
+      photoPath = null;
+      photoPublicId = null;
     }
 
     await db.query(
       `UPDATE projects 
-       SET name = ?, description = ?, photo = ?, start_date = ?, 
+       SET name = ?, description = ?, photo = ?, photo_public_id = ?, start_date = ?, 
            end_date = ?, status = ?, updated_by = ?
        WHERE project_id = ?`,
       [
         name,
         description,
         photoPath,
+        photoPublicId,
         start_date,
         end_date,
         status,
@@ -272,18 +294,10 @@ const updateProject = async (req, res) => {
     );
 
     res.json({
-      message: "Project updated successfully",
+      message: "อัพเดทโปรเจกต์สำเร็จ",
       photo: photoPath,
     });
   } catch (error) {
-    // ถ้ามีข้อผิดพลาด ให้ลบไฟล์รูปภาพที่อัพโหลดไว้
-    if (req.file) {
-      try {
-        await fs.unlink(path.join("uploads/projects/", req.file.filename));
-      } catch (err) {
-        console.error("Error deleting uploaded file:", err);
-      }
-    }
     res.status(500).json({ error: error.message });
   }
 };
@@ -297,7 +311,7 @@ const deleteProject = async (req, res) => {
     );
 
     if (!project.length) {
-      return res.status(404).json({ message: "Project not found" });
+      return res.status(404).json({ message: "ไม่พบโปรเจกต์" });
     }
 
     // ตรวจสอบว่ามี Sprint ที่เกี่ยวข้องหรือไม่
@@ -308,16 +322,18 @@ const deleteProject = async (req, res) => {
 
     if (sprints[0].count > 0) {
       return res.status(400).json({
-        message: "Cannot delete project with existing sprints",
+        message: "ไม่สามารถลบโปรเจกต์ที่มี Sprint อยู่ได้",
         sprint_count: sprints[0].count,
       });
     }
 
-    // ลบรูปภาพ (ถ้ามี)
-    if (project[0].photo) {
-      await fs
-        .unlink(path.join("uploads/projects/", project[0].photo))
-        .catch(() => {});
+    // ลบรูปภาพออกจาก Cloudinary (ถ้ามี)
+    if (project[0].photo_public_id) {
+      await cloudinary.uploader
+        .destroy(project[0].photo_public_id)
+        .catch((err) => {
+          console.error("Error deleting image from Cloudinary:", err);
+        });
     }
 
     await db.query("DELETE FROM projects WHERE project_id = ?", [
@@ -336,13 +352,13 @@ const deleteProject = async (req, res) => {
       ]
     );
 
-    res.json({ message: "Project deleted successfully" });
+    res.json({ message: "ลบโปรเจกต์สำเร็จ" });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-// ดึงสถิติของ Project
+// ดึงสถิติของ Project (ไม่มีการเปลี่ยนแปลงในส่วนนี้)
 const getProjectStats = async (req, res) => {
   try {
     const [stats] = await db.query(
@@ -366,7 +382,7 @@ const getProjectStats = async (req, res) => {
     );
 
     if (!stats.length) {
-      return res.status(404).json({ message: "Project not found" });
+      return res.status(404).json({ message: "ไม่พบโปรเจกต์" });
     }
 
     res.json(stats[0]);
@@ -374,20 +390,6 @@ const getProjectStats = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
-// สร้าง middleware function สำหรับตรวจสอบและสร้างโฟลเดอร์
-const ensureUploadDirExists = async () => {
-  const uploadDir = "uploads/projects";
-  try {
-    await fs.access(uploadDir);
-  } catch (error) {
-    // ถ้าโฟลเดอร์ไม่มีอยู่ ให้สร้างใหม่
-    await fs.mkdir(uploadDir, { recursive: true });
-  }
-};
-
-// เรียกใช้งานฟังก์ชันเมื่อเริ่มต้น server
-ensureUploadDirExists().catch(console.error);
 
 module.exports = {
   createProject,

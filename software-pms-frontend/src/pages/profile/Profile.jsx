@@ -121,9 +121,7 @@ const Profile = () => {
         email: profileData.email,
       });
       if (profileData.profile_image) {
-        setImagePreview(
-          `${API_BASE_URL}/api/uploads/profiles/${profileData.profile_image}`
-        );
+        setImagePreview(profileData.profile_image);
       } else {
         setImagePreview(null);
       }
