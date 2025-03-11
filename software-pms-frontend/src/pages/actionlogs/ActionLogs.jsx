@@ -22,7 +22,9 @@ const ActionLogs = () => {
   const [error, setError] = useState(null);
   const [actionTypes, setActionTypes] = useState([]);
   const [targetTables, setTargetTables] = useState([]);
+  const [filteredTargetTables, setFilteredTargetTables] = useState([]);
   const [projects, setProjects] = useState({});
+  const [sprints, setSprints] = useState({}); // เพิ่มสถานะเก็บข้อมูล sprints
   const [isInitialLoad, setIsInitialLoad] = useState(true);
   const [resourcesLoaded, setResourcesLoaded] = useState(false);
 
@@ -88,6 +90,20 @@ const ActionLogs = () => {
     "users",
   ];
 
+  // กำหนดความสัมพันธ์ระหว่างประเภทการดำเนินการกับตารางเป้าหมาย
+  const actionTypeToTargetTableMap = {
+    create: ["projects", "sprints", "test_files", "users", "project_members"],
+    update: ["projects", "sprints", "test_files", "users", "project_members"],
+    delete: ["projects", "sprints", "test_files", "users", "project_members"],
+    upload: ["test_files"],
+    update_profile: ["users"],
+    update_profile_image: ["users"],
+    delete_profile_image: ["users"],
+    password_change: ["users"],
+    assign: ["project_members"],
+    remove: ["project_members"],
+  };
+
   // --------- ฟังก์ชัน Helper ---------
 
   // ปรับวันที่เริ่มต้นและสิ้นสุดให้ครอบคลุมทั้งวัน
@@ -142,6 +158,22 @@ const ActionLogs = () => {
     )}`;
   };
 
+  // ฟังก์ชันสำหรับแสดงชื่อ Sprint (แม้จะถูกลบไปแล้ว)
+  const getSprintName = (sprintId) => {
+    if (sprints[sprintId]) {
+      return sprints[sprintId];
+    }
+    return `สปรินต์ #${sprintId} (ถูกลบแล้ว)`;
+  };
+
+  // ฟังก์ชันสำหรับแสดงชื่อโปรเจกต์ (แม้จะถูกลบไปแล้ว)
+  const getProjectName = (projectId) => {
+    if (projects[projectId]) {
+      return projects[projectId];
+    }
+    return `โปรเจกต์ #${projectId} (ถูกลบแล้ว)`;
+  };
+
   // แสดงรายละเอียดการดำเนินการในรูปแบบที่อ่านง่าย
   const formatDetails = (details, targetTable, actionType) => {
     if (!details) return "-";
@@ -180,6 +212,7 @@ const ActionLogs = () => {
         created_by: "สร้างโดย",
         project_id: "รหัสโปรเจกต์",
         upload_date: "วันที่อัพโหลด",
+        updated_by: "แก้ไขโดย",
         last_modified_by: "แก้ไขล่าสุดโดย",
         start_date: "วันที่เริ่มต้น",
         updated_at: "แก้ไขโดย",
@@ -195,7 +228,11 @@ const ActionLogs = () => {
         file_id: "รหัสไฟล์",
         filename: "ชื่อไฟล์",
         new_image: "รูปภาพใหม่",
+        new_image_public_id: "รหัสสาธารณะของรูปภาพใหม่",
         old_image: "รูปภาพเก่า",
+        photo_public_id: "รหัสสาธารณะของรูปภาพ",
+        deleted_image: "ลบรูปภาพ",
+        deleted_image_public_id: "รหัสสาธารณะของรูปภาพที่ถูกลบ",
         last_modified_date: "วันที่แก้ไขล่าสุด",
       };
 
@@ -267,7 +304,15 @@ const ActionLogs = () => {
 
         // แปลงค่าตามรูปแบบที่พบ
         let displayValue;
-        if (isISODateFormat) {
+
+        // แสดงชื่อ Sprint แทนเลข ID
+        if (key === "sprint_id") {
+          displayValue = getSprintName(value);
+        }
+        // แสดงชื่อ Project แทนเลข ID
+        else if (key === "project_id") {
+          displayValue = getProjectName(value);
+        } else if (isISODateFormat) {
           displayValue = formatThaiDate(new Date(value));
         } else if (isSimpleDateFormat) {
           displayValue = formatThaiDate(new Date(value));
@@ -329,10 +374,11 @@ const ActionLogs = () => {
       const authAxios = createAuthAxios();
 
       // ดึงข้อมูลพร้อมกันทั้งหมดในครั้งเดียว
-      const [typesRes, tablesRes, projectsRes] = await Promise.all([
+      const [typesRes, tablesRes, projectsRes, sprintsRes] = await Promise.all([
         authAxios.get("/api/action-logs/types"),
         authAxios.get("/api/action-logs/tables"),
         authAxios.get("/api/projects"),
+        authAxios.get("/api/sprints"), // เพิ่มการดึงข้อมูล sprints
       ]);
 
       // จัดเรียงประเภทการดำเนินการตามลำดับความสำคัญ
@@ -357,10 +403,18 @@ const ActionLogs = () => {
         projectMap[project.project_id] = project.name;
       });
 
+      // สร้าง map ของ sprint_id เป็น sprint_name
+      const sprintMap = {};
+      sprintsRes.data.forEach((sprint) => {
+        sprintMap[sprint.sprint_id] = sprint.name;
+      });
+
       // อัปเดตสถานะพร้อมกันหลังจากได้รับข้อมูลทั้งหมด
       setActionTypes(sortedTypes);
       setTargetTables(sortedTables);
+      setFilteredTargetTables(sortedTables); // เริ่มต้นกับทุกตาราง
       setProjects(projectMap);
+      setSprints(sprintMap);
       setResourcesLoaded(true);
     } catch (err) {
       setError("ไม่สามารถโหลดข้อมูลพื้นฐานได้");
@@ -400,21 +454,31 @@ const ActionLogs = () => {
 
       const response = await authAxios.get(`/api/action-logs?${queryParams}`);
 
-      // เพิ่มข้อมูลโปรเจกต์เข้าไปใน logs
+      // เพิ่มข้อมูลโปรเจกต์และสปรินต์เข้าไปใน logs
       const enhancedLogs = response.data.logs.map((log) => {
-        // หาข้อมูล project_id จาก details สำหรับ project_members
+        let enhancedLog = { ...log };
+
+        // เพิ่มข้อมูลโปรเจกต์สำหรับ project_members
         if (
           log.target_table === "project_members" &&
           log.details &&
           log.details.project_id
         ) {
-          return {
-            ...log,
+          enhancedLog = {
+            ...enhancedLog,
             project_id: log.details.project_id,
             project_name: projects[log.details.project_id] || null,
           };
         }
-        return log;
+
+        // เพิ่มข้อมูลสปรินต์ถ้ามี sprint_id ในรายละเอียด
+        if (log.details && log.details.sprint_id) {
+          enhancedLog.sprint_name =
+            sprints[log.details.sprint_id] ||
+            `สปรินต์ #${log.details.sprint_id} (ถูกลบแล้ว)`;
+        }
+
+        return enhancedLog;
       });
 
       setLogs(enhancedLogs);
@@ -438,7 +502,46 @@ const ActionLogs = () => {
     createAuthAxios,
     adjustDateRange,
     projects,
+    sprints,
   ]);
+
+  // ฟังก์ชันสำหรับดึงชื่อเดิมจาก details ตามประเภทของเป้าหมาย
+  const getOriginalName = (log, targetType) => {
+    // ถ้าเป็นการลบ ให้ดึงชื่อจาก details โดยตรง
+    if (log.action_type === "delete" && log.details && log.details.name) {
+      return log.details.name;
+    }
+
+    // กรณีมีการอัพเดท ชื่ออาจจะอยู่ในรูปแบบต่างกันตามประเภท
+    if (log.action_type === "update") {
+      if (targetType === "sprint" && log.details) {
+        return (
+          log.details.name ||
+          (log.details.new && log.details.new.name) ||
+          (log.details.old && log.details.old.name)
+        );
+      }
+      if (targetType === "project" && log.details) {
+        return (
+          log.details.name ||
+          (log.details.new && log.details.new.name) ||
+          (log.details.old && log.details.old.name)
+        );
+      }
+      if (targetType === "user" && log.details) {
+        return (
+          log.details.user_name ||
+          log.details.name ||
+          (log.details.new &&
+            (log.details.new.user_name || log.details.new.name)) ||
+          (log.details.old &&
+            (log.details.old.user_name || log.details.old.name))
+        );
+      }
+    }
+
+    return null;
+  };
 
   // --------- Event handlers ---------
 
@@ -467,9 +570,37 @@ const ActionLogs = () => {
   };
 
   // จัดการเปลี่ยนแปลงในตัวกรองและรีเซ็ตหน้าปัจจุบัน
+  // เมื่อมีการเปลี่ยนแปลง action_type
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
-    setFilters((prev) => ({ ...prev, [name]: value }));
+
+    // อัปเดตตัวกรอง
+    setFilters((prev) => {
+      const newFilters = { ...prev, [name]: value };
+
+      // ถ้าเปลี่ยนประเภทการดำเนินการ ให้รีเซ็ตตารางเป้าหมาย
+      if (name === "action_type" && value !== prev.action_type) {
+        newFilters.target_table = "";
+      }
+
+      return newFilters;
+    });
+
+    // ถ้าเปลี่ยนประเภทการดำเนินการ อัปเดตตัวเลือกตารางเป้าหมายที่เกี่ยวข้อง
+    if (name === "action_type") {
+      if (value) {
+        // กรองตารางเป้าหมายที่เกี่ยวข้องกับประเภทการดำเนินการที่เลือก
+        const relevantTables = actionTypeToTargetTableMap[value] || [];
+        const filteredTables = targetTables.filter((table) =>
+          relevantTables.includes(table)
+        );
+        setFilteredTargetTables(filteredTables);
+      } else {
+        // ถ้าไม่มีประเภทการดำเนินการที่เลือก แสดงทุกตารางเป้าหมาย
+        setFilteredTargetTables(targetTables);
+      }
+    }
+
     setCurrentPage(1);
     setError(null);
   };
@@ -483,6 +614,7 @@ const ActionLogs = () => {
       end_date: "",
       limit: 10,
     });
+    setFilteredTargetTables(targetTables); // รีเซ็ตตารางเป้าหมายให้แสดงทั้งหมด
     setSelectedRange({ from: undefined, to: undefined });
     setCurrentPage(1);
     setError(null);
@@ -579,7 +711,8 @@ const ActionLogs = () => {
                 className="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
                 <option value="">ตารางเป้าหมายทั้งหมด</option>
-                {targetTables.map((table) => (
+                {/* ใช้ filteredTargetTables แทน targetTables */}
+                {filteredTargetTables.map((table) => (
                   <option
                     key={table}
                     value={table}
@@ -768,12 +901,35 @@ const ActionLogs = () => {
                           log.target_table}{" "}
                         #{log.target_id}
                       </span>
-                      {log.target_name && (
+
+                      {/* ตรวจสอบและแสดงชื่อจากหลายแหล่งข้อมูล */}
+                      {(log.target_name ||
+                        (log.details && log.details.name) ||
+                        (log.target_table === "sprints" &&
+                          log.details &&
+                          getOriginalName(log, "sprint")) ||
+                        (log.target_table === "projects" &&
+                          log.details &&
+                          getOriginalName(log, "project")) ||
+                        (log.target_table === "users" &&
+                          log.details &&
+                          getOriginalName(log, "user"))) && (
                         <div
                           className="text-xs sm:text-sm font-medium text-gray-900"
                           data-cy={`target-name-${log.log_id}`}
                         >
-                          {log.target_name}
+                          {log.target_name ||
+                            (log.details && log.details.name) ||
+                            (log.target_table === "sprints" &&
+                              log.details &&
+                              getOriginalName(log, "sprint")) ||
+                            (log.target_table === "projects" &&
+                              log.details &&
+                              getOriginalName(log, "project")) ||
+                            (log.target_table === "users" &&
+                              log.details &&
+                              getOriginalName(log, "user"))}
+                          {!log.target_name && " (ถูกลบแล้ว)"}
                         </div>
                       )}
                     </td>

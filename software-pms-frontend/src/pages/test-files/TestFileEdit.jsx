@@ -45,7 +45,9 @@ const TestFileEdit = () => {
   const translateError = (errorMsg) => {
     // ตรวจสอบและแปลงข้อความเฉพาะ
     if (errorMsg === "This file has already been uploaded to another sprint") {
-      return "ไฟล์นี้ถูกอัพโหลดไปยัง sprint อื่นแล้ว";
+      return "ไฟล์นี้ถูกอัพโหลดไปยังสปรินต์อื่นแล้ว";
+    } else if (errorMsg === "File already exists in this sprint") {
+      return "ไฟล์นี้มีอยู่แล้วในสปรินต์นี้";
     }
     // เพิ่มเงื่อนไขสำหรับข้อความ error อื่นๆ ที่ต้องการแปลเพิ่มเติมได้ที่นี่
 
@@ -537,44 +539,6 @@ const TestFileEdit = () => {
                 data-cy="error-dialog-close"
               >
                 เข้าใจแล้ว
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* กล่องข้อความยืนยันการอัพเดตไฟล์ */}
-      {showConfirmDialog && (
-        <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
-          data-cy="confirm-dialog"
-        >
-          <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
-            <div className="text-center">
-              <CheckCircle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-blue-500 mb-3 md:mb-4" />
-              <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
-                ต้องการอัพเดตไฟล์ทดสอบที่มีอยู่?
-              </h2>
-              <p className="text-gray-600 mb-4 md:mb-6">
-                มีไฟล์ทดสอบที่ชื่อเดียวกันอยู่แล้วในสปรินต์นี้<br></br>
-                คุณต้องการอัพเดตไฟล์นี้ด้วยผลลัพธ์ใหม่หรือไม่?
-              </p>
-            </div>
-            <div className="flex justify-center space-x-3 md:space-x-4">
-              <button
-                onClick={() => setShowConfirmDialog(false)}
-                className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-                data-cy="confirm-dialog-cancel"
-              >
-                ยกเลิก
-              </button>
-              <button
-                onClick={handleConfirmUpdate}
-                className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors"
-                data-cy="confirm-dialog-update"
-              >
-                <Save className="w-4 h-4 md:w-5 md:h-5" />
-                อัพเดตไฟล์
               </button>
             </div>
           </div>

@@ -355,11 +355,61 @@ const ProjectEdit = () => {
     if (user && id) fetchProject();
   }, [id, user]);
 
+  // เพิ่มตัวแปรเหล่านี้ใน state management section:
+  const [errors, setErrors] = useState({
+    name: "",
+    dateRange: "",
+    status: "",
+  });
+
+  // เพิ่มฟังก์ชันตรวจสอบความถูกต้องที่จะเรียกก่อนบันทึก
+  const validateForm = () => {
+    let valid = true;
+    const newErrors = {
+      name: "",
+      dateRange: "",
+      status: "",
+    };
+
+    // ตรวจสอบชื่อโปรเจกต์
+    if (!formData.name.trim()) {
+      newErrors.name = "กรุณาระบุชื่อโปรเจกต์";
+      valid = false;
+    }
+
+    // ตรวจสอบระยะเวลาโปรเจกต์
+    if (!formData.start_date || !formData.end_date) {
+      newErrors.dateRange = "กรุณาระบุระยะเวลาโปรเจกต์";
+      valid = false;
+    }
+
+    // ตรวจสอบสถานะ
+    if (!formData.status) {
+      newErrors.status = "กรุณาระบุสถานะโปรเจกต์";
+      valid = false;
+    }
+
+    setErrors(newErrors);
+    return valid;
+  };
+
+  const handleSaveClick = () => {
+    if (validateForm()) {
+      setShowConfirmModal(true);
+    }
+  };
+
   // ===== EVENT HANDLERS =====
 
   // อัพเดตฟอร์มเมื่อมีการเปลี่ยนแปลงใน input
   const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+
+    // ลบข้อความแจ้งเตือนเมื่อผู้ใช้แก้ไขฟิลด์
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: "" });
+    }
   };
 
   // จัดการการอัปโหลดรูปภาพ
@@ -470,6 +520,11 @@ const ProjectEdit = () => {
       start_date: format(start, "yyyy-MM-dd"),
       end_date: format(end, "yyyy-MM-dd"),
     }));
+
+    // ลบข้อความแจ้งเตือนเมื่อผู้ใช้เลือกวันที่
+    if (errors.dateRange) {
+      setErrors({ ...errors, dateRange: "" });
+    }
   };
 
   // บันทึกข้อมูลโปรเจกต์
@@ -608,7 +663,7 @@ const ProjectEdit = () => {
           )}
 
           {/* ส่วนอัพโหลดรูปภาพ */}
-          <div className="space-y-2">
+          <div className="space-y-4 sm:space-y-6">
             <label className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700">
               <Image className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
               รูปภาพโปรเจกต์
@@ -670,7 +725,7 @@ const ProjectEdit = () => {
                 className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700"
               >
                 <FileText className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
-                ชื่อโปรเจกต์
+                ชื่อโปรเจกต์ <span className="text-red-500">*</span>
               </label>
               <input
                 type="text"
@@ -678,9 +733,19 @@ const ProjectEdit = () => {
                 name="name"
                 value={formData.name}
                 onChange={handleChange}
-                className="w-full p-2 md:p-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
+                className={`w-full p-2 md:p-3 text-sm md:text-base border ${
+                  errors.name ? "border-red-500" : "border-gray-300"
+                } rounded-lg focus:ring-2 focus:ring-blue-200 transition-all`}
                 data-cy="project-name"
               />
+              {errors.name && (
+                <p
+                  className="text-red-500 text-xs sm:text-sm mt-1"
+                  data-cy="name-error"
+                >
+                  {errors.name}
+                </p>
+              )}
             </div>
 
             {/* รายละเอียดโปรเจกต์ */}
@@ -706,7 +771,7 @@ const ProjectEdit = () => {
             <div className="space-y-1 md:space-y-2">
               <label className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700">
                 <Calendar className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
-                ระยะเวลาของโปรเจกต์
+                ระยะเวลาของโปรเจกต์ <span className="text-red-500">*</span>
               </label>
               <div className="relative">
                 <input
@@ -714,11 +779,21 @@ const ProjectEdit = () => {
                   readOnly
                   value={displayDateRange()}
                   onClick={() => setShowDatePicker(true)}
-                  className="w-full p-2 md:p-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer"
+                  className={`w-full p-2 md:p-3 text-sm md:text-base border ${
+                    errors.dateRange ? "border-red-500" : "border-gray-300"
+                  } rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer`}
                   placeholder="Select project duration"
                   data-cy="date-range-input"
                 />
               </div>
+              {errors.dateRange && (
+                <p
+                  className="text-red-500 text-xs sm:text-sm mt-1"
+                  data-cy="date-error"
+                >
+                  {errors.dateRange}
+                </p>
+              )}
             </div>
 
             {/* สถานะโปรเจกต์ */}
@@ -728,20 +803,31 @@ const ProjectEdit = () => {
                 className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700"
               >
                 <Activity className="w-4 h-4 md:w-5 md:h-5 text-indigo-500" />
-                สถานะ
+                สถานะ <span className="text-red-500">*</span>
               </label>
               <select
                 id="status"
                 name="status"
                 value={formData.status}
                 onChange={handleChange}
-                className="w-full p-2 md:p-3 text-sm md:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-200 transition-all"
+                className={`w-full p-2 md:p-3 text-sm md:text-base border ${
+                  errors.status ? "border-red-500" : "border-gray-300"
+                } rounded-lg focus:ring-2 focus:ring-blue-200 transition-all`}
                 data-cy="project-status"
               >
-                <option value="Active">Active</option>
-                <option value="Completed">Completed</option>
-                <option value="On Hold">On Hold</option>
+                <option value="">-- เลือกสถานะ --</option>
+                <option value="Active">กำลังดำเนินการ</option>
+                <option value="Completed">เสร็จสิ้น</option>
+                <option value="On Hold">ระงับชั่วคราว</option>
               </select>
+              {errors.status && (
+                <p
+                  className="text-red-500 text-xs sm:text-sm mt-1"
+                  data-cy="status-error"
+                >
+                  {errors.status}
+                </p>
+              )}
             </div>
           </div>
 
@@ -757,7 +843,7 @@ const ProjectEdit = () => {
             </button>
             <button
               type="button"
-              onClick={() => setShowConfirmModal(true)}
+              onClick={handleSaveClick}
               className="flex-1 flex items-center justify-center gap-1.5 md:gap-2 px-4 py-2 md:px-6 md:py-3 text-sm md:text-base text-white bg-blue-500 rounded-lg hover:bg-blue-600 transition-colors"
               data-cy="save-button"
             >

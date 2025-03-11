@@ -68,11 +68,10 @@ const DeleteErrorModal = ({ isOpen, onClose, sprintCount }) => {
         <div className="text-center">
           <AlertTriangle className="mx-auto h-16 w-16 text-yellow-500 mb-4" />
           <h2 className="text-2xl font-bold text-gray-800 mb-3">
-            ไม่สามารถลบโปรเจกต์ได้
+            เกิดข้อผิดพลาด
           </h2>
           <p className="text-gray-600">
-            ไม่สามารถลบโปรเจกต์นี้ได้ เนื่องจากมี {sprintCount}{" "}
-            {sprintCount === 1 ? "สปรินต์" : "สปรินต์"} ที่กำลังดำเนินการ
+            ไม่สามารถลบโปรเจกต์ที่มีสปรินต์อยู่ได้
           </p>
         </div>
         <button
@@ -228,6 +227,13 @@ const ProjectDetail = () => {
     }
   };
 
+  // เพิ่มการแปลงสถานะเป็นภาษาไทย
+  const statusTranslation = {
+    Active: "กำลังดำเนินการ",
+    Completed: "เสร็จสิ้น",
+    "On Hold": "ระงับชั่วคราว",
+  };
+
   // ดึงข้อมูลโปรเจกต์
   useEffect(() => {
     const fetchProject = async () => {
@@ -256,14 +262,16 @@ const ProjectDetail = () => {
       });
       navigate("/projects");
     } catch (err) {
-      if (
-        err.response?.data?.message ===
-        "Cannot delete project with existing sprints"
-      ) {
-        setSprintCount(err.response.data.sprint_count);
-        setShowDeleteModal(false);
+      console.log("Error deleting project:", err.response?.data);
+
+      // ตรวจสอบข้อความข้อผิดพลาดจาก API
+      if (err.response?.status === 400) {
+        // เซ็ตค่าให้โมดัลแสดงข้อผิดพลาด
+        setSprintCount(err.response?.data?.sprint_count || 0);
         setShowDeleteErrorModal(true);
+        setShowDeleteModal(false);
       } else {
+        // กรณีเกิด error อื่นๆ
         setError(err.response?.data?.message || "ไม่สามารถลบโปรเจกต์ได้");
       }
     }
@@ -404,7 +412,7 @@ const ProjectDetail = () => {
                   project.status
                 )}`}
               >
-                สถานะ {project.status}
+                สถานะ {statusTranslation[project.status] || project.status}
               </span>
             </div>
           </div>
@@ -471,12 +479,13 @@ const ProjectDetail = () => {
               {project.photo ? (
                 <div
                   data-cy="project-image"
-                  className="rounded-xl overflow-hidden shadow-lg h-56 md:h-64 lg:h-72 hover:scale-105 transition-transform duration-300"
+                  className="rounded-xl overflow-hidden shadow-lg w-full aspect-video md:aspect-4/3 lg:aspect-16/9 hover:scale-105 transition-transform duration-300"
                 >
                   <img
                     src={project.photo}
                     alt={project.name}
                     className="w-full h-full object-cover"
+                    loading="lazy"
                     onError={(e) => {
                       e.target.onerror = null;
                       e.target.src = "/placeholder-image.png";
@@ -486,7 +495,7 @@ const ProjectDetail = () => {
               ) : (
                 <div
                   data-cy="project-no-image"
-                  className="bg-gray-100 rounded-xl h-56 md:h-64 lg:h-72 flex items-center justify-center border-2 border-dashed border-gray-300"
+                  className="bg-gray-100 rounded-xl w-full aspect-video md:aspect-4/3 lg:aspect-16/9 flex items-center justify-center border-2 border-dashed border-gray-300"
                 >
                   <p className="text-gray-500 flex items-center gap-2">
                     <Info className="w-6 h-6" />
