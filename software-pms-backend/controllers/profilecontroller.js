@@ -43,9 +43,10 @@ const upload = multer({
   },
 }).single("profile_image");
 
-// Get profile information
+// Get profile information with projects
 const getProfile = async (req, res) => {
   try {
+    // Get user data
     const [user] = await db.query(
       `SELECT 
         user_id, 
@@ -65,7 +66,32 @@ const getProfile = async (req, res) => {
       return res.status(404).json({ message: "User not found" });
     }
 
-    res.json(user[0]);
+    // Get user's projects
+    const [projects] = await db.query(
+      `SELECT 
+        p.project_id,
+        p.name AS project_name,
+        p.start_date AS project_start_date,
+        p.end_date AS project_end_date,
+        p.status AS project_status,
+        pm.role AS user_role,
+        pm.assigned_at,
+        u.name AS assigned_by_name
+      FROM project_members pm
+      JOIN projects p ON pm.project_id = p.project_id
+      JOIN users u ON pm.assigned_by = u.user_id
+      WHERE pm.user_id = ?
+      ORDER BY pm.assigned_at DESC`,
+      [req.user.user_id]
+    );
+
+    // Combine user data with projects
+    const responseData = {
+      ...user[0],
+      projects: projects || [],
+    };
+
+    res.json(responseData);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

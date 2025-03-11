@@ -10,6 +10,7 @@ CREATE TABLE projects (
     name VARCHAR(255) NOT NULL,
     description TEXT,
     photo VARCHAR(255),
+    photo_public_id VARCHAR(255),
     start_date DATE NOT NULL,
     end_date DATE NOT NULL,
     status ENUM('Active', 'Completed', 'On Hold') NOT NULL,
@@ -68,7 +69,8 @@ CREATE TABLE users (
     role ENUM('Admin', 'Product Owner', 'Tester', 'Viewer') NOT NULL,
     created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    profile_image VARCHAR(255)
+    profile_image VARCHAR(255),
+    profile_image_public_id VARCHAR(255)
 );
 
 -- ตาราง project_members (เพิ่มตามที่ต้องการ)

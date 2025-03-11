@@ -15,6 +15,11 @@ import {
   AlertTriangle,
   Camera,
   Image,
+  Briefcase,
+  Clock,
+  Check,
+  Activity,
+  Pencil,
 } from "lucide-react";
 import Modal from "react-modal";
 import axios from "axios";
@@ -41,6 +46,7 @@ const modalStyles = {
   },
   overlay: {
     backgroundColor: "rgba(0, 0, 0, 0.5)",
+    zIndex: 1000,
   },
 };
 
@@ -50,8 +56,8 @@ const imagePreviewModalStyles = {
   content: {
     ...modalStyles.content,
     width: "auto",
-    maxWidth: "min(800px, 70vw)", // จำกัดความกว้างสูงสุดเป็น 800px หรือ 70% ของความกว้างหน้าจอ (แล้วแต่ว่าค่าไหนน้อยกว่า)
-    maxHeight: "70vh",
+    maxWidth: "min(800px, 90vw)", // เพิ่มความกว้างเป็น 90% ของหน้าจอเพื่อรองรับภาพขนาดใหญ่บนมือถือ
+    maxHeight: "80vh", // เพิ่มความสูงเป็น 80% ของความสูงหน้าจอ
     padding: "16px",
   },
 };
@@ -277,11 +283,43 @@ const Profile = () => {
     return `${paddedDay}/${paddedMonth}/${year}`;
   };
 
+  // ฟังก์ชันกำหนดสีตามสถานะโปรเจกต์
+  const getStatusColor = (status) => {
+    switch (status) {
+      case "Active":
+        return "bg-green-100 text-green-800";
+      case "Completed":
+        return "bg-blue-100 text-blue-800";
+      case "Pending":
+        return "bg-yellow-100 text-yellow-800";
+      case "Cancelled":
+        return "bg-red-100 text-red-800";
+      default:
+        return "bg-gray-100 text-gray-800";
+    }
+  };
+
+  // ฟังก์ชันแสดงไอคอนตามสถานะโปรเจกต์
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "Active":
+        return <Activity className="w-4 h-4" />;
+      case "Completed":
+        return <Check className="w-4 h-4" />;
+      case "Pending":
+        return <Clock className="w-4 h-4" />;
+      case "Cancelled":
+        return <X className="w-4 h-4" />;
+      default:
+        return <Activity className="w-4 h-4" />;
+    }
+  };
+
   // แสดงการโหลดข้อมูล
   if (loading) {
     return (
       <div
-        className="flex items-center justify-center min-h-screen"
+        className="flex items-center justify-center min-h-screen bg-gradient-to-br from-gray-50 to-gray-100"
         data-cy="profile-loading"
       >
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
@@ -291,56 +329,54 @@ const Profile = () => {
 
   return (
     <div
-      className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100 py-6 px-4 sm:py-12"
+      className="min-h-screen bg-gray-50 py-8 px-4 sm:py-12"
       data-cy="profile-page"
     >
       <div className="max-w-4xl mx-auto">
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          {/* ส่วนหัวของหน้าโปรไฟล์ */}
-          <div className="bg-gradient-to-r from-blue-600 to-blue-800 px-4 sm:px-8 py-4 sm:py-6">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          {/* Header */}
+          <div className="bg-gradient-to-r from-blue-700 to-indigo-800 px-6 sm:px-8 py-6">
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
               <h1 className="text-2xl sm:text-3xl font-bold text-white">
                 ตั้งค่าโปรไฟล์
               </h1>
               <div
-                className="px-3 py-1 sm:px-4 sm:py-2 bg-white rounded-lg self-start"
+                className="px-4 py-2 bg-white/90 backdrop-blur-sm rounded-lg self-start shadow-sm"
                 data-cy="profile-role"
               >
-                <span className="text-sm sm:text-base text-black font-medium capitalize">
+                <span className="text-sm sm:text-base text-indigo-800 font-medium capitalize">
                   {profile?.role || "User"}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="p-4 sm:p-6 md:p-8">
-            {/* แสดงข้อความแจ้งเตือนความผิดพลาด */}
-            {error && (
-              <div
-                className="mb-4 sm:mb-6 bg-red-50 border border-red-200 rounded-lg p-3 sm:p-4 flex items-center gap-2"
-                data-cy="profile-error"
+          {/* Error Alert */}
+          {error && (
+            <div
+              className="mx-6 sm:mx-8 mt-6 bg-red-50 border border-red-200 rounded-lg p-4 flex items-center gap-3"
+              data-cy="profile-error"
+            >
+              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <span className="text-sm sm:text-base text-red-700">{error}</span>
+              <button
+                onClick={() => setError(null)}
+                className="ml-auto hover:bg-red-100 p-1 rounded-full transition-colors"
+                data-cy="close-error"
               >
-                <AlertCircle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0" />
-                <span className="text-sm sm:text-base text-red-700">
-                  {error}
-                </span>
-                <button
-                  onClick={() => setError(null)}
-                  className="ml-auto hover:bg-red-100 p-1 rounded-full transition-colors"
-                  data-cy="close-error"
-                >
-                  <X className="h-4 w-4 text-red-500" />
-                </button>
-              </div>
-            )}
+                <X className="h-4 w-4 text-red-500" />
+              </button>
+            </div>
+          )}
 
-            {/* ส่วนรูปภาพโปรไฟล์และข้อมูลพื้นฐาน */}
-            <div className="flex flex-col items-center md:flex-row md:items-start gap-6 mb-6 sm:mb-8">
-              {/* ส่วนรูปภาพโปรไฟล์ */}
+          <div className="p-6 sm:p-8">
+            {/* Profile Info Section */}
+            <div className="flex flex-col md:flex-row gap-8 mb-8">
+              {/* Profile Image */}
               <div className="flex flex-col items-center space-y-4">
                 <div className="relative group">
                   <div
-                    className="w-28 h-28 sm:w-36 sm:h-36 md:w-40 md:h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg"
+                    className="w-32 h-32 sm:w-40 sm:h-40 rounded-full overflow-hidden bg-gray-100 border-4 border-white shadow-lg transition-transform group-hover:scale-102"
                     data-cy="profile-image"
                   >
                     {imagePreview ? (
@@ -352,31 +388,30 @@ const Profile = () => {
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center bg-gray-50">
-                        <UserCircle className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 text-gray-400" />
+                        <UserCircle className="w-16 h-16 sm:w-20 sm:h-20 text-gray-400" />
                       </div>
                     )}
                   </div>
 
-                  {/* ปุ่มเปลี่ยนรูปภาพ */}
                   <button
                     onClick={() => setShowUploadImageModal(true)}
-                    className="absolute bottom-1 right-1 bg-blue-500 p-2 rounded-full hover:bg-blue-600 transition-colors shadow-md"
+                    className="absolute bottom-1 right-1 bg-blue-600 p-2 rounded-full hover:bg-blue-700 transition-colors shadow-md"
                     data-cy="change-image-btn"
+                    aria-label="เปลี่ยนรูปโปรไฟล์"
+                    title="เปลี่ยนรูปโปรไฟล์"
                   >
-                    <Camera className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
+                    <Camera className="w-5 h-5 text-white" />
                   </button>
                 </div>
-
-                {/* ข้อความแนะนำการเปลี่ยนรูปโปรไฟล์ */}
                 <div className="text-sm text-gray-500 text-center">
                   คลิกที่ไอคอนกล้องเพื่อเปลี่ยนรูปโปรไฟล์
                 </div>
               </div>
 
-              {/* ข้อมูลพื้นฐานของผู้ใช้ */}
-              <div className="flex flex-col space-y-2 sm:space-y-3 text-center md:text-left md:pt-2">
+              {/* User Info */}
+              <div className="flex flex-col space-y-3 text-center md:text-left flex-grow">
                 <h2
-                  className="text-xl sm:text-2xl font-semibold text-gray-800"
+                  className="text-2xl font-semibold text-gray-800"
                   data-cy="profile-name"
                 >
                   {profile?.name}
@@ -385,120 +420,248 @@ const Profile = () => {
                   className="flex items-center justify-center md:justify-start space-x-2 text-gray-600"
                   data-cy="profile-email"
                 >
-                  <Mail className="w-4 h-4" />
-                  <span className="text-sm sm:text-base break-all">
-                    {profile?.email}
-                  </span>
+                  <Mail className="w-5 h-5 flex-shrink-0 text-blue-600" />
+                  <span className="text-base break-all">{profile?.email}</span>
                 </div>
                 <div
                   className="flex items-center justify-center md:justify-start space-x-2 text-gray-600"
                   data-cy="profile-created-at"
                 >
-                  <Calendar className="w-4 h-4" />
-                  <span className="text-sm sm:text-base">
+                  <Calendar className="w-5 h-5 flex-shrink-0 text-blue-600" />
+                  <span className="text-base">
                     เริ่มใช้งาน {formatDate(profile?.created_at)}
                   </span>
+                </div>
+
+                {/* Quick Actions */}
+                <div className="flex flex-wrap gap-3 mt-4 justify-center md:justify-start">
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm"
+                    data-cy="edit-profile-btn"
+                  >
+                    <User className="w-4 h-4" />
+                    แก้ไขโปรไฟล์
+                  </button>
+                  <button
+                    onClick={() => setShowPasswordModal(true)}
+                    className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
+                    data-cy="change-password-btn"
+                  >
+                    <Lock className="h-4 w-4" />
+                    เปลี่ยนรหัสผ่าน
+                  </button>
                 </div>
               </div>
             </div>
 
-            {/* ส่วนฟอร์มแก้ไขข้อมูล */}
-            <div className="space-y-4 sm:space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6">
-                {/* ช่องกรอกชื่อ */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    ชื่อ
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="text"
-                      value={formData.name}
-                      onChange={(e) => {
-                        setFormData({ ...formData, name: e.target.value });
-                        if (formErrors.name)
-                          setFormErrors({ ...formErrors, name: "" });
-                      }}
-                      disabled={!editMode}
-                      className={`w-full px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50 disabled:text-gray-500 ${
-                        formErrors.name ? "border-red-500" : ""
-                      }`}
-                      data-cy="name-input"
-                    />
-                    <User className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            {/* Edit Profile Form - Conditional Rendering */}
+            {editMode && (
+              <div className="bg-blue-50 p-6 rounded-xl shadow-sm mb-8 border border-blue-100">
+                <h3 className="font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                  <Pencil className="w-4 h-4 text-blue-600" />
+                  แก้ไขข้อมูลส่วนตัว
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  {/* Name field */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      ชื่อ
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="text"
+                        value={formData.name}
+                        onChange={(e) => {
+                          setFormData({ ...formData, name: e.target.value });
+                          if (formErrors.name)
+                            setFormErrors({ ...formErrors, name: "" });
+                        }}
+                        className={`w-full px-4 py-2 text-base border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          formErrors.name ? "border-red-500" : "border-gray-300"
+                        }`}
+                        data-cy="name-input"
+                        placeholder="ชื่อของคุณ"
+                      />
+                      <User className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    </div>
+                    {formErrors.name && (
+                      <p
+                        className="mt-1 text-sm text-red-500"
+                        data-cy="name-error"
+                      >
+                        {formErrors.name}
+                      </p>
+                    )}
                   </div>
-                  {formErrors.name && (
-                    <p
-                      className="mt-1 text-xs sm:text-sm text-red-500"
-                      data-cy="name-error"
-                    >
-                      {formErrors.name}
+
+                  {/* Email field (disabled) */}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      อีเมล
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="email"
+                        value={formData.email}
+                        disabled={true}
+                        className="w-full px-4 py-2 text-base border border-gray-300 rounded-lg bg-gray-50 text-gray-500"
+                        data-cy="email-input"
+                        placeholder="youremail@example.com"
+                      />
+                      <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    </div>
+                    <p className="mt-1 text-xs text-gray-500">
+                      ไม่สามารถเปลี่ยนอีเมลได้ โปรดติดต่อผู้ดูแลระบบ
                     </p>
-                  )}
+                  </div>
                 </div>
 
-                {/* ช่องแสดงอีเมล (ไม่สามารถแก้ไขได้) */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    อีเมล
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="email"
-                      value={formData.email}
-                      disabled={true}
-                      className="w-full px-3 py-2 sm:px-4 sm:py-2 text-sm sm:text-base border rounded-lg bg-gray-50 text-gray-500"
-                      data-cy="email-input"
-                    />
-                    <Mail className="absolute right-3 top-1/2 transform -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-                  </div>
+                {/* Form Actions */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={handleSubmit}
+                    disabled={actionLoading}
+                    className="px-5 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
+                    data-cy="save-profile-btn"
+                  >
+                    {actionLoading ? (
+                      <span className="animate-pulse">กำลังบันทึก...</span>
+                    ) : (
+                      "บันทึก"
+                    )}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setEditMode(false);
+                      setFormData({
+                        ...formData,
+                        name: profile?.name || "",
+                      });
+                      setFormErrors({});
+                    }}
+                    className="px-5 py-2 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors shadow-sm"
+                    data-cy="cancel-edit-btn"
+                  >
+                    ยกเลิก
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Projects Section */}
+            <div className="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden">
+              <div className="bg-indigo-50 px-6 py-4 border-b border-indigo-100">
+                <div className="flex items-center gap-2">
+                  <Briefcase className="w-5 h-5 text-indigo-600" />
+                  <h2 className="text-lg font-semibold text-gray-800">
+                    โปรเจกต์ที่ได้รับมอบหมาย
+                  </h2>
                 </div>
               </div>
 
-              {/* ปุ่มดำเนินการต่างๆ */}
-              <div className="flex flex-wrap sm:flex-nowrap gap-3 sm:gap-4 pt-4 sm:pt-6">
-                {!editMode ? (
-                  <button
-                    onClick={() => setEditMode(true)}
-                    className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 text-sm bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md w-full sm:w-auto"
-                    data-cy="edit-profile-btn"
-                  >
-                    แก้ไขโปรไฟล์
-                  </button>
+              <div className="p-6">
+                {profile?.projects && profile.projects.length > 0 ? (
+                  <div className="overflow-x-auto rounded-lg">
+                    <table
+                      className="min-w-full divide-y divide-gray-200"
+                      data-cy="projects-table"
+                    >
+                      <thead className="bg-gray-50">
+                        <tr>
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            ชื่อโปรเจกต์
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            ระยะเวลา
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            ตำแหน่ง
+                          </th>
+                          <th
+                            scope="col"
+                            className="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                          >
+                            สถานะ
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody className="bg-white divide-y divide-gray-200">
+                        {profile.projects.map((project) => (
+                          <tr
+                            key={project.project_id}
+                            className="hover:bg-indigo-50/50 transition-colors"
+                            data-cy={`project-row-${project.project_id}`}
+                          >
+                            <td className="px-4 py-4">
+                              <div className="font-medium text-gray-900">
+                                {project.project_name}
+                              </div>
+                              <div className="text-xs text-gray-500 mt-1">
+                                ได้รับมอบหมายเมื่อ{" "}
+                                {formatDate(project.assigned_at)}
+                              </div>
+                              <div className="text-xs text-gray-500">
+                                โดย {project.assigned_by_name}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {formatDate(project.project_start_date)} -{" "}
+                                {formatDate(project.project_end_date)}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">
+                                {project.user_role}
+                              </div>
+                            </td>
+                            <td className="px-4 py-4 whitespace-nowrap">
+                              <span
+                                className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${getStatusColor(
+                                  project.project_status
+                                )}`}
+                              >
+                                {getStatusIcon(project.project_status)}
+                                <span className="ml-1">
+                                  {project.project_status}
+                                </span>
+                              </span>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
                 ) : (
-                  <>
-                    <button
-                      onClick={handleSubmit}
-                      disabled={actionLoading}
-                      className="px-4 py-2 sm:px-6 sm:py-2.5 text-sm bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors shadow-md disabled:opacity-50 w-full sm:w-auto"
-                      data-cy="save-profile-btn"
-                    >
-                      {actionLoading ? "Saving..." : "บันทึก"}
-                    </button>
-                    <button
-                      onClick={() => {
-                        setEditMode(false);
-                        setFormData({
-                          ...formData,
-                          name: profile?.name || "",
-                        });
-                        setFormErrors({});
-                      }}
-                      className="px-4 py-2 sm:px-6 sm:py-2.5 text-sm bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors shadow-md w-full sm:w-auto"
-                      data-cy="cancel-edit-btn"
-                    >
-                      ยกเลิก
-                    </button>
-                  </>
+                  <div
+                    className="bg-indigo-50/50 rounded-lg p-8 text-center"
+                    data-cy="no-projects-message"
+                  >
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="bg-indigo-100 p-4 rounded-full">
+                        <Briefcase className="w-8 h-8 text-indigo-500" />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-700">
+                        ยังไม่มีโปรเจกต์ที่ได้รับมอบหมาย
+                      </h3>
+                      <p className="text-gray-500 max-w-md">
+                        ขณะนี้คุณยังไม่ได้รับมอบหมายให้ทำงานในโปรเจกต์ใดๆ
+                        เมื่อคุณได้รับมอบหมายให้ทำงานในโปรเจกต์
+                        ข้อมูลจะปรากฏที่นี่
+                      </p>
+                    </div>
+                  </div>
                 )}
-                <button
-                  onClick={() => setShowPasswordModal(true)}
-                  className="flex items-center justify-center gap-2 px-4 py-2 sm:px-6 sm:py-2.5 text-sm bg-yellow-500 text-white rounded-lg hover:bg-yellow-600 transition-colors shadow-md w-full sm:w-auto sm:ml-auto"
-                  data-cy="change-password-btn"
-                >
-                  <Lock className="h-4 w-4" />
-                  เปลี่ยนรหัสผ่าน
-                </button>
               </div>
             </div>
           </div>

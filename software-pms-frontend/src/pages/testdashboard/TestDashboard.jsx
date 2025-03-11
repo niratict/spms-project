@@ -525,47 +525,105 @@ export default function TestDashboard() {
         </div>
 
         {/* ตัวเลือกโปรเจกต์และ Sprint */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
-          <select
-            className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
-            value={selectedProject}
-            onChange={(e) => {
-              setSelectedProject(e.target.value);
-              setSelectedSprint("all");
-              setTestResults(null);
-            }}
-            data-cy="project-selector"
-          >
-            <option value="all">Select Project</option>
-            {projects.map((project) => (
-              <option
-                key={project.project_id}
-                value={project.project_id}
-                data-cy={`project-option-${project.project_id}`}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+          <div className="relative group">
+            <label className="block text-sm font-medium text-gray-700 mb-2 ml-1">
+              Select Project
+            </label>
+            <div className="relative">
+              <select
+                className="w-full appearance-none bg-white px-4 py-3.5 rounded-xl border border-gray-200 text-gray-800 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 hover:border-blue-300 transition duration-300 ease-in-out cursor-pointer group-hover:shadow-md"
+                value={selectedProject}
+                onChange={(e) => {
+                  setSelectedProject(e.target.value);
+                  setSelectedSprint("all");
+                  setTestResults(null);
+                }}
+                data-cy="project-selector"
               >
-                Project {project.name}
-              </option>
-            ))}
-          </select>
+                <option value="all" disabled>
+                  Select Project
+                </option>
+                {projects.map((project) => (
+                  <option
+                    key={project.project_id}
+                    value={project.project_id}
+                    data-cy={`project-option-${project.project_id}`}
+                  >
+                    Project {project.name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5">
+                <div className="bg-blue-50 rounded-lg p-1.5 text-blue-600 group-hover:bg-blue-100 transition-all duration-300">
+                  <svg
+                    className="h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
 
-          <select
-            className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
-            value={selectedSprint}
-            onChange={(e) => setSelectedSprint(e.target.value)}
-            disabled={selectedProject === "all"}
-            data-cy="sprint-selector"
-          >
-            <option value="all">All Sprints</option>
-            {sprints.map((sprint) => (
-              <option
-                key={sprint.sprint_id}
-                value={sprint.sprint_id}
-                data-cy={`sprint-option-${sprint.sprint_id}`}
+          <div className="relative group">
+            <label className="block text-sm font-medium text-gray-700 mb-2 ml-1">
+              Sprint
+            </label>
+            <div className="relative">
+              <select
+                className={`w-full appearance-none px-4 py-3.5 rounded-xl border shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 transition duration-300 ease-in-out ${
+                  selectedProject === "all"
+                    ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200"
+                    : "bg-white text-gray-800 cursor-pointer border-gray-200 hover:border-blue-300 font-medium group-hover:shadow-md"
+                }`}
+                value={selectedSprint}
+                onChange={(e) => setSelectedSprint(e.target.value)}
+                disabled={selectedProject === "all"}
+                data-cy="sprint-selector"
               >
-                {sprint.name}
-              </option>
-            ))}
-          </select>
+                <option value="all">All Sprints</option>
+                {sprints.map((sprint) => (
+                  <option
+                    key={sprint.sprint_id}
+                    value={sprint.sprint_id}
+                    data-cy={`sprint-option-${sprint.sprint_id}`}
+                  >
+                    {sprint.name}
+                  </option>
+                ))}
+              </select>
+              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5">
+                <div
+                  className={`rounded-lg p-1.5 transition-all duration-300 ${
+                    selectedProject === "all"
+                      ? "bg-gray-100 text-gray-400"
+                      : "bg-blue-50 text-blue-600 group-hover:bg-blue-100"
+                  }`}
+                >
+                  <svg
+                    className="h-5 w-5"
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 20 20"
+                    fill="currentColor"
+                  >
+                    <path
+                      fillRule="evenodd"
+                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
         {testResults && (
