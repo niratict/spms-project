@@ -518,7 +518,7 @@ const Profile = () => {
                 </div>
 
                 {/* Form Actions */}
-                <div className="flex gap-2">
+                <div className="flex gap-2 mt-4 md:mt-0">
                   <button
                     onClick={handleSubmit}
                     disabled={actionLoading}
