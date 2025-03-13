@@ -17,24 +17,23 @@ import { useNavigate, Navigate } from "react-router-dom";
 // ค่าคงที่สำหรับการตั้งค่า
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const USERS_PER_PAGE = 6;
-const DEFAULT_AVATAR =
-  "https://images.unsplash.com/photo-1586374579358-9d19d632b6df?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D"; // รูปโปรไฟล์เริ่มต้น
+const DEFAULT_AVATAR = null;
 
-  // กำหนดสีตามบทบาทผู้ใช้
-  const ROLE_COLORS = {
-    Admin: "bg-red-100 text-red-800 border border-red-200",
-    Tester: "bg-green-100 text-green-800 border border-green-200",
-    Viewer: "bg-blue-100 text-blue-800 border border-blue-200",
-    "Product Owner": "bg-orange-100 text-orange-800 border border-orange-200",
-  };
+// กำหนดสีตามบทบาทผู้ใช้
+const ROLE_COLORS = {
+  Admin: "bg-red-100 text-red-800 border border-red-200",
+  Tester: "bg-green-100 text-green-800 border border-green-200",
+  Viewer: "bg-blue-100 text-blue-800 border border-blue-200",
+  "Product Owner": "bg-orange-100 text-orange-800 border border-orange-200",
+};
 
-  // กำหนดไอคอนสำหรับแต่ละบทบาท
-  const ROLE_ICONS = {
-    Admin: "⚙️",
-    Tester: "🧑‍💻",
-    Viewer: "👁️",
-    "Product Owner": "🧑‍💼",
-  };
+// กำหนดไอคอนสำหรับแต่ละบทบาท
+const ROLE_ICONS = {
+  Admin: "⚙️",
+  Tester: "🧑‍💻",
+  Viewer: "👁️",
+  "Product Owner": "🧑‍💼",
+};
 
 const Users = () => {
   const { user, logout } = useAuth();
@@ -301,16 +300,20 @@ const Users = () => {
               <div className="px-4 sm:px-6 pt-0 pb-4 sm:pb-6 -mt-12">
                 <div className="flex justify-between">
                   {/* ส่วนการแสดงรูปภาพโปรไฟล์ */}
-                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md">
-                    <img
-                      src={userData.profile_image || DEFAULT_AVATAR}
-                      alt={userData.name}
-                      className="w-full h-full object-cover"
-                      onError={(e) => {
-                        e.target.onerror = null;
-                        e.target.src = DEFAULT_AVATAR;
-                      }}
-                    />
+                  <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-md flex items-center justify-center bg-gray-100">
+                    {userData.profile_image ? (
+                      <img
+                        src={userData.profile_image}
+                        alt={userData.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src = DEFAULT_AVATAR;
+                        }}
+                      />
+                    ) : (
+                      <UserCircle className="w-20 h-20 text-gray-400" />
+                    )}
                   </div>
                   <span
                     className={`text-sm ${

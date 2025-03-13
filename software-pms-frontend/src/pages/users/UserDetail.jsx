@@ -15,6 +15,7 @@ import {
   User,
   Mail,
   Globe,
+  UserCircle,
 } from "lucide-react";
 
 // Environment Configuration
@@ -285,8 +286,8 @@ const UserDetail = () => {
                     onError={handleImageError}
                   />
                 ) : (
-                  <div className="w-full h-full bg-blue-100 flex items-center justify-center">
-                    <User className="w-12 h-12 sm:w-16 sm:h-16 text-blue-300" />
+                  <div className="w-full h-full flex items-center justify-center bg-gray-50">
+                    <UserCircle className="w-20 h-20 text-gray-400" />
                   </div>
                 )}
               </div>

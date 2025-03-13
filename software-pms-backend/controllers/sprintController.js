@@ -49,6 +49,51 @@ const checkDateOverlap = async (
   return overlappingSprints;
 };
 
+// Helper function to check if sprint dates are within project dates
+const validateSprintDatesWithinProject = async (
+  projectId,
+  startDate,
+  endDate
+) => {
+  // ใช้ MySQL เปรียบเทียบวันที่โดยตรง
+  const [result] = await db.query(
+    `SELECT 
+      CASE 
+        WHEN ? < start_date OR ? > end_date THEN FALSE 
+        ELSE TRUE 
+      END AS is_valid,
+      DATE_FORMAT(start_date, '%Y-%m-%d') as project_start_date,
+      DATE_FORMAT(end_date, '%Y-%m-%d') as project_end_date
+    FROM projects 
+    WHERE project_id = ?`,
+    [startDate, endDate, projectId]
+  );
+
+  if (!result.length) {
+    throw new Error("Project not found");
+  }
+
+  if (result[0].is_valid === 0) {
+    // แปลงรูปแบบวันที่เป็นแบบไทย
+    const startDateParts = result[0].project_start_date.split("-");
+    const endDateParts = result[0].project_end_date.split("-");
+
+    // แปลงปี ค.ศ. เป็น พ.ศ.
+    const startThaiYear = parseInt(startDateParts[0]) + 543;
+    const endThaiYear = parseInt(endDateParts[0]) + 543;
+
+    // สร้างรูปแบบวันที่ไทย dd/mm/yyyy พ.ศ.
+    const thaiStartDate = `${startDateParts[2]}/${startDateParts[1]}/${startThaiYear}`;
+    const thaiEndDate = `${endDateParts[2]}/${endDateParts[1]}/${endThaiYear}`;
+
+    throw new Error(
+      `วันที่ของสปรินต์ต้องอยู่ภายในช่วงวันที่ของโปรเจกต์ (${thaiStartDate} - ${thaiEndDate})`
+    );
+  }
+
+  return true;
+};
+
 // Get next sprint number for a project
 const getNextSprintNumber = async (req, res) => {
   try {
@@ -115,6 +160,13 @@ const createSprint = async (req, res) => {
 
     if (!project.length) {
       return res.status(404).json({ message: "Project not found" });
+    }
+
+    // Validate sprint dates are within project date range
+    try {
+      await validateSprintDatesWithinProject(project_id, start_date, end_date);
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
     }
 
     // Get and validate next sprint number
@@ -266,6 +318,17 @@ const updateSprint = async (req, res) => {
 
     if (!sprint.length) {
       return res.status(404).json({ message: "Sprint not found" });
+    }
+
+    // Validate sprint dates are within project date range
+    try {
+      await validateSprintDatesWithinProject(
+        sprint[0].project_id,
+        start_date,
+        end_date
+      );
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
     }
 
     // Check for date overlaps (excluding current sprint)

@@ -306,7 +306,7 @@ const SprintEdit = () => {
   if (error)
     return (
       <div
-        className="flex justify-center items-center min-h-screen bg-red-50 px-4"
+        className="flex justify-center items-center min-h-screen bg-gray-50 px-4"
         data-cy="error-message"
       >
         <div className="bg-white p-6 sm:p-8 rounded-xl shadow-lg text-center max-w-md w-full">
@@ -352,6 +352,17 @@ const SprintEdit = () => {
               <X className="w-6 h-6 sm:w-8 sm:h-8" />
             </button>
           </div>
+
+          {/* แสดงข้อความผิดพลาด (ถ้ามี) */}
+          {error && (
+            <div
+              className="flex items-center space-x-2 sm:space-x-3 p-3 sm:p-4 bg-red-50 border border-red-200 rounded-lg"
+              data-cy="error-message"
+            >
+              <AlertCircle className="w-5 h-5 sm:w-6 sm:h-6 text-red-500" />
+              <p className="text-sm sm:text-base text-red-600">{error}</p>
+            </div>
+          )}
 
           {/* ฟอร์มแก้ไขสปรินต์ */}
           <form className="p-4 sm:p-6 md:p-8 space-y-4 sm:space-y-6">

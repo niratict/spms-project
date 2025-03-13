@@ -120,7 +120,7 @@ const TestFileCard = ({ file }) => {
         <div className="border-t border-gray-100 pt-4 mt-3 grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs text-gray-500">
           <div className="flex items-center space-x-2">
             <Clock className="w-4 h-4 text-blue-500 flex-shrink-0" />
-            <span className="truncate">
+            <span>
               {new Date(file.uploadDate).toLocaleString("th-TH", {
                 day: "2-digit",
                 month: "2-digit",

@@ -233,8 +233,8 @@ const SprintDetail = () => {
       daysUntilStart = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
     }
 
-    // คำนวณระยะเวลาทั้งหมดของสปรินต์เป็นวัน
-    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24));
+    // คำนวณระยะเวลาทั้งหมดของสปรินต์เป็นวันแบบรวมวันเริ่มและวันสิ้นสุด
+    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
 
     // สถานะของสปรินต์ (ยังไม่เริ่ม, กำลังดำเนินการ, เสร็จสิ้น)
     let status = "in_progress";
@@ -306,9 +306,33 @@ const SprintDetail = () => {
       return `${daysRemaining} วัน`;
     } else {
       // คำนวณว่าสปรินต์จบไปแล้วกี่วัน
-      const today = new Date().getTime();
-      const end = new Date(sprint.end_date).getTime();
-      const daysSinceEnd = Math.ceil((today - end) / (1000 * 60 * 60 * 24));
+      const today = new Date();
+
+      // ใช้วิธีเปรียบเทียบวันที่ด้วย format เดียวกัน
+      const todayFormatted = new Date(
+        today.getFullYear(),
+        today.getMonth(),
+        today.getDate()
+      );
+
+      // แปลงวันที่สิ้นสุดให้อยู่ในรูปแบบเดียวกัน
+      const endDateObj = new Date(sprint.end_date);
+      const endDateFormatted = new Date(
+        endDateObj.getFullYear(),
+        endDateObj.getMonth(),
+        endDateObj.getDate()
+      );
+
+      // ตรวจสอบว่าวันนี้ตรงกับวันสิ้นสุดหรือไม่
+      if (todayFormatted.getTime() === endDateFormatted.getTime()) {
+        return "วันนี้";
+      }
+
+      // คำนวณจำนวนวันที่ผ่านไปหลังจากวันสิ้นสุด
+      // ใช้ Math.floor แทน Math.ceil เพื่อป้องกันการปัดขึ้น
+      const daysSinceEnd = Math.floor(
+        (todayFormatted - endDateFormatted) / (1000 * 60 * 60 * 24)
+      );
       return `${daysSinceEnd} วันที่แล้ว`;
     }
   };
