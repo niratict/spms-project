@@ -33,13 +33,7 @@ const UserDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [profileImageError, setProfileImageError] = useState(false);
-  const [passwordData, setPasswordData] = useState({
-    current_password: "",
-    new_password: "",
-    confirm_password: "",
-  });
 
   // ===== สถานะสิทธิ์เข้าถึง =====
   // ตรวจสอบว่าผู้ใช้มีสิทธิ์ดูข้อมูลหรือไม่
@@ -97,49 +91,6 @@ const UserDetail = () => {
         return;
       }
       setError(err.response?.data?.message || "ไม่สามารถลบผู้ใช้ได้");
-    }
-  };
-
-  // เปลี่ยนรหัสผ่าน
-  const handlePasswordChange = async (e) => {
-    e.preventDefault();
-
-    // ตรวจสอบความถูกต้องของรหัสผ่าน
-    if (passwordData.new_password !== passwordData.confirm_password) {
-      alert("รหัสผ่านใหม่ไม่ตรงกัน");
-      return;
-    }
-
-    if (passwordData.new_password.length < 6) {
-      alert("รหัสผ่านใหม่ต้องมีความยาวอย่างน้อย 6 ตัวอักษร");
-      return;
-    }
-
-    try {
-      await axios.put(
-        `${API_BASE_URL}/api/users/${id}/password`,
-        {
-          current_password: passwordData.current_password,
-          new_password: passwordData.new_password,
-        },
-        {
-          headers: { Authorization: `Bearer ${user.token}` },
-        }
-      );
-      setShowPasswordModal(false);
-      setPasswordData({
-        current_password: "",
-        new_password: "",
-        confirm_password: "",
-      });
-      alert("เปลี่ยนรหัสผ่านสำเร็จ");
-    } catch (err) {
-      if (err.response?.status === 401) {
-        logout();
-        navigate("/login");
-        return;
-      }
-      alert(err.response?.data?.message || "ไม่สามารถเปลี่ยนรหัสผ่านได้");
     }
   };
 
@@ -339,14 +290,6 @@ const UserDetail = () => {
                     <Edit className="w-4 h-4 sm:w-5 sm:h-5" />
                     <span>แก้ไขโปรไฟล์</span>
                   </button>
-                  <button
-                    onClick={() => setShowPasswordModal(true)}
-                    className="btn-secondary flex items-center space-x-1 sm:space-x-2 text-sm sm:text-base"
-                    data-cy="change-password-button"
-                  >
-                    <KeyRound className="w-4 h-4 sm:w-5 sm:h-5" />
-                    <span>เปลี่ยนรหัสผ่าน</span>
-                  </button>
                 </>
               )}
               {canDelete && (
@@ -457,132 +400,6 @@ const UserDetail = () => {
                 </button>
               </div>
             </div>
-          </div>
-        </Modal>
-
-        {/* โมดัลเปลี่ยนรหัสผ่าน */}
-        <Modal
-          isOpen={showPasswordModal}
-          onRequestClose={() => setShowPasswordModal(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          overlayClassName="fixed inset-0 bg-black/50 backdrop-blur-sm"
-          data-cy="change-password-modal"
-        >
-          <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl sm:shadow-2xl max-w-md w-full p-4 sm:p-6 relative">
-            <button
-              onClick={() => setShowPasswordModal(false)}
-              className="absolute top-2 sm:top-4 right-2 sm:right-4 text-gray-500 hover:text-gray-800 transition-colors"
-              data-cy="close-password-modal"
-            >
-              <X className="w-5 h-5 sm:w-6 sm:h-6" />
-            </button>
-            <div className="flex items-center justify-center mb-4 text-blue-500">
-              <KeyRound className="w-12 h-12" />
-            </div>
-            <h2 className="text-xl sm:text-2xl font-bold text-blue-600 mb-3 sm:mb-4 text-center">
-              เปลี่ยนรหัสผ่าน
-            </h2>
-            <form
-              onSubmit={handlePasswordChange}
-              className="space-y-3 sm:space-y-4"
-              data-cy="password-form"
-            >
-              {/* รหัสผ่านปัจจุบันต้องกรอกเฉพาะผู้ใช้ทั่วไป (Admin ไม่ต้องกรอก) */}
-              {user.role !== "Admin" && (
-                <div>
-                  <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                    รหัสผ่านปัจจุบัน
-                  </label>
-                  <div className="relative">
-                    <input
-                      type="password"
-                      className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10"
-                      required
-                      value={passwordData.current_password}
-                      onChange={(e) =>
-                        setPasswordData({
-                          ...passwordData,
-                          current_password: e.target.value,
-                        })
-                      }
-                      data-cy="current-password-input"
-                    />
-                    <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                  </div>
-                </div>
-              )}
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                  รหัสผ่านใหม่
-                </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10"
-                    required
-                    minLength={6}
-                    value={passwordData.new_password}
-                    onChange={(e) =>
-                      setPasswordData({
-                        ...passwordData,
-                        new_password: e.target.value,
-                      })
-                    }
-                    data-cy="new-password-input"
-                  />
-                  <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                </div>
-                <p className="text-xs text-gray-500 mt-1">
-                  รหัสผ่านต้องมีความยาวอย่างน้อย 6 ตัวอักษร
-                </p>
-              </div>
-              <div>
-                <label className="block text-xs sm:text-sm font-medium text-gray-700 mb-1 sm:mb-2">
-                  ยืนยันรหัสผ่านใหม่
-                </label>
-                <div className="relative">
-                  <input
-                    type="password"
-                    className="w-full px-3 py-2 text-sm sm:text-base border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 pl-10"
-                    required
-                    minLength={6}
-                    value={passwordData.confirm_password}
-                    onChange={(e) =>
-                      setPasswordData({
-                        ...passwordData,
-                        confirm_password: e.target.value,
-                      })
-                    }
-                    data-cy="confirm-password-input"
-                  />
-                  <KeyRound className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-2 sm:space-x-3 mt-4 sm:mt-6">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowPasswordModal(false);
-                    setPasswordData({
-                      current_password: "",
-                      new_password: "",
-                      confirm_password: "",
-                    });
-                  }}
-                  className="bg-gray-200 text-gray-800 px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-gray-300 focus:outline-none focus:ring-2 focus:ring-gray-300 focus:ring-opacity-50 transition-colors"
-                  data-cy="cancel-password-change"
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  type="submit"
-                  className="bg-blue-500 text-white px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg text-sm sm:text-base hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50 transition-colors"
-                  data-cy="submit-password-change"
-                >
-                  เปลี่ยนรหัสผ่าน
-                </button>
-              </div>
-            </form>
           </div>
         </Modal>
       </div>

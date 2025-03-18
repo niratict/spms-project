@@ -669,7 +669,7 @@ const ActionLogs = () => {
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 sm:mb-8">
           <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center mb-4 sm:mb-0">
             <ClipboardList className="w-7 h-7 sm:w-10 sm:h-10 mr-2 sm:mr-4 text-blue-600" />
-            บันทึกการดำเนินการ
+            บันทึกการกระทำ
           </h1>
         </div>
 
@@ -679,7 +679,7 @@ const ActionLogs = () => {
           data-cy="filters-section"
         >
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            {/* ตัวกรองประเภทการดำเนินการ */}
+            {/* ตัวกรองประเภทการกระทำ */}
             <div className="relative" data-cy="action-type-filter-container">
               <select
                 data-cy="action-type-filter"
@@ -688,7 +688,7 @@ const ActionLogs = () => {
                 onChange={handleFilterChange}
                 className="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               >
-                <option value="">ประเภทการดำเนินการทั้งหมด</option>
+                <option value="">ประเภทการกระทำทั้งหมด</option>
                 {actionTypes.map((type) => (
                   <option
                     key={type}

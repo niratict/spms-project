@@ -187,7 +187,7 @@ export default function EnhancedNavbar() {
           { name: "สปรินต์", href: "/sprints", icon: RocketLaunchIcon },
           { name: "ไฟล์ทดสอบ", href: "/test-files", icon: DocumentTextIcon },
           { name: "ผู้ใช้งาน", href: "/users", icon: UsersIcon },
-          { name: "บันทึกการดำเนินการ", href: "/action-logs", icon: ClockIcon }
+          { name: "บันทึกการกระทำ", href: "/action-logs", icon: ClockIcon }
         );
         break;
       case "Product Owner":

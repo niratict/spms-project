@@ -158,7 +158,6 @@ const UserEdit = () => {
   // สถานะการแสดง Modal
   const [showConfirmModal, setShowConfirmModal] = useState(false);
   const [showPasswordModal, setShowPasswordModal] = useState(false);
-  const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
 
@@ -319,21 +318,6 @@ const UserEdit = () => {
     }
   };
 
-  // ลบผู้ใช้
-  const handleDelete = async () => {
-    setActionLoading(true);
-    try {
-      await axios.delete(`${API_BASE_URL}/api/users/${id}`, {
-        headers: { Authorization: `Bearer ${user.token}` },
-      });
-      navigate("/users");
-    } catch (err) {
-      setError(err.response?.data?.message || "ไม่สามารถลบผู้ใช้ได้");
-    } finally {
-      setActionLoading(false);
-    }
-  };
-
   // --------- RENDER CONDITIONS ---------
   if (loading)
     return (
@@ -478,21 +462,6 @@ const UserEdit = () => {
                   <Lock className="w-4 h-4 mr-1 md:mr-2 flex-shrink-0" />
                   เปลี่ยนรหัสผ่าน
                 </button>
-
-                {/* ปุ่มลบผู้ใช้ (แสดงเฉพาะกรณีที่ Admin ไม่ได้กำลังแก้ไขตัวเองหรือผู้ใช้ที่เป็น Admin) */}
-                {user.role === "Admin" &&
-                  user.user_id !== parseInt(id) &&
-                  userData.role !== "Admin" && (
-                    <button
-                      type="button"
-                      onClick={() => setShowDeleteModal(true)}
-                      className="flex items-center px-3 md:px-4 py-2 text-sm md:text-base text-red-600 border border-red-600 rounded hover:bg-red-50 transition-colors"
-                      data-cy="delete-user-button"
-                    >
-                      <Trash2 className="w-4 h-4 mr-1 md:mr-2 flex-shrink-0" />
-                      ลบผู้ใช้
-                    </button>
-                  )}
               </div>
 
               <div className="flex space-x-3 md:space-x-4">
@@ -543,7 +512,7 @@ const UserEdit = () => {
       {/* Modal เปลี่ยนรหัสผ่าน */}
       {showPasswordModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
           data-cy="password-modal"
         >
           <div className="bg-white rounded-xl shadow-2xl max-w-md w-full p-4 md:p-6 space-y-4 md:space-y-6">
@@ -585,23 +554,6 @@ const UserEdit = () => {
           </div>
         </div>
       )}
-
-      {/* Modal ลบผู้ใช้ */}
-      <ConfirmModal
-        isOpen={showDeleteModal}
-        onClose={() => !actionLoading && setShowDeleteModal(false)}
-        onConfirm={handleDelete}
-        title="ยืนยันการลบผู้ใช้"
-        message="คุณแน่ใจหรือไม่ว่าต้องการลบผู้ใช้นี้?"
-        icon={
-          <Trash2 className="mx-auto h-12 w-12 md:h-16 md:w-16 text-red-500 mb-3 md:mb-4" />
-        }
-        confirmText="ลบผู้ใช้"
-        confirmIcon={<Trash2 className="w-4 h-4 md:w-5 md:h-5" />}
-        color="red"
-        isLoading={actionLoading}
-        dataCy="delete-modal"
-      />
 
       {/* Modal ยกเลิกการแก้ไข */}
       <ConfirmModal

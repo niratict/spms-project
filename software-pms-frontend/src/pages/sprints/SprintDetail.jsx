@@ -624,7 +624,6 @@ const SprintDetail = () => {
               </h2>
               <p className="text-gray-600 mb-6">
                 คุณแน่ใจหรือไม่ว่าต้องการลบสปรินต์นี้?
-                การกระทำนี้ไม่สามารถเรียกคืนได้
               </p>
             </div>
             <div className="flex space-x-4">

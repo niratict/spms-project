@@ -295,6 +295,17 @@ const CreateUser = () => {
           {/* ปุ่มดำเนินการ */}
           <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4 sm:pt-6">
             <button
+              type="button"
+              onClick={handleCancel}
+              className="w-full sm:flex-1 py-2.5 sm:py-3 bg-gray-100 text-gray-700 text-sm sm:text-base rounded-lg 
+                         hover:bg-gray-200 focus:outline-none focus:ring-2 
+                         focus:ring-gray-300 focus:ring-opacity-50
+                         transition-all transform active:scale-95"
+              data-cy="cancel-button"
+            >
+              ยกเลิก
+            </button>
+            <button
               type="submit"
               disabled={loading}
               className="w-full sm:flex-1 py-2.5 sm:py-3 bg-blue-500 text-white text-sm sm:text-base rounded-lg hover:bg-blue-600 
@@ -309,17 +320,6 @@ const CreateUser = () => {
               ) : (
                 "สร้างผู้ใช้"
               )}
-            </button>
-            <button
-              type="button"
-              onClick={handleCancel}
-              className="w-full sm:flex-1 py-2.5 sm:py-3 bg-gray-100 text-gray-700 text-sm sm:text-base rounded-lg 
-                         hover:bg-gray-200 focus:outline-none focus:ring-2 
-                         focus:ring-gray-300 focus:ring-opacity-50
-                         transition-all transform active:scale-95"
-              data-cy="cancel-button"
-            >
-              ยกเลิก
             </button>
           </div>
         </form>

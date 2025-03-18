@@ -412,6 +412,18 @@ const TestFileEdit = () => {
 
               {/* ปุ่มการทำงาน */}
               <div className="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 pt-4">
+     
+                <button
+                  type="button"
+                  onClick={() => navigate(`/test-files/${id}`)}
+                  className="
+              w-full py-2 sm:py-3 rounded-lg text-gray-600 bg-gray-100 
+              hover:bg-gray-200 text-sm sm:text-base font-semibold transition-all duration-300
+            "
+                  data-cy="cancel-button"
+                >
+                  ยกเลิก
+                </button>
                 <button
                   type="submit"
                   disabled={saving}
@@ -426,17 +438,6 @@ const TestFileEdit = () => {
                   data-cy="save-button"
                 >
                   {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => navigate(`/test-files/${id}`)}
-                  className="
-              w-full py-2 sm:py-3 rounded-lg text-gray-600 bg-gray-100 
-              hover:bg-gray-200 text-sm sm:text-base font-semibold transition-all duration-300
-            "
-                  data-cy="cancel-button"
-                >
-                  ยกเลิก
                 </button>
               </div>
             </form>

@@ -283,6 +283,13 @@ const Profile = () => {
     return `${paddedDay}/${paddedMonth}/${year}`;
   };
 
+  // เพิ่มการแปลงสถานะเป็นภาษาไทย
+  const statusTranslation = {
+    Active: "กำลังดำเนินการ",
+    Completed: "เสร็จสิ้น",
+    "On Hold": "ระงับชั่วคราว",
+  };
+
   // ฟังก์ชันกำหนดสีตามสถานะโปรเจกต์
   const getStatusColor = (status) => {
     switch (status) {
@@ -520,18 +527,6 @@ const Profile = () => {
                 {/* Form Actions */}
                 <div className="flex gap-2 mt-4 md:mt-0">
                   <button
-                    onClick={handleSubmit}
-                    disabled={actionLoading}
-                    className="px-5 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
-                    data-cy="save-profile-btn"
-                  >
-                    {actionLoading ? (
-                      <span className="animate-pulse">กำลังบันทึก...</span>
-                    ) : (
-                      "บันทึก"
-                    )}
-                  </button>
-                  <button
                     onClick={() => {
                       setEditMode(false);
                       setFormData({
@@ -544,6 +539,18 @@ const Profile = () => {
                     data-cy="cancel-edit-btn"
                   >
                     ยกเลิก
+                  </button>
+                  <button
+                    onClick={handleSubmit}
+                    disabled={actionLoading}
+                    className="px-5 py-2 text-sm bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-sm disabled:opacity-50"
+                    data-cy="save-profile-btn"
+                  >
+                    {actionLoading ? (
+                      <span className="animate-pulse">กำลังบันทึก...</span>
+                    ) : (
+                      "บันทึก"
+                    )}
                   </button>
                 </div>
               </div>
@@ -633,7 +640,8 @@ const Profile = () => {
                               >
                                 {getStatusIcon(project.project_status)}
                                 <span className="ml-1">
-                                  {project.project_status}
+                                  {statusTranslation[project.project_status] ||
+                                    project.project_status}
                                 </span>
                               </span>
                             </td>
@@ -712,7 +720,6 @@ const Profile = () => {
                 </h2>
                 <p className="text-sm sm:text-base text-gray-600 mt-2">
                   คุณต้องการลบรูปโปรไฟล์นี้ใช่หรือไม่?
-                  การดำเนินการนี้ไม่สามารถเรียกคืนได้
                 </p>
               </div>
 
@@ -1054,14 +1061,6 @@ const Profile = () => {
           {/* ปุ่มในโมดัลเปลี่ยนรหัสผ่าน */}
           <div className="flex gap-4 pt-4">
             <button
-              onClick={handlePasswordChange}
-              disabled={actionLoading}
-              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
-              data-cy="confirm-password-change"
-            >
-              {actionLoading ? "Changing..." : "ยืนยัน"}
-            </button>
-            <button
               onClick={() => {
                 setShowPasswordModal(false);
                 setPasswordData({
@@ -1075,6 +1074,14 @@ const Profile = () => {
               data-cy="cancel-password-change"
             >
               ยกเลิก
+            </button>
+            <button
+              onClick={handlePasswordChange}
+              disabled={actionLoading}
+              className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
+              data-cy="confirm-password-change"
+            >
+              {actionLoading ? "Changing..." : "ยืนยัน"}
             </button>
           </div>
         </div>
