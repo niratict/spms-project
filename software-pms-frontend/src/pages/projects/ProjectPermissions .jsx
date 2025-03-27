@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useParams, useNavigate } from "react-router-dom";
@@ -26,7 +26,7 @@ const ProjectPermissions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddMember, setShowAddMember] = useState(false);
-  const [userProjectRole, setUserProjectRole] = useState(null);
+  const [setUserProjectRole] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ show: false, user: null });
 
   // ดึงข้อมูลโปรเจกต์
@@ -86,16 +86,15 @@ const ProjectPermissions = () => {
           headers: { Authorization: `Bearer ${user.token}` },
         }
       );
-      setAvailableUsers(response.data);
+      // กรองเฉพาะผู้ใช้ที่ไม่ใช่ Admin และไม่ใช่ Viewer
+      const filteredUsers = response.data.filter(
+        (user) => user.role !== "Admin" && user.role !== "Viewer"
+      );
+      setAvailableUsers(filteredUsers);
 
-      // Set default selected role based on user's role
-      if (user.role === "Admin") {
-        setSelectedRole("Product Owner");
-      } else if (user.role === "Product Owner") {
-        setSelectedRole("Tester");
-      } else {
-        setSelectedRole("Member");
-      }
+      // รีเซ็ตค่าที่เลือก
+      setSelectedUser("");
+      setSelectedRole("");
     } catch (err) {
       setError(err.response?.data?.message || "ไม่สามารถดึงข้อมูลผู้ใช้ได้");
     }
@@ -151,6 +150,29 @@ const ProjectPermissions = () => {
       setShowAddMember(false);
     } catch (err) {
       setError(err.response?.data?.message || "ไม่สามารถเพิ่มสมาชิกได้");
+    }
+  };
+
+  // อัพเดทบทบาทโปรเจกต์ตามผู้ใช้ที่เลือก
+  const handleUserSelect = (e) => {
+    const userId = e.target.value;
+    setSelectedUser(userId);
+    
+    // รีเซ็ตบทบาทก่อน เพื่อป้องกันการค้างค่าเดิม
+    setSelectedRole("");
+    
+    if (userId) {
+      // หาข้อมูลผู้ใช้จาก ID
+      const selectedUserData = availableUsers.find(user => String(user.user_id) === String(userId));
+      
+      if (selectedUserData) {
+        // กำหนดบทบาทในโปรเจกต์ตามบทบาทในระบบ
+        if (selectedUserData.role === "Product Owner") {
+          setSelectedRole("Product Owner");
+        } else if (selectedUserData.role === "Tester") {
+          setSelectedRole("Tester");
+        }
+      }
     }
   };
 
@@ -356,7 +378,7 @@ const ProjectPermissions = () => {
                     </label>
                     <select
                       value={selectedUser}
-                      onChange={(e) => setSelectedUser(e.target.value)}
+                      onChange={handleUserSelect}
                       className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
                       data-cy="user-select"
                     >
@@ -368,36 +390,18 @@ const ProjectPermissions = () => {
                       ))}
                     </select>
                   </div>
-                  {user.role === "Admin" && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        บทบาทในโปรเจกต์
-                      </label>
-                      <select
-                        value={selectedRole}
-                        onChange={(e) => setSelectedRole(e.target.value)}
-                        className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-                        data-cy="role-select"
-                      >
-                        <option value="Product Owner">Product Owner</option>
-                        <option value="Tester">Tester</option>
-                      </select>
-                    </div>
-                  )}
-                  {user.role === "Product Owner" && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">
-                        บทบาทในโปรเจกต์
-                      </label>
-                      <input
-                        type="text"
-                        value="Tester"
-                        readOnly
-                        className="w-full rounded-md border border-gray-300 p-2 text-sm bg-gray-50"
-                        data-cy="role-readonly"
-                      />
-                    </div>
-                  )}
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      บทบาทในโปรเจกต์
+                    </label>
+                    <input
+                      type="text"
+                      value={selectedRole}
+                      readOnly
+                      className="w-full rounded-md border border-gray-300 p-2 text-sm bg-gray-50"
+                      data-cy="role-readonly"
+                    />
+                  </div>
                   <div className="flex items-end">
                     <button
                       type="submit"
@@ -455,7 +459,9 @@ const ProjectPermissions = () => {
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             member.role === "Product Owner"
                               ? "bg-purple-100 text-purple-800"
-                              : "bg-blue-100 text-blue-800"
+                              : member.role === "Tester"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
                           }`}
                         >
                           {member.role}
@@ -468,7 +474,9 @@ const ProjectPermissions = () => {
                               ? "bg-red-100 text-red-800"
                               : member.user_role === "Product Owner"
                               ? "bg-purple-100 text-purple-800"
-                              : "bg-green-100 text-green-800"
+                              : member.user_role === "Tester"
+                              ? "bg-blue-100 text-blue-800" 
+                              : "bg-gray-100 text-gray-800"
                           }`}
                         >
                           {member.user_role}

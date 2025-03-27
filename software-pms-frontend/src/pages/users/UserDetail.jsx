@@ -351,7 +351,7 @@ const UserDetail = () => {
           isOpen={showDeleteModal}
           onRequestClose={() => setShowDeleteModal(false)}
           className="fixed inset-0 z-50 flex items-center justify-center p-4"
-          overlayClassName="fixed inset-0 bg-black/50"
+          overlayClassName="fixed inset-0"
           data-cy="delete-user-modal"
         >
           <div
