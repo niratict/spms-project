@@ -131,12 +131,17 @@ const ActionLogs = () => {
   // แปลงวันที่เป็นรูปแบบปฏิทินไทย (วัน/เดือน/พ.ศ.)
   const formatThaiDate = (date, includeTime = false) => {
     if (!date) return "";
-    const buddhistYear = parseInt(format(date, "yyyy", { locale: th })) + 543;
-    const dateFormatted = format(date, "dd/MM/") + buddhistYear;
+
+    // ดึงปี ค.ศ. แล้วบวก 543 เพื่อแปลงเป็น พ.ศ.
+    const buddhistYear = date.getFullYear() + 543;
+
+    // รูปแบบวันและเดือน
+    const dayMonth = format(date, "dd/MM/", { locale: th });
+    const dateFormatted = dayMonth + buddhistYear;
 
     if (includeTime) {
-      const timeFormatted = format(date, "HH:mm");
-      return dateFormatted;
+      const timeFormatted = format(date, "HH:mm", { locale: th });
+      return `${dateFormatted} ${timeFormatted}`; // นี่คือส่วนที่หายไป - ต้องรวมเวลากลับเข้าไปด้วย
     }
 
     return dateFormatted;
@@ -755,6 +760,14 @@ const ActionLogs = () => {
                         locale={th}
                         formatters={{
                           formatYear: (year) => `${year + 543}`,
+                          // เพิ่ม formatter สำหรับหัวข้อเดือน/ปี
+                          formatMonthCaption: (date, options) => {
+                            const thaiMonth = format(date, "MMMM", {
+                              locale: th,
+                            });
+                            const thaiYear = date.getFullYear() + 543;
+                            return `${thaiMonth} ${thaiYear}`;
+                          },
                         }}
                         modifiers={{
                           selected: [selectedRange.from, selectedRange.to],

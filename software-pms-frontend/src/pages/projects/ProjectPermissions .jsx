@@ -538,7 +538,7 @@ const ProjectPermissions = () => {
                   <span className="font-medium text-gray-900">
                     {deleteModal.user?.name}
                   </span>{" "}
-                  ที่มีบทบาทเป็น{" "}
+                  ที่มีบทบาทเป็น{" "}<br></br>
                   <span className="font-medium text-gray-900">
                     {deleteModal.user?.role}
                   </span>{" "}
