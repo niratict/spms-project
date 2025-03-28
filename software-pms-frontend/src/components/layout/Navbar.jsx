@@ -320,22 +320,19 @@ export default function EnhancedNavbar() {
                       className="group flex items-center space-x-2"
                       data-cy="app-logo"
                     >
-                      <span className="relative text-white font-bold text-xl md:text-2xl tracking-wider bg-gradient-to-r from-blue-600 to-blue-400 px-3 py-1 rounded-lg shadow-md transition duration-300 ease-in-out transform group-hover:scale-105 group-hover:shadow-blue-400/50">
+                      <span className="relative text-white font-bold text-lg sm:text-xl md:text-2xl tracking-wider bg-gradient-to-r from-blue-600 to-blue-400 px-2 sm:px-3 py-1 rounded-lg shadow-md transition duration-300 ease-in-out transform group-hover:scale-105 group-hover:shadow-blue-400/50">
                         SPMS
-                        <span className="absolute -top-2 -right-2 flex h-3 w-3 md:h-4 md:w-4">
+                        <span className="absolute -top-1.5 -right-1.5 sm:-top-2 sm:-right-2 flex h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-300 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-3 w-3 md:h-4 md:w-4 bg-blue-500"></span>
+                          <span className="relative inline-flex rounded-full h-2.5 w-2.5 sm:h-3 sm:w-3 md:h-4 md:w-4 bg-blue-500"></span>
                         </span>
                       </span>
                     </Link>
                   </div>
 
                   {/* เมนูนำทางสำหรับหน้าจอขนาดใหญ่ */}
-                  <div className="hidden sm:ml-6 sm:block">
-                    <div
-                      className="flex items-center space-x-1 lg:space-x-3"
-                      data-cy="desktop-nav-menu"
-                    >
+                  <div className="hidden sm:ml-3 md:ml-6 sm:block">
+                    <div className="flex items-center space-x-0.5 sm:space-x-1 md:space-x-2 lg:space-x-3" data-cy="desktop-nav-menu">
                       {/* แสดงเมนูหลัก */}
                       {mainMenus.map((item) => {
                         const Icon = item.icon;
@@ -347,21 +344,21 @@ export default function EnhancedNavbar() {
                               item.current
                                 ? "bg-blue-700 text-white shadow-md shadow-blue-500/20"
                                 : "text-blue-200 hover:bg-blue-700/80 hover:text-white",
-                              "group rounded-lg px-2 lg:px-3 py-2 text-xs md:text-sm font-medium transition duration-300 ease-in-out flex items-center space-x-1 hover:shadow-lg"
+                              "group rounded-lg px-1.5 sm:px-2 md:px-3 py-1.5 sm:py-2 text-xs md:text-sm font-medium transition duration-300 ease-in-out flex items-center space-x-1 hover:shadow-lg"
                             )}
                             data-cy={`nav-item-${item.name}`}
                           >
                             {Icon && (
                               <Icon
                                 className={classNames(
-                                  "h-4 w-4 md:h-5 md:w-5 transition-all duration-300 ease-in-out",
+                                  "h-3.5 w-3.5 sm:h-4 sm:w-4 md:h-5 md:w-5 transition-all duration-300 ease-in-out",
                                   item.current
                                     ? "text-white"
                                     : "group-hover:text-white"
                                 )}
                               />
                             )}
-                            <span className="relative whitespace-nowrap">
+                            <span className="relative whitespace-nowrap text-xs sm:text-sm">
                               {item.name}
                               {item.current && (
                                 <span className="absolute -bottom-1 left-0 h-0.5 w-full bg-blue-300 rounded-full transform scale-x-100 transition-transform duration-300"></span>
@@ -455,22 +452,22 @@ export default function EnhancedNavbar() {
                 </div>
 
                 {/* เมนูผู้ใช้และการแจ้งเตือน */}
-                <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0 space-x-2 md:space-x-3">
+                <div className="absolute inset-y-0 right-0 flex items-center pr-1 sm:pr-2 sm:static sm:inset-auto sm:ml-3 md:ml-6 sm:pr-0 space-x-1 sm:space-x-2 md:space-x-3">
                   {/* เมนูผู้ใช้ใช้ state ควบคุมแทน Menu component */}
-                  <div className="relative ml-2">
+                  <div className="relative ml-1 sm:ml-2">
                     <div>
                       <button
                         ref={menuButtonRef}
                         onClick={toggleUserMenu}
-                        className="group flex items-center space-x-2 rounded-full bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                        className="group flex items-center space-x-1 sm:space-x-2 rounded-full bg-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                         data-cy="user-menu-button"
                       >
                         <span className="sr-only">Open user menu</span>
                         <UserCircleIcon
-                          className="h-7 w-7 md:h-8 md:w-8 text-blue-200 group-hover:text-white transition duration-300 ease-in-out transform group-hover:scale-110"
+                          className="h-6 w-6 sm:h-7 sm:w-7 md:h-8 md:w-8 text-blue-200 group-hover:text-white transition duration-300 ease-in-out transform group-hover:scale-110"
                           aria-hidden="true"
                         />
-                        <span className="hidden lg:block text-blue-200 text-sm font-medium group-hover:text-white">
+                        <span className="hidden sm:hidden md:hidden lg:block text-blue-200 text-xs sm:text-sm font-medium group-hover:text-white">
                           {user?.name && user.name}
                         </span>
                       </button>
@@ -538,7 +535,7 @@ export default function EnhancedNavbar() {
                 className="sm:hidden bg-black/90 backdrop-blur-md rounded-b-xl shadow-xl"
                 data-cy="mobile-menu-panel"
               >
-                <div className="space-y-1 px-2 pb-3 pt-2 max-h-[70vh] overflow-y-auto">
+                <div className="space-y-1 px-2 pb-3 pt-2 max-h-[60vh] sm:max-h-[70vh] overflow-y-auto">
                   {navigation.map((item) => {
                     const Icon = item.icon;
                     return (
@@ -549,17 +546,17 @@ export default function EnhancedNavbar() {
                           item.current
                             ? "bg-blue-700 text-white"
                             : "text-blue-200 hover:bg-blue-700/80 hover:text-white",
-                          "flex items-center space-x-3 rounded-lg px-3 py-2.5 text-sm font-medium transition duration-300 ease-in-out"
+                          "flex items-center space-x-2 sm:space-x-3 rounded-lg px-2 sm:px-3 py-2 sm:py-2.5 text-xs sm:text-sm font-medium transition duration-300 ease-in-out"
                         )}
                         data-cy={`mobile-nav-item-${item.name}`}
                         onClick={() => handleNavItemClick({ close })}
                       >
                         {Icon && (
-                          <Icon className="h-5 w-5" aria-hidden="true" />
+                          <Icon className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
                         )}
                         <span>{item.name}</span>
                         {item.current && (
-                          <span className="ml-auto bg-blue-500 h-2 w-2 rounded-full" />
+                          <span className="ml-auto bg-blue-500 h-1.5 w-1.5 sm:h-2 sm:w-2 rounded-full" />
                         )}
                       </Link>
                     );

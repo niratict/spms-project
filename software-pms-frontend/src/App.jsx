@@ -4,8 +4,10 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 import { AuthProvider, useAuth } from "./context/AuthContext";
+import { useEffect } from "react";
 
 // นำเข้าคอมโพเนนต์หลัก
 import Layout from "./components/layout/Layout";
@@ -63,6 +65,17 @@ const ProtectedRoute = ({ children, allowedRoles = [] }) => {
 
   // ถ้าผู้ใช้ไม่มีสิทธิ์ ให้ไปหน้าหลัก
   return <Navigate to="/mainpage" replace />;
+};
+
+// คอมโพเนนต์สำหรับเลื่อนหน้าต่างไปด้านบนเมื่อเปลี่ยนเส้นทาง
+const ScrollToTop = () => {
+  const { pathname } = useLocation();
+  
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+  
+  return null;
 };
 
 // คอมโพเนนต์สำหรับจัดการเส้นทางทั้งหมดในแอพ
@@ -270,6 +283,7 @@ export default function App() {
   return (
     <AuthProvider>
       <Router>
+        <ScrollToTop />
         <AppRoutes />
       </Router>
     </AuthProvider>

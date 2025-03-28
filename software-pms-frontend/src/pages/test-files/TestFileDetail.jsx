@@ -298,17 +298,17 @@ const TestFileDetail = () => {
                   <div className="flex items-center gap-2 sm:gap-3">
                     <Calendar className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
                     <div className="text-sm sm:text-base">
-                      <span className="font-semibold">วันที่อัพโหลด</span>{" "}
+                      <span className="font-semibold">วันที่อัปโหลด</span>{" "}
                       <span data-cy="upload-date" className="text-gray-700">
                         {formatDate(testFile.upload_date)}
                       </span>
                     </div>
                   </div>
-                  {/* เพิ่มวันที่อัพเดท */}
+                  {/* เพิ่มวันที่อัปเดท */}
                   <div className="flex items-center gap-2 sm:gap-3">
                     <RefreshCw className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
                     <div className="text-sm sm:text-base">
-                      <span className="font-semibold">วันที่อัพเดท</span>{" "}
+                      <span className="font-semibold">วันที่อัปเดท</span>{" "}
                       <span data-cy="update-date" className="text-gray-700">
                         {formatDate(
                           testFile.last_modified_date || testFile.upload_date
@@ -319,7 +319,7 @@ const TestFileDetail = () => {
                   <div className="flex items-center gap-2 sm:gap-3">
                     <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
                     <div className="min-w-0 text-sm sm:text-base">
-                      <span className="font-semibold">อัพโหลดโดย</span>{" "}
+                      <span className="font-semibold">อัปโหลดโดย</span>{" "}
                       <span
                         data-cy="uploader"
                         className="block sm:inline truncate text-gray-700"
@@ -329,11 +329,11 @@ const TestFileDetail = () => {
                       </span>
                     </div>
                   </div>
-                  {/* เพิ่มอัพเดทล่าสุดโดย */}
+                  {/* เพิ่มอัปเดทล่าสุดโดย */}
                   <div className="flex items-center gap-2 sm:gap-3">
                     <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-500 flex-shrink-0" />
                     <div className="min-w-0 text-sm sm:text-base">
-                      <span className="font-semibold">อัพเดทล่าสุดโดย</span>{" "}
+                      <span className="font-semibold">อัปเดทล่าสุดโดย</span>{" "}
                       <span
                         data-cy="last-modified-by"
                         className="block sm:inline truncate text-gray-700"

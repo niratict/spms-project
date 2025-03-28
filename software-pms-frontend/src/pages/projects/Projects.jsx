@@ -143,7 +143,7 @@ const Projects = () => {
                 </div>
 
                 <p
-                  className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 line-clamp-2"
+                  className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4 line-clamp-1"
                   data-cy="project-description"
                 >
                   {project.description}

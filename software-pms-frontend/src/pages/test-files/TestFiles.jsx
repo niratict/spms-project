@@ -347,7 +347,7 @@ const TestFiles = () => {
   // Show filter results count
   const showFilterCount = () => {
     if (filteredTestFiles.length === 0) return "ไม่พบรายการที่ตรงกับเงื่อนไข";
-    return `พบ ${filteredTestFiles.length} รายการจากทั้งหมด ${testFiles.length} รายการ`;
+    return `พบ ${filteredTestFiles.length} รายการ จากทั้งหมด ${testFiles.length} รายการ`;
   };
 
   return (
@@ -422,7 +422,7 @@ const TestFiles = () => {
                 <span className="ml-3 text-gray-600">กำลังโหลดโปรเจกต์...</span>
               </div>
             ) : projects.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-0.5">
                 {projects.map((project) => (
                   <div
                     key={project.project_id}
@@ -436,10 +436,10 @@ const TestFiles = () => {
                     }}
                     data-cy={`project-card-${project.project_id}`}
                     className={`
-              cursor-pointer relative overflow-hidden
+              cursor-pointer relative
               border-2 rounded-lg p-4
               transition-all duration-200 
-              hover:shadow-md hover:scale-[1.01]
+              hover:shadow-md hover:scale-[1.01] hover:z-20
               ${
                 selectedProject?.project_id === project.project_id
                   ? "border-blue-500 bg-blue-50 shadow"
@@ -529,7 +529,7 @@ const TestFiles = () => {
                   </span>
                 </div>
               ) : sprints.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 p-0.5">
                   {sprints.map((sprint) => (
                     <div
                       key={sprint.sprint_id}
@@ -543,10 +543,10 @@ const TestFiles = () => {
                       }}
                       data-cy={`sprint-item-${sprint.sprint_id}`}
                       className={`
-                cursor-pointer relative overflow-hidden
+                cursor-pointer relative
                 border-2 rounded-lg p-4
                 transition-all duration-200
-                hover:shadow-md hover:scale-[1.01]
+                hover:shadow-md hover:scale-[1.01] hover:z-20
                 ${
                   selectedSprint?.sprint_id === sprint.sprint_id
                     ? "border-green-500 bg-green-50 shadow"
@@ -833,7 +833,7 @@ const TestFiles = () => {
                     className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:shadow-md transition-all"
                   >
                     <Upload className="w-4 h-4" />
-                    อัพโหลดไฟล์
+                    อัปโหลดไฟล์
                   </button>
                 </div>
               </div>
@@ -846,7 +846,7 @@ const TestFiles = () => {
                   className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:shadow-md transition w-full"
                 >
                   <Upload className="w-4 h-4" />
-                  อัพโหลดไฟล์ทดสอบ
+                  อัปโหลดไฟล์ทดสอบ
                 </button>
               </div>
 
@@ -882,7 +882,27 @@ const TestFiles = () => {
                     data-cy="upload-first-test-file-button"
                     className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 text-sm rounded-lg hover:shadow-md transition-all duration-200"
                   >
-                    อัพโหลดไฟล์ทดสอบไฟล์แรก
+                    อัปโหลดไฟล์ทดสอบไฟล์แรก
+                  </button>
+                </div>
+              ) : filteredTestFiles.length === 0 ? (
+                <div className="flex flex-col items-center justify-center p-5" data-cy="no-matching-files">
+                  <Search className="w-12 h-12 text-gray-400 mb-3" />
+                  <p className="text-lg text-gray-600 mb-2 text-center">
+                    ไม่พบไฟล์ทดสอบที่ตรงกับเงื่อนไข
+                  </p>
+                  <p className="text-sm text-gray-500 mb-4 text-center">
+                    ลองเปลี่ยนการค้นหาหรือตัวกรองของคุณ
+                  </p>
+                  <button
+                    onClick={() => {
+                      setSearchTerm("");
+                      setStatusFilter("all");
+                    }}
+                    data-cy="reset-filters-button"
+                    className="bg-gray-200 text-gray-800 px-5 py-2 text-sm rounded-lg hover:bg-gray-300 transition-all duration-200"
+                  >
+                    ล้างตัวกรองทั้งหมด
                   </button>
                 </div>
               ) : (

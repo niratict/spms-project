@@ -152,16 +152,28 @@ const Profile = () => {
     if (!passwordData.current_password) {
       errors.current_password = "โปรดระบุรหัสผ่านปัจจุบัน";
     }
+    
     if (!passwordData.new_password) {
       errors.new_password = "โปรดระบุรหัสผ่าน";
-    } else if (passwordData.new_password.length < 8) {
-      errors.new_password = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
-    } else if (
-      !/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(passwordData.new_password)
-    ) {
-      errors.new_password =
-        "รหัสผ่านจะต้องมีตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก และตัวเลข";
+    } else {
+      // ตรวจสอบเงื่อนไขรหัสผ่านทั้งหมด
+      if (passwordData.new_password.length < 8) {
+        errors.new_password = "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร";
+      }
+      if (!/[A-Z]/.test(passwordData.new_password)) {
+        errors.new_password = "รหัสผ่านต้องมีตัวอักษรพิมพ์ใหญ่อย่างน้อย 1 ตัว";
+      }
+      if (!/[a-z]/.test(passwordData.new_password)) {
+        errors.new_password = "รหัสผ่านต้องมีตัวอักษรพิมพ์เล็กอย่างน้อย 1 ตัว";
+      }
+      if (!/[0-9]/.test(passwordData.new_password)) {
+        errors.new_password = "รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว";
+      }
+      if (!/[!@#$%^&*(),.?":{}|<>]/.test(passwordData.new_password)) {
+        errors.new_password = "รหัสผ่านต้องมีอักษรพิเศษอย่างน้อย 1 ตัว";
+      }
     }
+    
     if (passwordData.new_password !== passwordData.confirm_password) {
       errors.confirm_password = "รหัสผ่านไม่ตรงกัน";
     }
@@ -258,9 +270,22 @@ const Profile = () => {
         new_password: "",
         confirm_password: "",
       });
+      setPasswordErrors({});
       setError(null);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to change password");
+      console.log("Error:", err.response?.data);
+      
+      // จัดการกับข้อผิดพลาดเกี่ยวกับรหัสผ่านปัจจุบันไม่ถูกต้อง
+      if (err.response?.data?.message.includes('current password') || 
+          err.response?.data?.message.includes('Current password')) {
+        setPasswordErrors({
+          ...passwordErrors,
+          current_password: "รหัสผ่านปัจจุบันไม่ถูกต้อง"
+        });
+      } else {
+        // ข้อผิดพลาดอื่นๆ
+        setError(err.response?.data?.message || "ไม่สามารถเปลี่ยนรหัสผ่านได้");
+      }
     } finally {
       setActionLoading(false);
     }
@@ -451,7 +476,16 @@ const Profile = () => {
                     แก้ไขโปรไฟล์
                   </button>
                   <button
-                    onClick={() => setShowPasswordModal(true)}
+                    onClick={() => {
+                      setShowPasswordModal(true);
+                      setPasswordData({
+                        current_password: "",
+                        new_password: "",
+                        confirm_password: "",
+                      });
+                      setPasswordErrors({});
+                      setError(null);
+                    }}
                     className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition-colors shadow-sm"
                     data-cy="change-password-btn"
                   >
@@ -663,8 +697,8 @@ const Profile = () => {
                         ยังไม่มีโปรเจกต์ที่ได้รับมอบหมาย
                       </h3>
                       <p className="text-gray-500 max-w-md">
-                        ขณะนี้คุณยังไม่ได้รับมอบหมายให้ทำงานในโปรเจกต์ใดๆ
-                        เมื่อคุณได้รับมอบหมายให้ทำงานในโปรเจกต์
+                        ขณะนี้คุณยังไม่ได้รับมอบหมายให้ทำงานในโปรเจกต์ใด ๆ
+                        <br></br>เมื่อคุณได้รับมอบหมายให้ทำงานในโปรเจกต์
                         ข้อมูลจะปรากฏที่นี่
                       </p>
                     </div>
@@ -873,6 +907,7 @@ const Profile = () => {
             confirm_password: "",
           });
           setPasswordErrors({});
+          setError(null);
         }}
         style={modalStyles}
         data-cy="password-modal"
@@ -891,6 +926,7 @@ const Profile = () => {
                   confirm_password: "",
                 });
                 setPasswordErrors({});
+                setError(null);
               }}
               className="p-1 hover:bg-gray-100 rounded-full transition-colors"
               data-cy="close-password-modal"
@@ -908,6 +944,7 @@ const Profile = () => {
               <input
                 type={showPassword.current ? "text" : "password"}
                 value={passwordData.current_password}
+                placeholder="รหัสผ่านปัจจุบัน"
                 onChange={(e) => {
                   setPasswordData({
                     ...passwordData,
@@ -962,6 +999,7 @@ const Profile = () => {
               <input
                 type={showPassword.new ? "text" : "password"}
                 value={passwordData.new_password}
+                placeholder="รหัสผ่านใหม่"
                 onChange={(e) => {
                   setPasswordData({
                     ...passwordData,
@@ -1013,6 +1051,7 @@ const Profile = () => {
               <input
                 type={showPassword.confirm ? "text" : "password"}
                 value={passwordData.confirm_password}
+                placeholder="ยืนยันรหัสผ่านใหม่"
                 onChange={(e) => {
                   setPasswordData({
                     ...passwordData,
@@ -1058,6 +1097,41 @@ const Profile = () => {
             )}
           </div>
 
+          {/* เงื่อนไขการตั้งรหัสผ่าน */}
+          <div className="mt-3 space-y-2 text-sm text-gray-600">
+            <p className="font-medium">มีเงื่อนไขในการตั้งค่ารหัสผ่านดังนี้</p>
+            <div className="flex items-center gap-2">
+              <div className={`w-5 h-5 flex items-center justify-center rounded-full ${passwordData.new_password.length >= 8 ? 'bg-green-500' : 'bg-gray-200'}`}>
+                {passwordData.new_password.length >= 8 && <Check className="w-3 h-3 text-white" />}
+              </div>
+              <span className={passwordData.new_password.length >= 8 ? 'text-green-600' : ''}>ต้องมีตัวอักษรอย่างน้อย 8 ตัวอักษร</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className={`w-5 h-5 flex items-center justify-center rounded-full ${/[A-Z]/.test(passwordData.new_password) ? 'bg-green-500' : 'bg-gray-200'}`}>
+                {/[A-Z]/.test(passwordData.new_password) && <Check className="w-3 h-3 text-white" />}
+              </div>
+              <span className={/[A-Z]/.test(passwordData.new_password) ? 'text-green-600' : ''}>ต้องมีตัวอักษรพิมพ์ใหญ่ (A-Z)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className={`w-5 h-5 flex items-center justify-center rounded-full ${/[a-z]/.test(passwordData.new_password) ? 'bg-green-500' : 'bg-gray-200'}`}>
+                {/[a-z]/.test(passwordData.new_password) && <Check className="w-3 h-3 text-white" />}
+              </div>
+              <span className={/[a-z]/.test(passwordData.new_password) ? 'text-green-600' : ''}>ต้องมีตัวอักษรพิมพ์เล็ก (a-z)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className={`w-5 h-5 flex items-center justify-center rounded-full ${/[0-9]/.test(passwordData.new_password) ? 'bg-green-500' : 'bg-gray-200'}`}>
+                {/[0-9]/.test(passwordData.new_password) && <Check className="w-3 h-3 text-white" />}
+              </div>
+              <span className={/[0-9]/.test(passwordData.new_password) ? 'text-green-600' : ''}>ต้องมีตัวเลข (0-9)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className={`w-5 h-5 flex items-center justify-center rounded-full ${/[!@#$%^&*(),.?":{}|<>]/.test(passwordData.new_password) ? 'bg-green-500' : 'bg-gray-200'}`}>
+                {/[!@#$%^&*(),.?":{}|<>]/.test(passwordData.new_password) && <Check className="w-3 h-3 text-white" />}
+              </div>
+              <span className={/[!@#$%^&*(),.?":{}|<>]/.test(passwordData.new_password) ? 'text-green-600' : ''}>ต้องมีอักษรพิเศษ เช่น @!& เป็นต้น</span>
+            </div>
+          </div>
+
           {/* ปุ่มในโมดัลเปลี่ยนรหัสผ่าน */}
           <div className="flex gap-4 pt-4">
             <button
@@ -1069,6 +1143,7 @@ const Profile = () => {
                   confirm_password: "",
                 });
                 setPasswordErrors({});
+                setError(null);
               }}
               className="flex-1 px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 transition-colors"
               data-cy="cancel-password-change"
@@ -1076,12 +1151,14 @@ const Profile = () => {
               ยกเลิก
             </button>
             <button
-              onClick={handlePasswordChange}
+              onClick={() => {
+                handlePasswordChange();
+              }}
               disabled={actionLoading}
               className="flex-1 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors disabled:opacity-50"
               data-cy="confirm-password-change"
             >
-              {actionLoading ? "Changing..." : "ยืนยัน"}
+              {actionLoading ? "กำลังเปลี่ยน..." : "ยืนยัน"}
             </button>
           </div>
         </div>

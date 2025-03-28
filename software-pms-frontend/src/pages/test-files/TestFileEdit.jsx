@@ -36,7 +36,7 @@ const TestFileEdit = () => {
   const [existingSprintName, setExistingSprintName] = useState(null); // ชื่อสปรินต์ที่มีไฟล์ซ้ำ
   const [existingProjectName, setExistingProjectName] = useState(null); // ชื่อโปรเจกต์ที่มีไฟล์ซ้ำ
   const [pendingFileId, setPendingFileId] = useState(null); // ID ของไฟล์ซ้ำในสปรินต์เดียวกัน
-  const [isUpdateMode, setIsUpdateMode] = useState(false); // สถานะการอัพเดตไฟล์
+  const [isUpdateMode, setIsUpdateMode] = useState(false); // สถานะการอัปเดตไฟล์
   const [formData, setFormData] = useState({
     filename: "",
   });
@@ -45,7 +45,7 @@ const TestFileEdit = () => {
   const translateError = (errorMsg) => {
     // ตรวจสอบและแปลงข้อความเฉพาะ
     if (errorMsg === "This file has already been uploaded to another sprint") {
-      return "ไฟล์นี้ถูกอัพโหลดไปยังสปรินต์อื่นแล้ว";
+      return "ไฟล์นี้ถูกอัปโหลดไปยังสปรินต์อื่นแล้ว";
     } else if (errorMsg === "File already exists in this sprint") {
       return "ไฟล์นี้มีอยู่แล้วในสปรินต์นี้";
     }
@@ -102,7 +102,7 @@ const TestFileEdit = () => {
 
     if (existingFile) {
       if (existingFile.sprint_id === testFile.sprint_id) {
-        // ไฟล์มีอยู่แล้วในสปรินต์เดียวกัน - แสดงหน้าต่างยืนยันการอัพเดต
+        // ไฟล์มีอยู่แล้วในสปรินต์เดียวกัน - แสดงหน้าต่างยืนยันการอัปเดต
         setPendingFileId(existingFile.file_id);
         setShowConfirmDialog(true);
         return "SAME_SPRINT";
@@ -167,10 +167,10 @@ const TestFileEdit = () => {
       const submitData = new FormData();
       if (selectedFile) {
         submitData.append("testFile", selectedFile);
-        // ไม่ต้องส่ง status เดิมไปเมื่อมีการอัพโหลดไฟล์ใหม่
+        // ไม่ต้องส่ง status เดิมไปเมื่อมีการอัปโหลดไฟล์ใหม่
         // เพื่อให้ backend กำหนดสถานะจาก JSON content ใหม่อัตโนมัติ
       } else {
-        // ใช้สถานะเดิมจาก testFile เฉพาะกรณีที่ไม่มีการอัพโหลดไฟล์ใหม่
+        // ใช้สถานะเดิมจาก testFile เฉพาะกรณีที่ไม่มีการอัปโหลดไฟล์ใหม่
         if (testFile && testFile.status) {
           submitData.append("status", testFile.status);
         }
@@ -203,7 +203,7 @@ const TestFileEdit = () => {
     }
   };
 
-  // จัดการการยืนยันการอัพเดตไฟล์ที่มีอยู่
+  // จัดการการยืนยันการอัปเดตไฟล์ที่มีอยู่
   const handleConfirmUpdate = () => {
     setShowConfirmDialog(false);
     setIsUpdateMode(true);
@@ -319,13 +319,13 @@ const TestFileEdit = () => {
                   />
                 </div>
 
-                {/* ส่วนการอัพโหลดไฟล์ */}
+                {/* ส่วนการอัปโหลดไฟล์ */}
                 <div>
                   <label
                     htmlFor="testFile"
                     className="block text-sm font-medium text-gray-700 mb-1 sm:mb-2"
                   >
-                    อัพโหลดไฟล์ใหม่ (เลือกได้)
+                    อัปโหลดไฟล์ใหม่ (เลือกได้)
                   </label>
                   <div className="mt-1">
                     <input
@@ -354,7 +354,7 @@ const TestFileEdit = () => {
                       <span className="text-xs sm:text-sm font-medium truncate">
                         {selectedFile
                           ? selectedFile.name
-                          : "คลิกเพื่ออัพโหลดไฟล์ใหม่"}
+                          : "คลิกเพื่ออัปโหลดไฟล์ใหม่"}
                       </span>
                     </label>
 
@@ -471,7 +471,7 @@ const TestFileEdit = () => {
                     className="block mt-2 font-medium break-words"
                     data-cy="confirm-new-file"
                   >
-                    คุณกำลังจะอัพโหลดไฟล์ใหม่: {selectedFile.name}
+                    คุณกำลังจะอัปโหลดไฟล์ใหม่: {selectedFile.name}
                   </span>
                 )}
               </p>
@@ -525,12 +525,12 @@ const TestFileEdit = () => {
             <div className="text-center">
               <AlertTriangle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-red-500 mb-3 md:mb-4" />
               <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
-                ไม่สามารถอัพโหลดไฟล์ได้
+                ไม่สามารถอัปโหลดไฟล์ได้
               </h2>
               <p className="text-gray-600 mb-4 md:mb-6 whitespace-pre-line">
-                ไฟล์ทดสอบนี้ถูกอัพโหลดแล้วใน {existingSprintName} ในโปรเจกต์{" "}
+                ไฟล์ทดสอบนี้ถูกอัปโหลดแล้วใน {existingSprintName} ในโปรเจกต์{" "}
                 <span className="font-medium">{existingProjectName} </span>
-                ไม่สามารถอัพโหลดไฟล์เดียวกันในหลายสปรินต์ได้
+                ไม่สามารถอัปโหลดไฟล์เดียวกันในหลายสปรินต์ได้
               </p>
             </div>
             <div className="flex justify-center">

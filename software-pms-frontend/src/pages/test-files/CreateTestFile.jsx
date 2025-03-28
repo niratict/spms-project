@@ -17,7 +17,7 @@ const CreateTestFile = () => {
   const { sprintId } = useParams();
   const { user } = useAuth();
 
-  // สถานะของข้อมูลไฟล์และการอัพโหลด
+  // สถานะของข้อมูลไฟล์และการอัปโหลด
   const [selectedFile, setSelectedFile] = useState(null);
   const [filename, setFilename] = useState("");
   const [isUpdateMode, setIsUpdateMode] = useState(false);
@@ -63,7 +63,7 @@ const CreateTestFile = () => {
 
     if (existingFile) {
       if (existingFile.sprint_id === parseInt(sprintId)) {
-        // ไฟล์มีอยู่แล้วในสปรินต์เดียวกัน - แสดงหน้าต่างยืนยันการอัพเดต
+        // ไฟล์มีอยู่แล้วในสปรินต์เดียวกัน - แสดงหน้าต่างยืนยันการอัปเดต
         setPendingFileId(existingFile.file_id);
         setShowConfirmDialog(true);
         return "SAME_SPRINT";
@@ -117,7 +117,7 @@ const CreateTestFile = () => {
     }
   };
 
-  // จัดการการอัพโหลดไฟล์
+  // จัดการการอัปโหลดไฟล์
   const handleUpload = async () => {
     if (!selectedFile) {
       setFileError("Please select a file");
@@ -138,7 +138,7 @@ const CreateTestFile = () => {
     formData.append("filename", filename);
 
     try {
-      // เลือก endpoint ตามโหมดการอัพโหลด (สร้างใหม่หรืออัพเดต)
+      // เลือก endpoint ตามโหมดการอัปโหลด (สร้างใหม่หรืออัปเดต)
       const endpoint = isUpdateMode
         ? `${API_BASE_URL}/api/test-files/upload/${pendingFileId}`
         : `${API_BASE_URL}/api/test-files/upload`;
@@ -150,7 +150,7 @@ const CreateTestFile = () => {
         },
       });
 
-      // นำทางไปยังหน้าแสดงรายละเอียดไฟล์หลังอัพโหลดสำเร็จ
+      // นำทางไปยังหน้าแสดงรายละเอียดไฟล์หลังอัปโหลดสำเร็จ
       navigate(`/test-files/${response.data.file_id || pendingFileId}`);
     } catch (err) {
       if (err.response?.status === 409 && err.response.data.sameSprint) {
@@ -171,7 +171,7 @@ const CreateTestFile = () => {
     handleUpload();
   };
 
-  // จัดการการยืนยันการอัพเดตไฟล์ที่มีอยู่
+  // จัดการการยืนยันการอัปเดตไฟล์ที่มีอยู่
   const handleConfirmUpdate = () => {
     setShowConfirmDialog(false);
     setIsUpdateMode(true);
@@ -205,11 +205,11 @@ const CreateTestFile = () => {
           <div className="bg-blue-50 px-4 sm:px-6 py-4 sm:py-5 border-b border-blue-100">
             <h2 className="text-xl sm:text-2xl font-bold text-gray-800 flex items-center">
               <FileUp className="w-5 h-5 sm:w-6 sm:h-6 mr-2 sm:mr-3 text-blue-600" />
-              {isUpdateMode ? "อัพเดตไฟล์ทดสอบ" : "อัพโหลดไฟล์ทดสอบ"}
+              {isUpdateMode ? "อัปเดตไฟล์ทดสอบ" : "อัปโหลดไฟล์ทดสอบ"}
             </h2>
           </div>
 
-          {/* แบบฟอร์มอัพโหลดไฟล์ */}
+          {/* แบบฟอร์มอัปโหลดไฟล์ */}
           <form
             onSubmit={handleSubmit}
             className="p-4 sm:p-6 space-y-4 sm:space-y-6"
@@ -247,7 +247,7 @@ const CreateTestFile = () => {
                 />
               </div>
 
-              {/* ส่วนการอัพโหลดไฟล์ */}
+              {/* ส่วนการอัปโหลดไฟล์ */}
               <div>
                 <label
                   htmlFor="testFile"
@@ -282,7 +282,7 @@ const CreateTestFile = () => {
                     <span className="text-xs sm:text-sm font-medium truncate">
                       {selectedFile
                         ? selectedFile.name
-                        : "คลิกเพื่ออัพโหลดไฟล์"}
+                        : "คลิกเพื่ออัปโหลดไฟล์"}
                     </span>
                   </label>
 
@@ -331,10 +331,10 @@ const CreateTestFile = () => {
                 data-cy="submit-button"
               >
                 {loading
-                  ? "กำลังอัพโหลด..."
+                  ? "กำลังอัปโหลด..."
                   : isUpdateMode
-                  ? "อัพเดตไฟล์"
-                  : "อัพโหลดไฟล์"}
+                  ? "อัปเดตไฟล์"
+                  : "อัปโหลดไฟล์"}
               </button>
             </div>
           </form>
@@ -350,12 +350,12 @@ const CreateTestFile = () => {
               <div className="text-center">
                 <AlertTriangle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-red-500 mb-3 md:mb-4" />
                 <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
-                  ไม่สามารถอัพโหลดไฟล์ได้
+                  ไม่สามารถอัปโหลดไฟล์ได้
                 </h2>
                 <p className="text-gray-600 mb-4 md:mb-6 whitespace-pre-line">
-                  ไฟล์ทดสอบนี้ถูกอัพโหลดแล้วใน {existingSprintName} ในโปรเจกต์{" "}
+                  ไฟล์ทดสอบนี้ถูกอัปโหลดแล้วใน {existingSprintName} ในโปรเจกต์{" "}
                   <span className="font-medium">{existingProjectName} </span>
-                  ไม่สามารถอัพโหลดไฟล์เดียวกันในหลายสปรินต์ได้
+                  ไม่สามารถอัปโหลดไฟล์เดียวกันในหลายสปรินต์ได้
                 </p>
               </div>
               <div className="flex justify-center">
@@ -371,7 +371,7 @@ const CreateTestFile = () => {
           </div>
         )}
 
-        {/* กล่องข้อความยืนยันการอัพเดตไฟล์ */}
+        {/* กล่องข้อความยืนยันการอัปเดตไฟล์ */}
         {showConfirmDialog && (
           <div
             className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
@@ -381,11 +381,11 @@ const CreateTestFile = () => {
               <div className="text-center">
                 <CheckCircle className="mx-auto h-12 w-12 md:h-16 md:w-16 text-blue-500 mb-3 md:mb-4" />
                 <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">
-                  ต้องการอัพเดตไฟล์ทดสอบที่มีอยู่?
+                  ต้องการอัปเดตไฟล์ทดสอบที่มีอยู่?
                 </h2>
                 <p className="text-gray-600 mb-4 md:mb-6">
                   มีไฟล์ทดสอบที่ชื่อเดียวกันอยู่แล้วในสปรินต์นี้<br></br>
-                  คุณต้องการอัพเดตไฟล์นี้ด้วยผลลัพธ์ใหม่หรือไม่?
+                  คุณต้องการอัปเดตไฟล์นี้ด้วยผลลัพธ์ใหม่หรือไม่?
                 </p>
               </div>
               <div className="flex justify-center space-x-3 md:space-x-4">
@@ -402,7 +402,7 @@ const CreateTestFile = () => {
                   data-cy="confirm-dialog-update"
                 >
                   <Save className="w-4 h-4 md:w-5 md:h-5" />
-                  อัพเดตไฟล์
+                  อัปเดตไฟล์
                 </button>
               </div>
             </div>

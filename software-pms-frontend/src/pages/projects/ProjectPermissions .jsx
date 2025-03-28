@@ -9,9 +9,118 @@ import {
   Shield,
   AlertTriangle,
   X,
+  ChevronDown,
+  CheckCircle2,
+  User,
+  UserCheck,
 } from "lucide-react";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL;
+
+// คอมโพเนนต์ DropdownSelect สำหรับใช้ในฟอร์ม
+const DropdownSelect = ({
+  label,
+  value,
+  onChange,
+  options,
+  disabled = false,
+  placeholder,
+  dataCy,
+  icon,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const handleSelect = (optionValue) => {
+    onChange({ target: { value: optionValue } });
+    setIsOpen(false);
+  };
+
+  return (
+    <div>
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          {label}
+        </label>
+      )}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          className={`flex items-center justify-between w-full rounded-md border ${
+            disabled
+              ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200"
+              : "bg-white text-gray-800 cursor-pointer border-gray-300 hover:border-blue-500"
+          } p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200`}
+          data-cy={dataCy}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+        >
+          <span className="block truncate text-left pr-8">
+            {options.find(opt => opt.value === value)?.label || placeholder}
+          </span>
+          <div
+            className={`absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none`}
+          >
+            <div
+              className={`rounded-lg p-1 transition-all duration-300 ${
+                disabled
+                  ? "text-gray-400"
+                  : "text-blue-600"
+              }`}
+            >
+              {icon || <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />}
+            </div>
+          </div>
+        </button>
+        
+        {isOpen && !disabled && (
+          <>
+            <div 
+              className="fixed inset-0 z-10" 
+              onClick={() => setIsOpen(false)}
+            ></div>
+            <div 
+              className="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
+              style={{ scrollbarWidth: 'thin' }}
+              data-cy={`${dataCy}-dropdown`}
+            >
+              <ul role="listbox">
+                {placeholder && (
+                  <li
+                    className="py-2 px-4 text-gray-500 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center text-sm"
+                    onClick={() => handleSelect("")}
+                    data-cy={`${dataCy}-option-placeholder`}
+                  >
+                    {placeholder}
+                  </li>
+                )}
+                {options.map((option) => (
+                  <li
+                    key={option.value}
+                    className={`py-2 px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center text-sm ${
+                      option.value === value ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-800"
+                    }`}
+                    onClick={() => handleSelect(option.value)}
+                    data-cy={`${dataCy}-option-${option.value}`}
+                    role="option"
+                    aria-selected={option.value === value}
+                  >
+                    {option.value === value && (
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
+                    )}
+                    <span className={option.value === value ? "ml-0" : "ml-6"}>
+                      {option.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
 
 const ProjectPermissions = () => {
   const { user } = useAuth();
@@ -26,7 +135,7 @@ const ProjectPermissions = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [showAddMember, setShowAddMember] = useState(false);
-  const [setUserProjectRole] = useState(null);
+  const [userProjectRole, setUserProjectRole] = useState(null);
   const [deleteModal, setDeleteModal] = useState({ show: false, user: null });
 
   // ดึงข้อมูลโปรเจกต์
@@ -86,18 +195,51 @@ const ProjectPermissions = () => {
           headers: { Authorization: `Bearer ${user.token}` },
         }
       );
-      // กรองเฉพาะผู้ใช้ที่ไม่ใช่ Admin และไม่ใช่ Viewer
-      const filteredUsers = response.data.filter(
-        (user) => user.role !== "Admin" && user.role !== "Viewer"
-      );
+      
+      // กรองผู้ใช้งานที่มีบทบาทเป็น Viewer ออก
+      const filteredUsers = response.data.filter(user => user.role !== "Viewer");
       setAvailableUsers(filteredUsers);
 
-      // รีเซ็ตค่าที่เลือก
-      setSelectedUser("");
-      setSelectedRole("");
+      // Set default selected role based on user's role
+      if (user.role === "Admin") {
+        setSelectedRole("Product Owner");
+      } else if (user.role === "Product Owner") {
+        setSelectedRole("Tester");
+      } else {
+        setSelectedRole("Member");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "ไม่สามารถดึงข้อมูลผู้ใช้ได้");
     }
+  };
+
+  // เพิ่มฟังก์ชันใหม่สำหรับตรวจสอบบทบาทของผู้ใช้ที่เลือก
+  const getSelectedUserRole = () => {
+    if (!selectedUser) return null;
+    const selected = availableUsers.find(user => user.user_id === selectedUser);
+    return selected ? selected.role : null;
+  };
+
+  // เพิ่มฟังก์ชันใหม่สำหรับตรวจสอบบทบาทที่สามารถเลือกได้
+  const getAvailableRoles = () => {
+    const selectedUserRole = getSelectedUserRole();
+    
+    if (user.role === "Admin") {
+      // Admin สามารถกำหนด Product Owner หรือ Tester ได้
+      // แต่ถ้าเลือกผู้ใช้ที่เป็น Tester ให้แสดงเฉพาะ Tester
+      if (selectedUserRole === "Tester") {
+        return [{ value: "Tester", label: "Tester" }];
+      }
+      return [
+        { value: "Product Owner", label: "Product Owner" },
+        { value: "Tester", label: "Tester" }
+      ];
+    } else if (user.role === "Product Owner") {
+      // Product Owner สามารถกำหนดได้แค่ Tester
+      return [{ value: "Tester", label: "Tester" }];
+    }
+    
+    return [];
   };
 
   // เปิดฟอร์มเพิ่มสมาชิก
@@ -150,29 +292,6 @@ const ProjectPermissions = () => {
       setShowAddMember(false);
     } catch (err) {
       setError(err.response?.data?.message || "ไม่สามารถเพิ่มสมาชิกได้");
-    }
-  };
-
-  // อัพเดทบทบาทโปรเจกต์ตามผู้ใช้ที่เลือก
-  const handleUserSelect = (e) => {
-    const userId = e.target.value;
-    setSelectedUser(userId);
-    
-    // รีเซ็ตบทบาทก่อน เพื่อป้องกันการค้างค่าเดิม
-    setSelectedRole("");
-    
-    if (userId) {
-      // หาข้อมูลผู้ใช้จาก ID
-      const selectedUserData = availableUsers.find(user => String(user.user_id) === String(userId));
-      
-      if (selectedUserData) {
-        // กำหนดบทบาทในโปรเจกต์ตามบทบาทในระบบ
-        if (selectedUserData.role === "Product Owner") {
-          setSelectedRole("Product Owner");
-        } else if (selectedUserData.role === "Tester") {
-          setSelectedRole("Tester");
-        }
-      }
     }
   };
 
@@ -236,6 +355,16 @@ const ProjectPermissions = () => {
   const canManageMembers = () => {
     return user.role === "Admin" || user.role === "Product Owner";
   };
+
+  useEffect(() => {
+    // เมื่อเลือกผู้ใช้ใหม่ ให้ปรับค่า selectedRole ตามบทบาทที่สามารถเลือกได้
+    if (selectedUser) {
+      const availableRoles = getAvailableRoles();
+      if (availableRoles.length > 0) {
+        setSelectedRole(availableRoles[0].value);
+      }
+    }
+  }, [selectedUser]);
 
   // แสดงตัวโหลดขณะกำลังโหลดข้อมูล
   if (loading) {
@@ -373,35 +502,45 @@ const ProjectPermissions = () => {
               <form onSubmit={handleAddMember}>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      เลือกผู้ใช้
-                    </label>
-                    <select
+                    <DropdownSelect
+                      label="เลือกผู้ใช้"
                       value={selectedUser}
-                      onChange={handleUserSelect}
-                      className="w-full rounded-md border border-gray-300 p-2 text-sm focus:ring-blue-500 focus:border-blue-500"
-                      data-cy="user-select"
-                    >
-                      <option value="">-- เลือกผู้ใช้ --</option>
-                      {availableUsers.map((user) => (
-                        <option key={user.user_id} value={user.user_id}>
-                          {user.name} - {user.role}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      บทบาทในโปรเจกต์
-                    </label>
-                    <input
-                      type="text"
-                      value={selectedRole}
-                      readOnly
-                      className="w-full rounded-md border border-gray-300 p-2 text-sm bg-gray-50"
-                      data-cy="role-readonly"
+                      onChange={(e) => setSelectedUser(e.target.value)}
+                      options={availableUsers.map(user => ({
+                        value: user.user_id,
+                        label: `${user.name} - ${user.role}`
+                      }))}
+                      placeholder="-- เลือกผู้ใช้ --"
+                      dataCy="user-select"
+                      icon={<User className="h-4 w-4" />}
                     />
                   </div>
+                  {user.role === "Admin" && (
+                    <div>
+                      <DropdownSelect
+                        label="บทบาทในโปรเจกต์"
+                        value={selectedRole}
+                        onChange={(e) => setSelectedRole(e.target.value)}
+                        options={getAvailableRoles()}
+                        dataCy="role-select"
+                        icon={<UserCheck className="h-4 w-4" />}
+                      />
+                    </div>
+                  )}
+                  {user.role === "Product Owner" && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">
+                        บทบาทในโปรเจกต์
+                      </label>
+                      <input
+                        type="text"
+                        value="Tester"
+                        readOnly
+                        className="w-full rounded-md border border-gray-300 p-2 text-sm bg-gray-50"
+                        data-cy="role-readonly"
+                      />
+                    </div>
+                  )}
                   <div className="flex items-end">
                     <button
                       type="submit"
@@ -459,9 +598,7 @@ const ProjectPermissions = () => {
                           className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                             member.role === "Product Owner"
                               ? "bg-purple-100 text-purple-800"
-                              : member.role === "Tester"
-                              ? "bg-blue-100 text-blue-800"
-                              : "bg-gray-100 text-gray-800"
+                              : "bg-blue-100 text-blue-800"
                           }`}
                         >
                           {member.role}
@@ -474,9 +611,7 @@ const ProjectPermissions = () => {
                               ? "bg-red-100 text-red-800"
                               : member.user_role === "Product Owner"
                               ? "bg-purple-100 text-purple-800"
-                              : member.user_role === "Tester"
-                              ? "bg-blue-100 text-blue-800" 
-                              : "bg-gray-100 text-gray-800"
+                              : "bg-green-100 text-green-800"
                           }`}
                         >
                           {member.user_role}
@@ -546,7 +681,7 @@ const ProjectPermissions = () => {
                   <span className="font-medium text-gray-900">
                     {deleteModal.user?.name}
                   </span>{" "}
-                  ที่มีบทบาทเป็น{" "}<br></br>
+                  ที่มีบทบาทเป็น <br></br>
                   <span className="font-medium text-gray-900">
                     {deleteModal.user?.role}
                   </span>{" "}

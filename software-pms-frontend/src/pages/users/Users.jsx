@@ -3,16 +3,16 @@ import {
   Search,
   UserCircle,
   Eye,
-  ChevronLeft,
-  ChevronRight,
   Users as UsersIcon,
   UserPlus,
   Filter,
   RefreshCw,
+  ShieldCheck,
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate, Navigate } from "react-router-dom";
+import DropdownSelect from "../../components/ui/DropdownSelect";
 
 // ค่าคงที่สำหรับการตั้งค่า
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -51,25 +51,15 @@ const Users = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
 
-  // ตรวจสอบสิทธิ์การเข้าถึง
-  if (!user?.token) return <Navigate to="/login" />;
-  if (user?.role !== "Admin") {
-    return (
-      <div
-        className="text-center p-4 sm:p-6 bg-gray-100 min-h-screen flex items-center justify-center"
-        data-cy="access-denied-container"
-      >
-        <div className="bg-white p-4 sm:p-8 rounded-xl shadow-md w-full max-w-md">
-          <h2 className="text-xl sm:text-2xl font-bold text-red-500">
-            Access Denied
-          </h2>
-          <p className="text-gray-600 mt-2">
-            Only administrators can access this page.
-          </p>
-        </div>
-      </div>
-    );
-  }
+  // จัดการข้อผิดพลาดเกี่ยวกับการยืนยันตัวตน
+  const handleAuthError = (err) => {
+    if (err.response?.status === 401) {
+      logout();
+      navigate("/login");
+    } else {
+      setError(err.response?.data?.message || "Failed to fetch users");
+    }
+  };
 
   // ดึงข้อมูลผู้ใช้งานจาก API
   const fetchUsers = async () => {
@@ -87,27 +77,17 @@ const Users = () => {
     }
   };
 
-  useEffect(() => {
-    if (user?.token) {
-      fetchUsers();
-    }
-  }, [user]);
-
-  // จัดการข้อผิดพลาดเกี่ยวกับการยืนยันตัวตน
-  const handleAuthError = (err) => {
-    if (err.response?.status === 401) {
-      logout();
-      navigate("/login");
-    } else {
-      setError(err.response?.data?.message || "Failed to fetch users");
-    }
-  };
-
   // รีเฟรชข้อมูลผู้ใช้
   const handleRefresh = () => {
     setRefreshing(true);
     fetchUsers();
   };
+
+  useEffect(() => {
+    if (user?.token) {
+      fetchUsers();
+    }
+  }, [user]);
 
   // กรองข้อมูลผู้ใช้ตามคำค้นหาและบทบาท
   const filteredUsers = useMemo(() => {
@@ -128,7 +108,32 @@ const Users = () => {
 
   // คำนวณจำนวนหน้าทั้งหมด
   const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
-  const roleOptions = ["Admin", "Product Owner", "Tester", "Viewer"];
+  const roleOptions = [
+    { value: "Admin", label: `Admin ${ROLE_ICONS["Admin"]}` },
+    { value: "Product Owner", label: `Product Owner ${ROLE_ICONS["Product Owner"]}` },
+    { value: "Tester", label: `Tester ${ROLE_ICONS["Tester"]}` },
+    { value: "Viewer", label: `Viewer ${ROLE_ICONS["Viewer"]}` }
+  ];
+
+  // ตรวจสอบสิทธิ์การเข้าถึง
+  if (!user?.token) return <Navigate to="/login" />;
+  if (user?.role !== "Admin") {
+    return (
+      <div
+        className="text-center p-4 sm:p-6 bg-gray-100 min-h-screen flex items-center justify-center"
+        data-cy="access-denied-container"
+      >
+        <div className="bg-white p-4 sm:p-8 rounded-xl shadow-md w-full max-w-md">
+          <h2 className="text-xl sm:text-2xl font-bold text-red-500">
+            Access Denied
+          </h2>
+          <p className="text-gray-600 mt-2">
+            Only administrators can access this page.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   // แสดงสถานะกำลังโหลด
   if (loading) {
@@ -246,29 +251,20 @@ const Users = () => {
             <div className={`${showFilters ? "block" : "hidden"} sm:block`}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <label
-                    htmlFor="role-filter"
-                    className="block text-sm font-medium text-gray-700 mb-1"
-                  >
-                    กรองตามบทบาท
-                  </label>
-                  <select
-                    id="role-filter"
-                    data-cy="role-filter"
+                  <DropdownSelect
+                    label="กรองตามบทบาท"
                     value={roleFilter}
                     onChange={(e) => {
                       setRoleFilter(e.target.value);
                       setCurrentPage(1);
                     }}
-                    className="border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 w-full"
-                  >
-                    <option value="">ทุกบทบาท</option>
-                    {roleOptions.map((role) => (
-                      <option key={role} value={role}>
-                        {role} {ROLE_ICONS[role]}
-                      </option>
-                    ))}
-                  </select>
+                    options={[
+                      { value: "", label: "ทุกบทบาท" },
+                      ...roleOptions
+                    ]}
+                    dataCy="role-filter"
+                    icon={<ShieldCheck className="h-4 w-4" />}
+                  />
                 </div>
 
                 <div className="sm:col-span-2 flex items-end">
@@ -389,62 +385,182 @@ const Users = () => {
           </div>
         )}
 
-        {/* ส่วนแสดงหมายเลขหน้า - ปรับให้สวยงาม */}
+        {/* ส่วนแสดงหมายเลขหน้า - ปรับใหม่ตามรูปแบบของ ActionLogs */}
         {filteredUsers.length > USERS_PER_PAGE && (
           <div
-            className="flex justify-center items-center space-x-2 sm:space-x-4 mt-6"
+            className="flex flex-col items-center mt-4"
             data-cy="pagination-container"
           >
-            <button
-              data-cy="prev-page-button"
-              onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-              disabled={currentPage === 1}
-              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:bg-gray-100 hover:bg-gray-50 transition"
+            <div
+              className="text-xs sm:text-sm text-gray-700 mb-2"
+              data-cy="pagination-info"
             >
-              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
-              <span className="hidden sm:inline">ก่อนหน้า</span>
-            </button>
-
-            <div className="flex items-center gap-1">
-              {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
-                let pageNum;
-                if (totalPages <= 5) {
-                  pageNum = i + 1;
-                } else if (currentPage <= 3) {
-                  pageNum = i + 1;
-                } else if (currentPage >= totalPages - 2) {
-                  pageNum = totalPages - 4 + i;
-                } else {
-                  pageNum = currentPage - 2 + i;
-                }
-
-                return (
-                  <button
-                    key={pageNum}
-                    onClick={() => setCurrentPage(pageNum)}
-                    className={`w-8 h-8 sm:w-10 sm:h-10 flex items-center justify-center rounded-lg ${
-                      currentPage === pageNum
-                        ? "bg-blue-600 text-white"
-                        : "bg-white border border-gray-300 text-gray-700 hover:bg-gray-50"
-                    }`}
-                  >
-                    {pageNum}
-                  </button>
-                );
-              })}
+              รายการที่{" "}
+              {filteredUsers.length > 0 ? (currentPage - 1) * USERS_PER_PAGE + 1 : 0} ถึง{" "}
+              {Math.min(currentPage * USERS_PER_PAGE, filteredUsers.length)} จากทั้งหมด{" "}
+              {filteredUsers.length} รายการ
             </div>
+            <div className="flex items-center space-x-2 justify-center">
+              {/* ปุ่มหน้าแรก */}
+              <button
+                data-cy="first-page"
+                onClick={() => setCurrentPage(1)}
+                disabled={currentPage === 1 || filteredUsers.length === 0}
+                className="hidden sm:block px-2 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+              >
+                <span className="sr-only">หน้าแรก</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-4 h-4"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M13.293 4.293a1 1 0 0 1 0 1.414L7.414 12l5.879 5.293a1 1 0 1 1-1.414 1.414l-7-6a1 1 0 0 1 0-1.414l7-6a1 1 0 0 1 1.414 0z"
+                    clipRule="evenodd"
+                  />
+                  <path
+                    fillRule="evenodd"
+                    d="M7.293 4.293a1 1 0 0 1 0 1.414L1.414 12l5.879 5.293a1 1 0 1 1-1.414 1.414l-7-6a1 1 0 0 1 0-1.414l7-6a1 1 0 0 1 1.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
 
-            <button
-              data-cy="next-page-button"
-              onClick={() =>
-                setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-              }
-              disabled={currentPage === totalPages}
-              className="flex items-center gap-1 sm:gap-2 px-3 sm:px-4 py-2 bg-white border border-gray-300 rounded-lg disabled:opacity-50 disabled:bg-gray-100 hover:bg-gray-50 transition"
-            >
-              <span className="hidden sm:inline">ถัดไป</span>
-              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
-            </button>
+              {/* ปุ่มก่อนหน้า */}
+              <button
+                data-cy="previous-page"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage === 1 || filteredUsers.length === 0}
+                className="px-3 sm:px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm flex items-center"
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-4 h-4 mr-1 sm:mr-2"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+                ก่อนหน้า
+              </button>
+
+              {/* แสดงปุ่มตัวเลขหน้า - ปรับปรุงตรรกะการแสดงหน้า */}
+              <div className="hidden sm:flex space-x-1">
+                {Array.from({ length: totalPages }).map((_, index) => {
+                  const pageNumber = index + 1;
+
+                  // ปรับตรรกะการแสดงหน้า
+                  // 1. แสดงหน้าแรกเสมอ
+                  // 2. แสดงหน้าสุดท้ายเสมอ
+                  // 3. แสดงหน้าปัจจุบันและหน้าถัดไปอีก 2 หน้า
+                  const isFirstPage = pageNumber === 1;
+                  const isLastPage = pageNumber === totalPages;
+                  const isWithinRange =
+                    pageNumber >= Math.max(1, currentPage) &&
+                    pageNumber <= Math.min(totalPages, currentPage + 2);
+
+                  // เงื่อนไขการแสดงจุดไข่ปลา
+                  const showLeftEllipsis = pageNumber === 2 && currentPage > 2;
+                  const showRightEllipsis =
+                    pageNumber === totalPages - 1 && currentPage + 2 < totalPages;
+
+                  // แสดงหน้าเมื่อเป็นไปตามเงื่อนไข
+                  if (isFirstPage || isLastPage || isWithinRange) {
+                    return (
+                      <button
+                        key={pageNumber}
+                        onClick={() => setCurrentPage(pageNumber)}
+                        className={`w-8 h-8 flex items-center justify-center rounded-md text-xs transition-colors duration-200
+                      ${
+                        pageNumber === currentPage
+                          ? "bg-blue-600 text-white font-medium shadow-sm"
+                          : "border bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                        data-cy={`page-number-${pageNumber}`}
+                        aria-current={
+                          pageNumber === currentPage ? "page" : undefined
+                        }
+                      >
+                        {pageNumber}
+                      </button>
+                    );
+                  } else if (showLeftEllipsis || showRightEllipsis) {
+                    return (
+                      <div
+                        key={`ellipsis-${pageNumber}`}
+                        className="w-8 h-8 flex items-center justify-center text-gray-500"
+                      >
+                        &hellip;
+                      </div>
+                    );
+                  }
+
+                  return null;
+                })}
+              </div>
+
+              {/* แสดงตัวแสดงหน้าปัจจุบันบนมือถือ */}
+              <div className="flex sm:hidden items-center px-3 py-1 bg-gray-100 rounded-md text-sm font-medium">
+                <span>
+                  {currentPage} / {Math.max(1, totalPages)}
+                </span>
+              </div>
+
+              {/* ปุ่มถัดไป */}
+              <button
+                data-cy="next-page"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={currentPage === totalPages || filteredUsers.length === 0}
+                className="px-3 sm:px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm flex items-center"
+              >
+                ถัดไป
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-4 h-4 ml-1 sm:ml-2"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+
+              {/* ปุ่มหน้าสุดท้าย */}
+              <button
+                data-cy="last-page"
+                onClick={() => setCurrentPage(totalPages)}
+                disabled={currentPage === totalPages || filteredUsers.length === 0}
+                className="hidden sm:block px-2 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+              >
+                <span className="sr-only">หน้าสุดท้าย</span>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                  className="w-4 h-4"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M6.707 4.293a1 1 0 0 1 1.414 0l7 6a1 1 0 0 1 0 1.414l-7 6a1 1 0 0 1-1.414-1.414L12.586 10 6.707 4.707a1 1 0 0 1 0-1.414z"
+                    clipRule="evenodd"
+                  />
+                  <path
+                    fillRule="evenodd"
+                    d="M12.707 4.293a1 1 0 0 1 1.414 0l7 6a1 1 0 0 1 0 1.414l-7 6a1 1 0 0 1-1.414-1.414L18.586 10 12.707 4.707a1 1 0 0 1 0-1.414z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
         )}
       </div>

@@ -12,7 +12,12 @@ import {
   Trash2,
   CheckCircle,
   Save,
+  Check,
+  Eye,
+  EyeOff,
+  ShieldCheck,
 } from "lucide-react";
+import DropdownSelect from "../../components/ui/DropdownSelect";
 
 // ตั้งค่า URL ของ API จาก environment variables
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -77,6 +82,10 @@ const PasswordForm = ({
   passwordError,
 }) => {
   const { user } = useAuth();
+  const [showPassword, setShowPassword] = useState({
+    new: false,
+    confirm: false,
+  });
 
   return (
     <div className="space-y-3 md:space-y-4 pt-2">
@@ -93,36 +102,33 @@ const PasswordForm = ({
         </div>
       )}
 
-      {/* ฟิลด์รหัสผ่านปัจจุบัน (แสดงเฉพาะเมื่อไม่ใช่ Admin) */}
-      {user.role !== "Admin" && (
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            รหัสผ่านปัจจุบัน
-          </label>
-          <input
-            type="password"
-            name="current_password"
-            value={passwordData.current_password}
-            onChange={handlePasswordChange}
-            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200"
-            data-cy="current-password-input"
-          />
-        </div>
-      )}
-
       {/* ฟิลด์รหัสผ่านใหม่ */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           รหัสผ่านใหม่
         </label>
-        <input
-          type="password"
-          name="new_password"
-          value={passwordData.new_password}
-          onChange={handlePasswordChange}
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200"
-          data-cy="new-password-input"
-        />
+        <div className="relative">
+          <input
+            type={showPassword.new ? "text" : "password"}
+            name="new_password"
+            value={passwordData.new_password}
+            onChange={handlePasswordChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200"
+            data-cy="new-password-input"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword({...showPassword, new: !showPassword.new})}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2"
+            data-cy="toggle-new-password"
+          >
+            {showPassword.new ? (
+              <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            ) : (
+              <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            )}
+          </button>
+        </div>
       </div>
 
       {/* ฟิลด์ยืนยันรหัสผ่านใหม่ */}
@@ -130,14 +136,63 @@ const PasswordForm = ({
         <label className="block text-sm font-medium text-gray-700 mb-1">
           ยืนยันรหัสผ่านใหม่
         </label>
-        <input
-          type="password"
-          name="confirm_password"
-          value={passwordData.confirm_password}
-          onChange={handlePasswordChange}
-          className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200"
-          data-cy="confirm-password-input"
-        />
+        <div className="relative">
+          <input
+            type={showPassword.confirm ? "text" : "password"}
+            name="confirm_password"
+            value={passwordData.confirm_password}
+            onChange={handlePasswordChange}
+            className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200"
+            data-cy="confirm-password-input"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword({...showPassword, confirm: !showPassword.confirm})}
+            className="absolute right-3 top-1/2 transform -translate-y-1/2"
+            data-cy="toggle-confirm-password"
+          >
+            {showPassword.confirm ? (
+              <EyeOff className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            ) : (
+              <Eye className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+            )}
+          </button>
+        </div>
+      </div>
+
+      {/* เงื่อนไขการตั้งรหัสผ่าน */}
+      <div className="mt-3 space-y-2 text-sm text-gray-600">
+        <p className="font-medium">มีเงื่อนไขในการตั้งค่ารหัสผ่านดังนี้</p>
+        <div className="flex items-center gap-2">
+          <div className={`w-5 h-5 flex items-center justify-center rounded-full ${passwordData.new_password.length >= 8 ? 'bg-green-500' : 'bg-gray-200'}`}>
+            {passwordData.new_password.length >= 8 && <Check className="w-3 h-3 text-white" />}
+          </div>
+          <span className={passwordData.new_password.length >= 8 ? 'text-green-600' : ''}>ต้องมีตัวอักษรอย่างน้อย 8 ตัวอักษร</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className={`w-5 h-5 flex items-center justify-center rounded-full ${/[A-Z]/.test(passwordData.new_password) ? 'bg-green-500' : 'bg-gray-200'}`}>
+            {/[A-Z]/.test(passwordData.new_password) && <Check className="w-3 h-3 text-white" />}
+          </div>
+          <span className={/[A-Z]/.test(passwordData.new_password) ? 'text-green-600' : ''}>ต้องมีตัวอักษรพิมพ์ใหญ่ (A-Z)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className={`w-5 h-5 flex items-center justify-center rounded-full ${/[a-z]/.test(passwordData.new_password) ? 'bg-green-500' : 'bg-gray-200'}`}>
+            {/[a-z]/.test(passwordData.new_password) && <Check className="w-3 h-3 text-white" />}
+          </div>
+          <span className={/[a-z]/.test(passwordData.new_password) ? 'text-green-600' : ''}>ต้องมีตัวอักษรพิมพ์เล็ก (a-z)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className={`w-5 h-5 flex items-center justify-center rounded-full ${/[0-9]/.test(passwordData.new_password) ? 'bg-green-500' : 'bg-gray-200'}`}>
+            {/[0-9]/.test(passwordData.new_password) && <Check className="w-3 h-3 text-white" />}
+          </div>
+          <span className={/[0-9]/.test(passwordData.new_password) ? 'text-green-600' : ''}>ต้องมีตัวเลข (0-9)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className={`w-5 h-5 flex items-center justify-center rounded-full ${/[!@#$%^&*(),.?":{}|<>]/.test(passwordData.new_password) ? 'bg-green-500' : 'bg-gray-200'}`}>
+            {/[!@#$%^&*(),.?":{}|<>]/.test(passwordData.new_password) && <Check className="w-3 h-3 text-white" />}
+          </div>
+          <span className={/[!@#$%^&*(),.?":{}|<>]/.test(passwordData.new_password) ? 'text-green-600' : ''}>ต้องมีอักษรพิเศษ เช่น @!& เป็นต้น</span>
+        </div>
       </div>
     </div>
   );
@@ -184,6 +239,14 @@ const UserEdit = () => {
     new_password: "",
     confirm_password: "",
   });
+
+  // ตัวเลือกสำหรับบทบาท
+  const roleOptions = [
+    { value: "Viewer", label: "Viewer" },
+    { value: "Tester", label: "Tester" },
+    { value: "Product Owner", label: "Product Owner" },
+    { value: "Admin", label: "Admin" }
+  ];
 
   // --------- EFFECTS ---------
   // ดึงข้อมูลผู้ใช้เมื่อโหลดคอมโพเนนต์
@@ -278,6 +341,32 @@ const UserEdit = () => {
 
     if (!passwordData.confirm_password.trim()) {
       setPasswordError("กรุณายืนยันรหัสผ่านใหม่");
+      return;
+    }
+
+    // ตรวจสอบเงื่อนไขรหัสผ่านตามที่กำหนด
+    if (passwordData.new_password.length < 8) {
+      setPasswordError("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร");
+      return;
+    }
+
+    if (!/[A-Z]/.test(passwordData.new_password)) {
+      setPasswordError("รหัสผ่านต้องมีตัวอักษรพิมพ์ใหญ่อย่างน้อย 1 ตัว");
+      return;
+    }
+
+    if (!/[a-z]/.test(passwordData.new_password)) {
+      setPasswordError("รหัสผ่านต้องมีตัวอักษรพิมพ์เล็กอย่างน้อย 1 ตัว");
+      return;
+    }
+
+    if (!/[0-9]/.test(passwordData.new_password)) {
+      setPasswordError("รหัสผ่านต้องมีตัวเลขอย่างน้อย 1 ตัว");
+      return;
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(passwordData.new_password)) {
+      setPasswordError("รหัสผ่านต้องมีอักษรพิเศษอย่างน้อย 1 ตัว");
       return;
     }
 
@@ -429,21 +518,14 @@ const UserEdit = () => {
                 <div className="flex flex-col md:flex-row md:items-center md:space-x-3">
                   <Edit className="hidden md:inline w-5 h-5 text-gray-500 flex-shrink-0" />
                   <div className="flex-grow">
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      บทบาท
-                    </label>
-                    <select
-                      name="role"
+                    <DropdownSelect
+                      label="บทบาท"
                       value={formData.role}
                       onChange={handleChange}
-                      className="w-full p-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-200 transition-all"
-                      data-cy="role-select"
-                    >
-                      <option value="Viewer">Viewer</option>
-                      <option value="Tester">Tester</option>
-                      <option value="Product Owner">Product Owner</option>
-                      <option value="Admin">Admin</option>
-                    </select>
+                      options={roleOptions}
+                      dataCy="role-select"
+                      icon={<ShieldCheck className="h-4 w-4" />}
+                    />
                   </div>
                 </div>
               )}

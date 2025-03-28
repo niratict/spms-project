@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   PieChart,
   Pie,
@@ -14,10 +14,6 @@ import {
 import {
   Search,
   Filter,
-  ChevronFirst,
-  ChevronLast,
-  ChevronLeft,
-  ChevronRight,
   FileCode,
   CheckCircle,
   BarChart2,
@@ -27,6 +23,7 @@ import {
   XCircle,
   PieChart as PieChartIcon,
   RefreshCw,
+  ChevronDown,
 } from "lucide-react";
 import SprintStackedChart from "./SprintStackedChart";
 import TestResultsList from "./TestResultsList";
@@ -155,27 +152,6 @@ export default function TestDashboard() {
       refreshData();
     }
   }, [refreshTrigger, refreshData]);
-
-  // เพิ่มปุ่ม Refresh ในส่วนของการเลือก Project และ Sprint
-  const RefreshButton = () => (
-    <button
-      onClick={() => setRefreshTrigger((prev) => prev + 1)}
-      disabled={selectedProject === "all" || isRefreshing}
-      className={`p-2 sm:p-3 rounded-lg transition-all duration-300 ${
-        selectedProject === "all" || isRefreshing
-          ? "bg-gray-200 text-gray-500 cursor-not-allowed"
-          : "bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700"
-      }`}
-      title="Refresh Data"
-      data-cy="refresh-dashboard"
-    >
-      <RefreshCw
-        className={`h-4 w-4 sm:h-5 sm:w-5 ${
-          isRefreshing ? "animate-spin" : ""
-        }`}
-      />
-    </button>
-  );
 
   // === ดึงข้อมูลโปรเจกต์เมื่อโหลดหน้า === //
   useEffect(() => {
@@ -472,6 +448,108 @@ export default function TestDashboard() {
   // === การจัดการสถานะโหลดและข้อผิดพลาด === //
   const isPageLoading = isLoading.projects || isLoading.dashboardStats;
 
+  const DropdownSelect = ({
+    label,
+    value,
+    onChange,
+    options,
+    disabled = false,
+    placeholder,
+    dataCy,
+    icon,
+  }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    
+    const handleSelect = (optionValue) => {
+      onChange({ target: { value: optionValue } });
+      setIsOpen(false);
+    };
+
+    return (
+      <div className="relative group">
+        {label && (
+          <label className="block text-sm font-medium text-gray-700 mb-2 ml-1">
+            {label}
+          </label>
+        )}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => !disabled && setIsOpen(!isOpen)}
+            className={`flex items-center justify-between w-full px-4 py-3.5 rounded-xl border shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 transition duration-300 ease-in-out ${
+              disabled
+                ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200"
+                : "bg-white text-gray-800 cursor-pointer border-gray-200 hover:border-blue-300 font-medium group-hover:shadow-md"
+            }`}
+            data-cy={dataCy}
+            aria-haspopup="listbox"
+            aria-expanded={isOpen}
+          >
+            <span className="block truncate text-left pr-8">
+              {options.find(opt => opt.value === value)?.label || placeholder || "ทั้งหมด"}
+            </span>
+            <div
+              className={`absolute inset-y-0 right-0 flex items-center px-3.5 pointer-events-none`}
+            >
+              <div
+                className={`rounded-lg p-1.5 transition-all duration-300 ${
+                  disabled
+                    ? "bg-gray-100 text-gray-400"
+                    : "bg-blue-50 text-blue-600 group-hover:bg-blue-100"
+                }`}
+              >
+                {icon || <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />}
+              </div>
+            </div>
+          </button>
+          
+          {isOpen && !disabled && (
+            <>
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setIsOpen(false)}
+              ></div>
+              <div 
+                className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
+                style={{ scrollbarWidth: 'thin' }}
+                data-cy={`${dataCy}-dropdown`}
+              >
+                <ul role="listbox">
+                  <li
+                    className="py-2 px-4 text-gray-800 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center"
+                    onClick={() => handleSelect("all")}
+                    data-cy={`${dataCy}-option-all`}
+                  >
+                    {placeholder || "ทั้งหมด"}
+                  </li>
+                  {options.map((option) => (
+                    <li
+                      key={option.value}
+                      className={`py-2 px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center ${
+                        option.value === value ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-800"
+                      }`}
+                      onClick={() => handleSelect(option.value)}
+                      data-cy={`${dataCy}-option-${option.value}`}
+                      role="option"
+                      aria-selected={option.value === value}
+                    >
+                      {option.value === value && (
+                        <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
+                      )}
+                      <span className={option.value === value ? "ml-0" : "ml-6"}>
+                        {option.label}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  };
+
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -526,102 +604,57 @@ export default function TestDashboard() {
 
         {/* ตัวเลือกโปรเจกต์และ Sprint */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
-          <div className="relative group">
-            <label className="block text-sm font-medium text-gray-700 mb-2 ml-1">
-              Select Project
-            </label>
-            <div className="relative">
-              <select
-                className="w-full appearance-none bg-white px-4 py-3.5 rounded-xl border border-gray-200 text-gray-800 font-medium shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 hover:border-blue-300 transition duration-300 ease-in-out cursor-pointer group-hover:shadow-md"
-                value={selectedProject}
-                onChange={(e) => {
-                  setSelectedProject(e.target.value);
-                  setSelectedSprint("all");
-                  setTestResults(null);
-                }}
-                data-cy="project-selector"
-              >
-                <option value="all" disabled>
-                  Select Project
-                </option>
-                {projects.map((project) => (
-                  <option
-                    key={project.project_id}
-                    value={project.project_id}
-                    data-cy={`project-option-${project.project_id}`}
-                  >
-                    Project {project.name}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5">
-                <div className="bg-blue-50 rounded-lg p-1.5 text-blue-600 group-hover:bg-blue-100 transition-all duration-300">
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
-            </div>
-          </div>
+          <DropdownSelect 
+            label="เลือกโปรเจกต์"
+            value={selectedProject}
+            onChange={(e) => {
+              setSelectedProject(e.target.value);
+              setSelectedSprint("all");
+              setTestResults(null);
+            }}
+            options={projects.map((project) => ({
+              value: project.project_id,
+              label: `Project ${project.name}`
+            }))}
+            disabled={false}
+            placeholder="เลือกโปรเจกต์"
+            dataCy="project-selector"
+          />
 
-          <div className="relative group">
-            <label className="block text-sm font-medium text-gray-700 mb-2 ml-1">
-              Sprint
-            </label>
-            <div className="relative">
-              <select
-                className={`w-full appearance-none px-4 py-3.5 rounded-xl border shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 transition duration-300 ease-in-out ${
-                  selectedProject === "all"
-                    ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200"
-                    : "bg-white text-gray-800 cursor-pointer border-gray-200 hover:border-blue-300 font-medium group-hover:shadow-md"
-                }`}
+          <div className="flex gap-3">
+            <div className="flex-grow">
+              <DropdownSelect 
+                label="เลือกสปรินท์"
                 value={selectedSprint}
                 onChange={(e) => setSelectedSprint(e.target.value)}
+                options={sprints.map((sprint) => ({
+                  value: sprint.sprint_id,
+                  label: sprint.name
+                }))}
                 disabled={selectedProject === "all"}
-                data-cy="sprint-selector"
+                placeholder="ทุกสปรินท์"
+                dataCy="sprint-selector"
+              />
+            </div>
+            
+            <div className="flex items-end">
+              <button
+                onClick={() => setRefreshTrigger((prev) => prev + 1)}
+                disabled={selectedProject === "all" || isRefreshing}
+                className={`mb-0.5 h-[52px] w-[52px] flex items-center justify-center rounded-xl transition-all duration-300 ${
+                  selectedProject === "all" || isRefreshing
+                    ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
+                    : "bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 border border-blue-200 hover:border-blue-300"
+                }`}
+                title="รีเฟรชข้อมูล"
+                data-cy="refresh-dashboard"
               >
-                <option value="all">All Sprints</option>
-                {sprints.map((sprint) => (
-                  <option
-                    key={sprint.sprint_id}
-                    value={sprint.sprint_id}
-                    data-cy={`sprint-option-${sprint.sprint_id}`}
-                  >
-                    {sprint.name}
-                  </option>
-                ))}
-              </select>
-              <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3.5">
-                <div
-                  className={`rounded-lg p-1.5 transition-all duration-300 ${
-                    selectedProject === "all"
-                      ? "bg-gray-100 text-gray-400"
-                      : "bg-blue-50 text-blue-600 group-hover:bg-blue-100"
+                <RefreshCw
+                  className={`h-5 w-5 ${
+                    isRefreshing ? "animate-spin" : ""
                   }`}
-                >
-                  <svg
-                    className="h-5 w-5"
-                    xmlns="http://www.w3.org/2000/svg"
-                    viewBox="0 0 20 20"
-                    fill="currentColor"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                </div>
-              </div>
+                />
+              </button>
             </div>
           </div>
         </div>
@@ -713,105 +746,117 @@ export default function TestDashboard() {
                       className="text-lg sm:text-xl md:text-2xl font-bold mb-3 sm:mb-4 text-gray-800 flex items-center"
                       data-cy="pie-chart-title"
                     >
-                      <PieChartIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2 text-green-500" />
-                      การกระจายผลลัพธ์
+                      <PieChartIcon className="h-4 w-4 sm:h-5 sm:w-5 md:h-6 md:w-6 mr-2 text-emerald-500" />
+                      แผนภูมิวงกลม
                     </h2>
                     <div className="w-full h-48 sm:h-56 md:h-64">
-                      <ResponsiveContainer
-                        width="100%"
-                        height="100%"
-                        data-cy="pie-chart-container"
-                      >
-                        <PieChart>
-                          <Pie
-                            data={pieData}
-                            dataKey="value"
-                            nameKey="name"
-                            cx="50%"
-                            cy="50%"
-                            innerRadius={window.innerWidth < 640 ? 40 : 60}
-                            outerRadius={window.innerWidth < 640 ? 70 : 90}
-                            paddingAngle={1}
-                            labelLine={false}
-                            label={({
-                              cx,
-                              cy,
-                              midAngle,
-                              innerRadius,
-                              outerRadius,
-                              percent,
-                              name,
-                              index,
-                            }) => {
-                              const RADIAN = Math.PI / 180;
-                              // คำนวณตำแหน่งป้ายกำกับ
-                              const radius =
-                                innerRadius + (outerRadius - innerRadius) * 0.5;
-                              const x =
-                                cx + radius * Math.cos(-midAngle * RADIAN);
-                              const y =
-                                cy + radius * Math.sin(-midAngle * RADIAN);
+                      {pieData && 
+                       pieData.length > 0 && 
+                       pieData.some(item => item.value > 0) ? (
+                        <ResponsiveContainer
+                          width="100%"
+                          height="100%"
+                          data-cy="pie-chart-container"
+                        >
+                          <PieChart>
+                            <Pie
+                              data={pieData}
+                              dataKey="value"
+                              nameKey="name"
+                              cx="50%"
+                              cy="50%"
+                              innerRadius={window.innerWidth < 640 ? 40 : 60}
+                              outerRadius={window.innerWidth < 640 ? 70 : 90}
+                              paddingAngle={1}
+                              labelLine={false}
+                              label={({
+                                cx,
+                                cy,
+                                midAngle,
+                                innerRadius,
+                                outerRadius,
+                                percent,
+                                name
+                              }) => {
+                                const RADIAN = Math.PI / 180;
+                                // คำนวณตำแหน่งป้ายกำกับ
+                                const radius =
+                                  innerRadius + (outerRadius - innerRadius) * 0.5;
+                                const x =
+                                  cx + radius * Math.cos(-midAngle * RADIAN);
+                                const y =
+                                  cy + radius * Math.sin(-midAngle * RADIAN);
 
-                              // กำหนดสไตล์ตามสถานะ passed/failed
-                              const bgColor =
-                                name === "Passed"
-                                  ? "rgba(74, 222, 128, 0.9)"
-                                  : "rgba(248, 113, 113, 0.9)";
-                              const textColor = "white";
+                                // กำหนดสไตล์ตามสถานะ passed/failed
+                                const bgColor =
+                                  name === "Passed"
+                                    ? "rgba(52, 211, 153, 0.9)"
+                                    : "rgba(251, 113, 133, 0.9)";
+                                const textColor = "white";
 
-                              const content = `${name} ${(
-                                percent * 100
-                              ).toFixed(0)}%`;
-                              const labelWidth =
-                                window.innerWidth < 640 ? 70 : 80;
-                              const labelHeight =
-                                window.innerWidth < 640 ? 18 : 20;
-                              const fontSize =
-                                window.innerWidth < 640 ? "0.65rem" : "0.75rem";
+                                const content = `${name} ${(
+                                  percent * 100
+                                ).toFixed(0)}%`;
+                                const labelWidth =
+                                  window.innerWidth < 640 ? 70 : 80;
+                                const labelHeight =
+                                  window.innerWidth < 640 ? 18 : 20;
+                                const fontSize =
+                                  window.innerWidth < 640 ? "0.65rem" : "0.75rem";
 
-                              return (
-                                <>
-                                  {/* สี่เหลี่ยมพื้นหลัง */}
-                                  <rect
-                                    x={x - labelWidth / 2}
-                                    y={y - labelHeight / 2}
-                                    width={labelWidth}
-                                    height={labelHeight}
-                                    rx="4"
-                                    fill={bgColor}
-                                    stroke="white"
-                                    strokeWidth="0.5"
-                                    className="text-label-bg"
-                                    data-cy={`pie-label-${name.toLowerCase()}`}
-                                  />
-                                  {/* ข้อความ */}
-                                  <text
-                                    x={x}
-                                    y={y}
-                                    fill={textColor}
-                                    textAnchor="middle"
-                                    dominantBaseline="central"
-                                    style={{ fontSize }}
-                                    className="font-medium"
-                                  >
-                                    {content}
-                                  </text>
-                                </>
-                              );
-                            }}
-                          >
-                            <Cell fill="#4ADE80" data-cy="pie-cell-passed" />
-                            <Cell fill="#F87171" data-cy="pie-cell-failed" />
-                          </Pie>
-                          <Tooltip
-                            contentStyle={{
-                              backgroundColor: "rgba(255,255,255,0.9)",
-                              borderRadius: "12px",
-                              padding: "10px",
-                            }}
-                          />
-                        </PieChart>
-                      </ResponsiveContainer>
+                                return (
+                                  <>
+                                    {/* สี่เหลี่ยมพื้นหลัง */}
+                                    <rect
+                                      x={x - labelWidth / 2}
+                                      y={y - labelHeight / 2}
+                                      width={labelWidth}
+                                      height={labelHeight}
+                                      rx="4"
+                                      fill={bgColor}
+                                      stroke="white"
+                                      strokeWidth="0.5"
+                                      className="text-label-bg"
+                                      data-cy={`pie-label-${name.toLowerCase()}`}
+                                    />
+                                    {/* ข้อความ */}
+                                    <text
+                                      x={x}
+                                      y={y}
+                                      fill={textColor}
+                                      textAnchor="middle"
+                                      dominantBaseline="central"
+                                      style={{ fontSize }}
+                                      className="font-medium"
+                                    >
+                                      {content}
+                                    </text>
+                                  </>
+                                );
+                              }}
+                            >
+                              <Cell fill="#34D399" data-cy="pie-cell-passed" />
+                              <Cell fill="#FB7185" data-cy="pie-cell-failed" />
+                            </Pie>
+                            <Tooltip
+                              contentStyle={{
+                                backgroundColor: "rgba(255,255,255,0.9)",
+                                borderRadius: "12px",
+                                padding: "10px",
+                              }}
+                            />
+                          </PieChart>
+                        </ResponsiveContainer>
+                      ) : (
+                        <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 rounded-xl border border-dashed border-gray-300" data-cy="empty-pie-chart">
+                          <div className="relative mb-4">
+                            <PieChartIcon className="h-16 w-16 text-gray-300" />
+                            <XCircle className="h-7 w-7 text-gray-400 absolute -bottom-1 -right-1" />
+                          </div>
+                          <p className="text-gray-600 text-sm sm:text-base font-medium">ไม่มีข้อมูลผลทดสอบ</p>
+                          <p className="text-gray-500 text-xs sm:text-sm mt-1 text-center max-w-xs">เลือกโปรเจกต์และสปรินท์ที่มีการทดสอบ<br></br>เพื่อดูแผนภูมิวงกลม</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -955,38 +1000,34 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
             >
               <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
                 {/* ช่องค้นหาผลการทดสอบ */}
-                <div className="relative flex-grow">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
-                  <input
-                    type="text"
-                    placeholder="ค้นหาไฟล์ทดสอบ..."
-                    className="w-full pl-9 sm:pl-10 p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    data-cy="search-input"
-                  />
+                <div className="relative flex-grow md:w-3/4">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                    <input
+                      type="text"
+                      placeholder="ค้นหาไฟล์ทดสอบ..."
+                      className="w-full pl-9 sm:pl-10 p-3 sm:p-3.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-300 hover:border-blue-300 transition duration-300 shadow-sm"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      data-cy="search-input"
+                    />
+                  </div>
                 </div>
+                
                 {/* ตัวกรองสถานะการทดสอบ */}
-                <div className="flex items-center gap-2 sm:min-w-[140px]">
-                  <Filter className="h-4 w-4 sm:h-5 sm:w-5 text-gray-400 flex-shrink-0" />
-                  <select
-                    className="w-full p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 transition duration-300"
+                <div className="md:w-1/4 flex-shrink-0">
+                  <DropdownSelect 
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
-                    data-cy="status-filter"
-                  >
-                    <option value="all" data-cy="filter-option-all">
-                      ทั้งหมด
-                    </option>
-                    <option value="passed" data-cy="filter-option-passed">
-                      เฉพาะที่ผ่าน
-                    </option>
-                    <option value="failed" data-cy="filter-option-failed">
-                      เฉพาะที่ผิดพลาด
-                    </option>
-                  </select>
+                    options={[
+                      { value: "passed", label: "เฉพาะที่ผ่าน" },
+                      { value: "failed", label: "เฉพาะที่ผิดพลาด" }
+                    ]}
+                    placeholder="สถานะทั้งหมด"
+                    dataCy="status-filter"
+                    icon={<Filter className="h-5 w-5" />}
+                  />
                 </div>
-                <RefreshButton />
               </div>
             </div>
 
@@ -1011,7 +1052,7 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
                     className="p-4 sm:p-6 text-center text-gray-500 text-sm sm:text-base"
                     data-cy="no-results-message"
                   >
-                    ไม่พบผลการทดสอบที่ตรงกับเงื่อนไข
+                    ไม่พบผลการทดสอบ
                   </div>
                 ) : (
                   // วนลูปแสดงผลการทดสอบแต่ละรายการ
@@ -1115,93 +1156,179 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
               {/* ส่วนการแบ่งหน้า (Pagination) */}
               {totalPages > 0 && (
                 <div
-                  className="mt-4 sm:mt-6 flex justify-center items-center gap-1 sm:gap-2 flex-wrap"
+                  className="flex flex-col items-center mt-4"
                   data-cy="pagination-container"
                 >
-                  {/* ปุ่มไปหน้าแรก */}
-                  <button
-                    onClick={() => goToPage(1)}
-                    disabled={currentPage === 1}
-                    className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="หน้าแรก"
-                    data-cy="pagination-first"
+                  <div
+                    className="text-xs sm:text-sm text-gray-700 mb-2"
+                    data-cy="pagination-info"
                   >
-                    <ChevronFirst className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </button>
-
-                  {/* ปุ่มย้อนกลับ */}
-                  <button
-                    onClick={() => goToPage(currentPage - 1)}
-                    disabled={currentPage === 1}
-                    className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="หน้าก่อนหน้า"
-                    data-cy="pagination-prev"
-                  >
-                    <ChevronLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </button>
-
-                  {/* แสดงหมายเลขหน้า */}
-                  <div className="flex items-center gap-1 flex-wrap">
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      // คำนวณหมายเลขหน้าที่จะแสดง
-                      let pageNum =
-                        totalPages <= 5
-                          ? i + 1
-                          : currentPage <= 3
-                          ? i + 1
-                          : currentPage >= totalPages - 2
-                          ? totalPages - 4 + i
-                          : currentPage - 2 + i;
-
-                      return (
-                        <button
-                          key={i}
-                          onClick={() => goToPage(pageNum)}
-                          className={`w-6 h-6 sm:w-8 sm:h-8 text-xs sm:text-sm rounded-md ${
-                            currentPage === pageNum
-                              ? "bg-blue-500 text-white"
-                              : "hover:bg-gray-100"
-                          }`}
-                          data-cy={`pagination-page-${pageNum}`}
-                        >
-                          {pageNum}
-                        </button>
-                      );
-                    })}
+                    รายการที่{" "}
+                    {filteredTests.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} ถึง{" "}
+                    {Math.min(currentPage * itemsPerPage, filteredTests.length)} จากทั้งหมด{" "}
+                    {filteredTests.length} รายการ
                   </div>
+                  <div className="flex items-center space-x-2 justify-center">
+                    {/* ปุ่มหน้าแรก */}
+                    <button
+                      data-cy="first-page"
+                      onClick={() => goToPage(1)}
+                      disabled={currentPage === 1 || filteredTests.length === 0}
+                      className="hidden sm:block px-2 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                    >
+                      <span className="sr-only">หน้าแรก</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="w-4 h-4"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M13.293 4.293a1 1 0 0 1 0 1.414L7.414 12l5.879 5.293a1 1 0 1 1-1.414 1.414l-7-6a1 1 0 0 1 0-1.414l7-6a1 1 0 0 1 1.414 0z"
+                          clipRule="evenodd"
+                        />
+                        <path
+                          fillRule="evenodd"
+                          d="M7.293 4.293a1 1 0 0 1 0 1.414L1.414 12l5.879 5.293a1 1 0 1 1-1.414 1.414l-7-6a1 1 0 0 1 0-1.414l7-6a1 1 0 0 1 1.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
 
-                  {/* ปุ่มไปหน้าถัดไป */}
-                  <button
-                    onClick={() => goToPage(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                    className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="หน้าถัดไป"
-                    data-cy="pagination-next"
-                  >
-                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </button>
+                    {/* ปุ่มก่อนหน้า */}
+                    <button
+                      data-cy="previous-page"
+                      onClick={() => goToPage(Math.max(1, currentPage - 1))}
+                      disabled={currentPage === 1 || filteredTests.length === 0}
+                      className="px-3 sm:px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm flex items-center"
+                    >
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="w-4 h-4 mr-1 sm:mr-2"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                      ก่อนหน้า
+                    </button>
 
-                  {/* ปุ่มไปหน้าสุดท้าย */}
-                  <button
-                    onClick={() => goToPage(totalPages)}
-                    disabled={currentPage === totalPages}
-                    className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="หน้าสุดท้าย"
-                    data-cy="pagination-last"
-                  >
-                    <ChevronLast className="h-4 w-4 sm:h-5 sm:w-5" />
-                  </button>
-                </div>
-              )}
+                    {/* แสดงปุ่มตัวเลขหน้า - ปรับปรุงตรรกะการแสดงหน้า */}
+                    <div className="hidden sm:flex space-x-1">
+                      {Array.from({ length: totalPages }).map((_, index) => {
+                        const pageNumber = index + 1;
 
-              {/* แสดงข้อมูลการแบ่งหน้า */}
-              {totalPages > 0 && (
-                <div
-                  className="mt-2 text-center text-xs sm:text-sm text-gray-600"
-                  data-cy="pagination-info"
-                >
-                  หน้า {currentPage} จาก {totalPages} ({filteredTests.length}{" "}
-                  รายการ)
+                        // ปรับตรรกะการแสดงหน้า
+                        // 1. แสดงหน้าแรกเสมอ
+                        // 2. แสดงหน้าสุดท้ายเสมอ
+                        // 3. แสดงหน้าปัจจุบันและหน้าถัดไปอีก 2 หน้า
+                        const isFirstPage = pageNumber === 1;
+                        const isLastPage = pageNumber === totalPages;
+                        const isWithinRange =
+                          pageNumber >= Math.max(1, currentPage) &&
+                          pageNumber <= Math.min(totalPages, currentPage + 2);
+
+                        // เงื่อนไขการแสดงจุดไข่ปลา
+                        const showLeftEllipsis = pageNumber === 2 && currentPage > 2;
+                        const showRightEllipsis =
+                          pageNumber === totalPages - 1 && currentPage + 2 < totalPages;
+
+                        // แสดงหน้าเมื่อเป็นไปตามเงื่อนไข
+                        if (isFirstPage || isLastPage || isWithinRange) {
+                          return (
+                            <button
+                              key={pageNumber}
+                              onClick={() => goToPage(pageNumber)}
+                              className={`w-8 h-8 flex items-center justify-center rounded-md text-xs transition-colors duration-200
+                            ${
+                              pageNumber === currentPage
+                                ? "bg-blue-600 text-white font-medium shadow-sm"
+                                : "border bg-white text-gray-700 hover:bg-gray-50"
+                            }`}
+                              data-cy={`page-number-${pageNumber}`}
+                              aria-current={
+                                pageNumber === currentPage ? "page" : undefined
+                              }
+                            >
+                              {pageNumber}
+                            </button>
+                          );
+                        } else if (showLeftEllipsis || showRightEllipsis) {
+                          return (
+                            <div
+                              key={`ellipsis-${pageNumber}`}
+                              className="w-8 h-8 flex items-center justify-center text-gray-500"
+                            >
+                              &hellip;
+                            </div>
+                          );
+                        }
+
+                        return null;
+                      })}
+                    </div>
+
+                    {/* แสดงตัวแสดงหน้าปัจจุบันบนมือถือ */}
+                    <div className="flex sm:hidden items-center px-3 py-1 bg-gray-100 rounded-md text-sm font-medium">
+                      <span>
+                        {currentPage} / {Math.max(1, totalPages)}
+                      </span>
+                    </div>
+
+                    {/* ปุ่มถัดไป */}
+                    <button
+                      data-cy="next-page"
+                      onClick={() => goToPage(Math.min(totalPages, currentPage + 1))}
+                      disabled={currentPage === totalPages || filteredTests.length === 0}
+                      className="px-3 sm:px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm flex items-center"
+                    >
+                      ถัดไป
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="w-4 h-4 ml-1 sm:ml-2"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+
+                    {/* ปุ่มหน้าสุดท้าย */}
+                    <button
+                      data-cy="last-page"
+                      onClick={() => goToPage(totalPages)}
+                      disabled={currentPage === totalPages || filteredTests.length === 0}
+                      className="hidden sm:block px-2 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
+                    >
+                      <span className="sr-only">หน้าสุดท้าย</span>
+                      <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 20 20"
+                        fill="currentColor"
+                        className="w-4 h-4"
+                      >
+                        <path
+                          fillRule="evenodd"
+                          d="M6.707 4.293a1 1 0 0 1 1.414 0l7 6a1 1 0 0 1 0 1.414l-7 6a1 1 0 0 1-1.414-1.414L12.586 10 6.707 4.707a1 1 0 0 1 0-1.414z"
+                          clipRule="evenodd"
+                        />
+                        <path
+                          fillRule="evenodd"
+                          d="M12.707 4.293a1 1 0 0 1 1.414 0l7 6a1 1 0 0 1 0 1.414l-7 6a1 1 0 0 1-1.414-1.414L18.586 10 12.707 4.707a1 1 0 0 1 0-1.414z"
+                          clipRule="evenodd"
+                        />
+                      </svg>
+                    </button>
+                  </div>
                 </div>
               )}
             </div>

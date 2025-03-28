@@ -36,11 +36,6 @@ const SprintDetail = () => {
   const [showDeleteWarningModal, setShowDeleteWarningModal] = useState(false);
   const [deleteWarningMessage, setDeleteWarningMessage] = useState("");
 
-  // เลื่อนไปที่ด้านบนของหน้าเมื่อโหลดหน้าใหม่
-  useEffect(() => {
-    window.scrollTo(0, 0);
-  }, []);
-
   // โหลดข้อมูลสปรินต์เมื่อมีการเปลี่ยน id หรือ user
   useEffect(() => {
     const fetchSprintData = async () => {

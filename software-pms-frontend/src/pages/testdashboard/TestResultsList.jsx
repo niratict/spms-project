@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import { useState, useMemo } from "react";
 import {
   ChevronDown,
   ChevronUp,
@@ -13,7 +13,7 @@ import {
   AlertTriangle,
   SkipForward,
   ChevronRight,
-  InfoIcon,
+  CheckCircle2,
 } from "lucide-react";
 import ErrorHandler from "./ErrorHandler";
 
@@ -41,7 +41,7 @@ const TestCase = ({ test }) => {
       `}
     >
       <div
-        className="p-3 cursor-pointer"
+        className="p-3 pl-4 pr-4 w-full cursor-pointer"
         onClick={() => hasError && setShowDetails(!showDetails)}
       >
         <div className="flex items-start gap-3">
@@ -277,6 +277,109 @@ const TestSuite = ({ suite, searchTerm, filterStatus, level = 0 }) => {
   );
 };
 
+// คอมโพเนนต์ dropdown แบบปรับแต่ง
+const DropdownSelect = ({
+  label,
+  value,
+  onChange,
+  options,
+  disabled = false,
+  placeholder,
+  dataCy,
+  icon,
+}) => {
+  const [isOpen, setIsOpen] = useState(false);
+  
+  const handleSelect = (optionValue) => {
+    onChange({ target: { value: optionValue } });
+    setIsOpen(false);
+  };
+
+  return (
+    <div className="relative group">
+      {label && (
+        <label className="block text-sm font-medium text-gray-700 mb-2 ml-1">
+          {label}
+        </label>
+      )}
+      <div className="relative">
+        <button
+          type="button"
+          onClick={() => !disabled && setIsOpen(!isOpen)}
+          className={`flex items-center justify-between w-full px-4 py-2 rounded-lg border shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 transition duration-300 ease-in-out ${
+            disabled
+              ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200"
+              : "bg-white text-gray-800 cursor-pointer border-gray-200 hover:border-blue-300 font-medium group-hover:shadow-md"
+          }`}
+          data-cy={dataCy}
+          aria-haspopup="listbox"
+          aria-expanded={isOpen}
+        >
+          <span className="block truncate text-left pr-8 text-sm">
+            {options.find(opt => opt.value === value)?.label || placeholder || "ทั้งหมด"}
+          </span>
+          <div
+            className={`absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none`}
+          >
+            <div
+              className={`rounded-lg p-1 transition-all duration-300 ${
+                disabled
+                  ? "bg-gray-100 text-gray-400"
+                  : "bg-blue-50 text-blue-600 group-hover:bg-blue-100"
+              }`}
+            >
+              {icon || <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />}
+            </div>
+          </div>
+        </button>
+        
+        {isOpen && !disabled && (
+          <>
+            <div 
+              className="fixed inset-0 z-10" 
+              onClick={() => setIsOpen(false)}
+            ></div>
+            <div 
+              className="absolute z-20 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
+              style={{ scrollbarWidth: 'thin' }}
+              data-cy={`${dataCy}-dropdown`}
+            >
+              <ul role="listbox">
+                <li
+                  className="py-2 px-4 text-gray-800 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center text-sm"
+                  onClick={() => handleSelect("all")}
+                  data-cy={`${dataCy}-option-all`}
+                >
+                  {placeholder || "ทั้งหมด"}
+                </li>
+                {options.map((option) => (
+                  <li
+                    key={option.value}
+                    className={`py-2 px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center text-sm ${
+                      option.value === value ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-800"
+                    }`}
+                    onClick={() => handleSelect(option.value)}
+                    data-cy={`${dataCy}-option-${option.value}`}
+                    role="option"
+                    aria-selected={option.value === value}
+                  >
+                    {option.value === value && (
+                      <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
+                    )}
+                    <span className={option.value === value ? "ml-0" : "ml-6"}>
+                      {option.label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </>
+        )}
+      </div>
+    </div>
+  );
+};
+
 // คอมโพเนนต์หลักสำหรับแสดงผลการทดสอบทั้งหมด
 const TestResultsList = ({ tests }) => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -481,30 +584,29 @@ const TestResultsList = ({ tests }) => {
             {/* ส่วนค้นหาและกรองผลการทดสอบ */}
             <div className="flex flex-col sm:flex-row gap-3 mb-4">
               <div className="flex-1 relative">
-                <Search className="absolute left-3 top-2.5 h-4 w-4 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
                   placeholder="ค้นหากรณีทดสอบ..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 bg-white rounded-lg border border-gray-200 
+                  className="w-full pl-8 pr-4 py-2 bg-white rounded-lg border border-gray-200 
                     focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
                   data-cy="search-input"
                 />
               </div>
-              <div className="sm:w-48 flex items-center gap-2">
-                <Filter className="h-4 w-4 text-gray-400 flex-shrink-0" />
-                <select
+              <div className="sm:w-48 flex-shrink-0">
+                <DropdownSelect 
                   value={filterStatus}
                   onChange={(e) => setFilterStatus(e.target.value)}
-                  className="flex-1 px-4 py-2 bg-white rounded-lg border border-gray-200
-                    focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-                  data-cy="filter-select"
-                >
-                  <option value="all">ทั้งหมด</option>
-                  <option value="passed">เฉพาะที่ผ่าน</option>
-                  <option value="failed">เฉพาะที่ผิดพลาด</option>
-                </select>
+                  options={[
+                    { value: "passed", label: "เฉพาะที่ผ่าน" },
+                    { value: "failed", label: "เฉพาะที่ผิดพลาด" }
+                  ]}
+                  placeholder="ทั้งหมด"
+                  dataCy="filter-select"
+                  icon={<Filter className="h-4 w-4" />}
+                />
               </div>
             </div>
 

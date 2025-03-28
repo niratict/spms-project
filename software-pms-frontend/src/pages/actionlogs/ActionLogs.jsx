@@ -1,12 +1,13 @@
 import React, { useEffect, useState, useCallback } from "react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
-import { Calendar, Filter, ClipboardList } from "lucide-react";
+import { Filter, ClipboardList, ChevronDown } from "lucide-react";
 import { useNavigate, Navigate } from "react-router-dom";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { DayPicker } from "react-day-picker";
 import "react-day-picker/dist/style.css";
+import DropdownSelect from "../../components/ui/DropdownSelect";
 
 // ตั้งค่า URL พื้นฐานของ API จาก environment variables
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -49,9 +50,9 @@ const ActionLogs = () => {
     create: "สร้าง",
     update: "อัปเดต",
     delete: "ลบ",
-    upload: "อัพโหลด",
-    update_profile: "อัพเดตโปรไฟล์",
-    update_profile_image: "อัพโหลดรูปโปรไฟล์",
+    upload: "อัปโหลด",
+    update_profile: "อัปเดตโปรไฟล์",
+    update_profile_image: "อัปโหลดรูปโปรไฟล์",
     delete_profile_image: "ลบรูปโปรไฟล์",
     password_change: "เปลี่ยนรหัสผ่าน",
     assign: "มอบหมาย",
@@ -216,14 +217,14 @@ const ActionLogs = () => {
         changed_at: "วันที่เปลี่ยน",
         created_by: "สร้างโดย",
         project_id: "รหัสโปรเจกต์",
-        upload_date: "วันที่อัพโหลด",
+        upload_date: "วันที่อัปโหลด",
         updated_by: "แก้ไขโดย",
         last_modified_by: "แก้ไขล่าสุดโดย",
         start_date: "วันที่เริ่มต้น",
         updated_at: "แก้ไขโดย",
         file_size: "ขนาดไฟล์",
         custom_filename: "ชื่อไฟล์",
-        original_filename: "ชื่อไฟล์ที่อัพโหลด",
+        original_filename: "ชื่อไฟล์ที่อัปโหลด",
         photo: "รูปภาพ",
         description: "รายละเอียด",
         role: "บทบาท",
@@ -246,10 +247,10 @@ const ActionLogs = () => {
         "status", // สถานะ
         "file_id", // รหัสไฟล์
         "filename", // ชื่อไฟล์
-        "original_filename", // ชื่อไฟล์ที่อัพโหลด
+        "original_filename", // ชื่อไฟล์ที่อัปโหลด
         "custom_filename", // ชื่อไฟล์
         "file_size", // ขนาดไฟล์
-        "upload_date", // วันที่อัพโหลด
+        "upload_date", // วันที่อัปโหลด
         "last_modified_by", // แก้ไขล่าสุดโดย
         "last_modified_date", // วันที่แก้ไขล่าสุด
         "name", // ชื่อ
@@ -435,7 +436,7 @@ const ActionLogs = () => {
     targetTablePriority,
   ]);
 
-  // ดึกบันทึกการดำเนินการจาก API พร้อมตัวกรอง
+  // ดึงบันทึกการดำเนินการจาก API พร้อมตัวกรอง
   const fetchLogs = useCallback(async () => {
     if (!user?.token || !resourcesLoaded) return;
 
@@ -517,7 +518,7 @@ const ActionLogs = () => {
       return log.details.name;
     }
 
-    // กรณีมีการอัพเดท ชื่ออาจจะอยู่ในรูปแบบต่างกันตามประเภท
+    // กรณีมีการอัปเดท ชื่ออาจจะอยู่ในรูปแบบต่างกันตามประเภท
     if (log.action_type === "update") {
       if (targetType === "sprint" && log.details) {
         return (
@@ -686,110 +687,114 @@ const ActionLogs = () => {
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {/* ตัวกรองประเภทการกระทำ */}
             <div className="relative" data-cy="action-type-filter-container">
-              <select
-                data-cy="action-type-filter"
+              <DropdownSelect
+                dataCy="action-type-filter"
+                label="ประเภทการกระทำ"
                 name="action_type"
                 value={filters.action_type}
-                onChange={handleFilterChange}
-                className="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">ประเภทการกระทำทั้งหมด</option>
-                {actionTypes.map((type) => (
-                  <option
-                    key={type}
-                    value={type}
-                    data-cy={`action-type-option-${type}`}
-                  >
-                    {actionTypeMapping[type] || type}
-                  </option>
-                ))}
-              </select>
+                onChange={(e) => handleFilterChange({ target: { name: "action_type", value: e.target.value } })}
+                options={[
+                  { value: "", label: "ประเภทการกระทำทั้งหมด" },
+                  ...actionTypes.map(type => ({ 
+                    value: type, 
+                    label: actionTypeMapping[type] || type
+                  }))
+                ]}
+              />
             </div>
 
             {/* ตัวกรองตารางเป้าหมาย */}
             <div className="relative" data-cy="target-table-filter-container">
-              <select
-                data-cy="target-table-filter"
+              <DropdownSelect 
+                dataCy="target-table-filter"
+                label="ตารางเป้าหมาย"
                 name="target_table"
                 value={filters.target_table}
-                onChange={handleFilterChange}
-                className="w-full py-2 px-3 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-              >
-                <option value="">ตารางเป้าหมายทั้งหมด</option>
-                {/* ใช้ filteredTargetTables แทน targetTables */}
-                {filteredTargetTables.map((table) => (
-                  <option
-                    key={table}
-                    value={table}
-                    data-cy={`target-table-option-${table}`}
-                  >
-                    {targetTableMapping[table] || table}
-                  </option>
-                ))}
-              </select>
+                onChange={(e) => handleFilterChange({ target: { name: "target_table", value: e.target.value } })}
+                options={[
+                  { value: "", label: "ตารางเป้าหมายทั้งหมด" },
+                  ...filteredTargetTables.map(table => ({
+                    value: table,
+                    label: targetTableMapping[table] || table
+                  }))
+                ]}
+              />
             </div>
 
             {/* ตัวเลือกช่วงวันที่ */}
             <div className="relative" data-cy="date-range-container">
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                ช่วงวันที่
+              </label>
               <div className="relative">
                 <button
                   type="button"
                   onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                  className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-10 text-sm"
                   data-cy="date-range-picker"
                 >
                   <span className="text-gray-700 truncate">
                     {formatDateRange()}
                   </span>
-                  <Calendar className="h-4 w-4 text-gray-400 flex-shrink-0" />
+                  <div 
+                    className={`rounded-lg p-1 transition-all duration-300 text-blue-600`}
+                  >
+                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isDatePickerOpen ? 'rotate-180' : ''}`} />
+                  </div>
                 </button>
 
                 {isDatePickerOpen && (
-                  <div
-                    className="absolute z-10 mt-1 bg-white rounded-md shadow-lg p-2 sm:p-4 border border-gray-200 left-0 right-0 sm:right-auto"
-                    data-cy="date-picker-popup"
-                  >
+                  <>
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setIsDatePickerOpen(false)}
+                    ></div>
                     <div
-                      className="overflow-x-auto"
-                      style={{ maxWidth: "100%" }}
+                      className="absolute z-50 mt-1 bg-white rounded-lg shadow-lg p-2 sm:p-4 border border-gray-200 left-0 right-0 sm:right-auto"
+                      data-cy="date-picker-popup"
                     >
-                      <DayPicker
-                        mode="range"
-                        selected={selectedRange}
-                        onSelect={handleDateRangeSelect}
-                        locale={th}
-                        formatters={{
-                          formatYear: (year) => `${year + 543}`,
-                          // เพิ่ม formatter สำหรับหัวข้อเดือน/ปี
-                          formatMonthCaption: (date, options) => {
-                            const thaiMonth = format(date, "MMMM", {
-                              locale: th,
-                            });
-                            const thaiYear = date.getFullYear() + 543;
-                            return `${thaiMonth} ${thaiYear}`;
-                          },
-                        }}
-                        modifiers={{
-                          selected: [selectedRange.from, selectedRange.to],
-                        }}
-                        modifiersStyles={{
-                          selected: {
-                            backgroundColor: "#3b82f6",
-                            color: "white",
-                          },
-                        }}
-                      />
-                    </div>
-                    <div className="mt-4 flex justify-end">
-                      <button
-                        onClick={() => setIsDatePickerOpen(false)}
-                        className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                        data-cy="date-picker-confirm"
+                      <div
+                        className="overflow-x-auto"
+                        style={{ maxWidth: "100%" }}
                       >
-                        ตกลง
-                      </button>
+                        <DayPicker
+                          mode="range"
+                          selected={selectedRange}
+                          onSelect={handleDateRangeSelect}
+                          locale={th}
+                          formatters={{
+                            formatYear: (year) => `${year + 543}`,
+                            // เพิ่ม formatter สำหรับหัวข้อเดือน/ปี
+                            formatMonthCaption: (date, options) => {
+                              const thaiMonth = format(date, "MMMM", {
+                                locale: th,
+                              });
+                              const thaiYear = date.getFullYear() + 543;
+                              return `${thaiMonth} ${thaiYear}`;
+                            },
+                          }}
+                          modifiers={{
+                            selected: [selectedRange.from, selectedRange.to],
+                          }}
+                          modifiersStyles={{
+                            selected: {
+                              backgroundColor: "#3b82f6",
+                              color: "white",
+                            },
+                          }}
+                        />
+                      </div>
+                      <div className="mt-4 flex justify-end">
+                        <button
+                          onClick={() => setIsDatePickerOpen(false)}
+                          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                          data-cy="date-picker-confirm"
+                        >
+                          ตกลง
+                        </button>
+                      </div>
                     </div>
-                  </div>
+                  </>
                 )}
               </div>
             </div>

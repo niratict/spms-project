@@ -13,6 +13,8 @@ import {
   Upload,
   AlertTriangle,
   X,
+  ChevronDown,
+  CheckCircle2,
 } from "lucide-react";
 import { useAuth } from "../../context/AuthContext";
 import { DayPicker } from "react-day-picker";
@@ -50,7 +52,7 @@ const DateRangePickerModal = ({
   }, [isOpen, startDate, endDate]);
 
   // สร้าง formatter สำหรับแสดงปี พ.ศ.
-  const formatCaption = (date, options) => {
+  const formatCaption = (date) => {
     const year = date.getFullYear() + 543; // แปลงเป็นปี พ.ศ.
     const month = format(date, "LLLL", { locale: th }); // แสดงชื่อเดือนภาษาไทย
     return `${month} ${year}`;
@@ -588,6 +590,117 @@ const ProjectEdit = () => {
       </div>
     );
 
+  // ===== COMPONENT: DropdownSelect =====
+
+  // คอมโพเนนต์ dropdown แบบปรับแต่ง
+  const DropdownSelect = ({
+    label,
+    value,
+    onChange,
+    options,
+    disabled = false,
+    placeholder,
+    dataCy,
+    icon,
+    required = false,
+    error = "",
+  }) => {
+    const [isOpen, setIsOpen] = useState(false);
+    
+    const handleSelect = (optionValue) => {
+      onChange({ target: { value: optionValue, name: 'status' } });
+      setIsOpen(false);
+    };
+
+    return (
+      <div className="space-y-1 md:space-y-2">
+        {label && (
+          <label className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700">
+            {icon}
+            {label} {required && <span className="text-red-500">*</span>}
+          </label>
+        )}
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => !disabled && setIsOpen(!isOpen)}
+            className={`flex items-center justify-between w-full p-2 md:p-3 text-sm md:text-base rounded-lg border transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-200 ${
+              error 
+                ? "border-red-500" 
+                : disabled
+                  ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200"
+                  : "bg-white text-gray-800 cursor-pointer border-gray-300 hover:border-blue-300"
+            }`}
+            data-cy={dataCy}
+            aria-haspopup="listbox"
+            aria-expanded={isOpen}
+          >
+            <span className="block truncate text-left pr-8">
+              {options.find(opt => opt.value === value)?.label || placeholder || "-- เลือกสถานะ --"}
+            </span>
+            <div
+              className={`absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none`}
+            >
+              <div
+                className={`rounded-lg p-1 transition-all duration-300 ${
+                  disabled
+                    ? "bg-gray-100 text-gray-400"
+                    : "bg-blue-50 text-blue-600 hover:bg-blue-100"
+                }`}
+              >
+                {icon ? icon : <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />}
+              </div>
+            </div>
+          </button>
+          
+          {isOpen && !disabled && (
+            <>
+              <div 
+                className="fixed inset-0 z-10" 
+                onClick={() => setIsOpen(false)}
+              ></div>
+              <div 
+                className="absolute z-20 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
+                style={{ scrollbarWidth: 'thin' }}
+                data-cy={`${dataCy}-dropdown`}
+              >
+                <ul role="listbox">
+                  {options.map((option) => (
+                    <li
+                      key={option.value}
+                      className={`py-2 px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center ${
+                        option.value === value ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-800"
+                      }`}
+                      onClick={() => handleSelect(option.value)}
+                      data-cy={`${dataCy}-option-${option.value}`}
+                      role="option"
+                      aria-selected={option.value === value}
+                    >
+                      {option.value === value && (
+                        <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
+                      )}
+                      <span className={option.value === value ? "ml-0" : "ml-6"}>
+                        {option.label}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </>
+          )}
+        </div>
+        {error && (
+          <p
+            className="text-red-500 text-xs sm:text-sm mt-1"
+            data-cy="status-error"
+          >
+            {error}
+          </p>
+        )}
+      </div>
+    );
+  };
+
   // แสดงฟอร์มแก้ไขโปรเจกต์
   return (
     <div
@@ -797,38 +910,21 @@ const ProjectEdit = () => {
             </div>
 
             {/* สถานะโปรเจกต์ */}
-            <div className="space-y-1 md:space-y-2">
-              <label
-                htmlFor="status"
-                className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700"
-              >
-                <Activity className="w-4 h-4 md:w-5 md:h-5 text-indigo-500" />
-                สถานะ <span className="text-red-500">*</span>
-              </label>
-              <select
-                id="status"
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className={`w-full p-2 md:p-3 text-sm md:text-base border ${
-                  errors.status ? "border-red-500" : "border-gray-300"
-                } rounded-lg focus:ring-2 focus:ring-blue-200 transition-all`}
-                data-cy="project-status"
-              >
-                <option value="">-- เลือกสถานะ --</option>
-                <option value="Active">กำลังดำเนินการ</option>
-                <option value="Completed">เสร็จสิ้น</option>
-                <option value="On Hold">ระงับชั่วคราว</option>
-              </select>
-              {errors.status && (
-                <p
-                  className="text-red-500 text-xs sm:text-sm mt-1"
-                  data-cy="status-error"
-                >
-                  {errors.status}
-                </p>
-              )}
-            </div>
+            <DropdownSelect
+              label="สถานะ"
+              value={formData.status}
+              onChange={handleChange}
+              options={[
+                { value: "Active", label: "กำลังดำเนินการ" },
+                { value: "Completed", label: "เสร็จสิ้น" },
+                { value: "On Hold", label: "ระงับชั่วคราว" }
+              ]}
+              placeholder="-- เลือกสถานะ --"
+              icon={<Activity className="w-4 h-4 md:w-5 md:h-5 text-indigo-500" />}
+              required={true}
+              error={errors.status}
+              dataCy="project-status"
+            />
           </div>
 
           {/* ปุ่มการทำงาน */}

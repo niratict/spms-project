@@ -29,6 +29,23 @@ export default function Login() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(""); // ล้างข้อความ error ก่อนทำการ login
+    
+    // ตรวจสอบความถูกต้องของข้อมูลก่อนส่งไปยัง API
+    if (!email) {
+      setError("กรุณาระบุอีเมล");
+      return;
+    }
+    
+    if (!email.includes('@')) {
+      setError("รูปแบบอีเมลไม่ถูกต้อง กรุณาตรวจสอบอีกครั้ง");
+      return;
+    }
+    
+    if (!password) {
+      setError("กรุณาระบุรหัสผ่าน");
+      return;
+    }
+    
     setIsLoading(true); // แสดงสถานะ loading
 
     try {
@@ -177,8 +194,7 @@ export default function Login() {
                 <input
                   id="email"
                   name="email"
-                  type="email"
-                  required
+                  type="text"
                   className="appearance-none block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 sm:text-sm"
                   placeholder="yourname@example.com"
                   value={email}
@@ -218,7 +234,6 @@ export default function Login() {
                   id="password"
                   name="password"
                   type={showPassword ? "text" : "password"}
-                  required
                   className="appearance-none block w-full pl-10 pr-10 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-all duration-200 sm:text-sm"
                   placeholder="รหัสผ่านของคุณ"
                   value={password}
