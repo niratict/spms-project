@@ -47,7 +47,7 @@ const ActionLogs = () => {
   // แมปปิ้งประเภทการดำเนินการเป็นภาษาไทยและจัดเรียงตามความสำคัญ
   const actionTypeMapping = {
     create: "สร้าง",
-    update: "อัพเดต",
+    update: "อัปเดต",
     delete: "ลบ",
     upload: "อัพโหลด",
     update_profile: "อัพเดตโปรไฟล์",

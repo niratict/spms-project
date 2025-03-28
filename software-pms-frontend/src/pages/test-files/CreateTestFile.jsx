@@ -390,19 +390,19 @@ const CreateTestFile = () => {
               </div>
               <div className="flex justify-center space-x-3 md:space-x-4">
                 <button
+                  onClick={() => setShowConfirmDialog(false)}
+                  className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
+                  data-cy="confirm-dialog-cancel"
+                >
+                  ยกเลิก
+                </button>
+                <button
                   onClick={handleConfirmUpdate}
                   className="px-4 py-2 md:px-6 md:py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 flex items-center gap-2 transition-colors"
                   data-cy="confirm-dialog-update"
                 >
                   <Save className="w-4 h-4 md:w-5 md:h-5" />
                   อัพเดตไฟล์
-                </button>
-                <button
-                  onClick={() => setShowConfirmDialog(false)}
-                  className="px-4 py-2 md:px-6 md:py-2 border border-gray-300 rounded-lg hover:bg-gray-100 transition-colors"
-                  data-cy="confirm-dialog-cancel"
-                >
-                  ยกเลิก
                 </button>
               </div>
             </div>

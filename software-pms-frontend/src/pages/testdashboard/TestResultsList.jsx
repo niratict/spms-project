@@ -24,7 +24,7 @@ const TestCase = ({ test }) => {
   // แปลงหน่วยเวลาจากมิลลิวินาทีเป็นวินาที
   const duration =
     typeof test.duration === "number"
-      ? (test.duration / 1000).toFixed(3)
+      ? (test.duration / 1000).toFixed(2)
       : "N/A";
 
   const isPassed = test.pass || test.state === "passed";
