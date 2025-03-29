@@ -476,7 +476,7 @@ export default function TestDashboard() {
           <button
             type="button"
             onClick={() => !disabled && setIsOpen(!isOpen)}
-            className={`flex items-center justify-between w-full px-4 py-3.5 rounded-xl border shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 transition duration-300 ease-in-out ${
+            className={`flex items-center justify-between w-full px-3 sm:px-4 py-2.5 sm:py-3.5 rounded-md sm:rounded-xl border shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-300 transition duration-300 ease-in-out ${
               disabled
                 ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200"
                 : "bg-white text-gray-800 cursor-pointer border-gray-200 hover:border-blue-300 font-medium group-hover:shadow-md"
@@ -485,20 +485,20 @@ export default function TestDashboard() {
             aria-haspopup="listbox"
             aria-expanded={isOpen}
           >
-            <span className="block truncate text-left pr-8">
+            <span className="block truncate text-left pr-8 text-sm sm:text-base">
               {options.find(opt => opt.value === value)?.label || placeholder || "ทั้งหมด"}
             </span>
             <div
-              className={`absolute inset-y-0 right-0 flex items-center px-3.5 pointer-events-none`}
+              className={`absolute inset-y-0 right-0 flex items-center px-2 sm:px-3.5 pointer-events-none`}
             >
               <div
-                className={`rounded-lg p-1.5 transition-all duration-300 ${
+                className={`rounded-lg p-1 sm:p-1.5 transition-all duration-300 ${
                   disabled
                     ? "bg-gray-100 text-gray-400"
                     : "bg-blue-50 text-blue-600 group-hover:bg-blue-100"
                 }`}
               >
-                {icon || <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />}
+                {icon || <ChevronDown className={`h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />}
               </div>
             </div>
           </button>
@@ -510,13 +510,13 @@ export default function TestDashboard() {
                 onClick={() => setIsOpen(false)}
               ></div>
               <div 
-                className="absolute z-20 mt-1 w-full bg-white rounded-xl shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
+                className="absolute z-20 mt-1 w-full bg-white rounded-lg sm:rounded-xl shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
                 style={{ scrollbarWidth: 'thin' }}
                 data-cy={`${dataCy}-dropdown`}
               >
-                <ul role="listbox">
+                <ul role="listbox" className="py-1">
                   <li
-                    className="py-2 px-4 text-gray-800 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center"
+                    className="py-2 px-3 sm:px-4 text-sm sm:text-base text-gray-800 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center"
                     onClick={() => handleSelect("all")}
                     data-cy={`${dataCy}-option-all`}
                   >
@@ -525,7 +525,7 @@ export default function TestDashboard() {
                   {options.map((option) => (
                     <li
                       key={option.value}
-                      className={`py-2 px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center ${
+                      className={`py-2 px-3 sm:px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center text-sm sm:text-base ${
                         option.value === value ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-800"
                       }`}
                       onClick={() => handleSelect(option.value)}
@@ -534,7 +534,7 @@ export default function TestDashboard() {
                       aria-selected={option.value === value}
                     >
                       {option.value === value && (
-                        <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
+                        <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600 flex-shrink-0" />
                       )}
                       <span className={option.value === value ? "ml-0" : "ml-6"}>
                         {option.label}
@@ -641,16 +641,16 @@ export default function TestDashboard() {
               <button
                 onClick={() => setRefreshTrigger((prev) => prev + 1)}
                 disabled={selectedProject === "all" || isRefreshing}
-                className={`mb-0.5 h-[52px] w-[52px] flex items-center justify-center rounded-xl transition-all duration-300 ${
+                className={`mb-0.5 h-[44px] sm:h-[52px] w-[44px] sm:w-[52px] flex items-center justify-center rounded-lg sm:rounded-xl shadow-sm hover:shadow transition-all duration-300 ${
                   selectedProject === "all" || isRefreshing
                     ? "bg-gray-100 text-gray-400 cursor-not-allowed border border-gray-200"
-                    : "bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 border border-blue-200 hover:border-blue-300"
+                    : "bg-blue-50 text-blue-600 hover:bg-blue-100 hover:text-blue-700 border border-blue-200 hover:border-blue-300 active:bg-blue-200"
                 }`}
                 title="รีเฟรชข้อมูล"
                 data-cy="refresh-dashboard"
               >
                 <RefreshCw
-                  className={`h-5 w-5 ${
+                  className={`h-4 w-4 sm:h-5 sm:w-5 ${
                     isRefreshing ? "animate-spin" : ""
                   }`}
                 />
@@ -1000,7 +1000,7 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
             >
               <div className="flex flex-col md:flex-row gap-2 sm:gap-4">
                 {/* ช่องค้นหาผลการทดสอบ */}
-                <div className="relative flex-grow md:w-3/4">
+                <div className="relative flex-grow">
                   <div className="relative">
                     <Search className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     <input
@@ -1015,7 +1015,7 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
                 </div>
                 
                 {/* ตัวกรองสถานะการทดสอบ */}
-                <div className="md:w-1/4 flex-shrink-0">
+                <div className="md:w-1/3 lg:w-1/4 flex-shrink-0">
                   <DropdownSelect 
                     value={filterStatus}
                     onChange={(e) => setFilterStatus(e.target.value)}
@@ -1025,7 +1025,7 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
                     ]}
                     placeholder="สถานะทั้งหมด"
                     dataCy="status-filter"
-                    icon={<Filter className="h-5 w-5" />}
+                    icon={<Filter className="h-4 w-4 sm:h-5 sm:w-5" />}
                   />
                 </div>
               </div>

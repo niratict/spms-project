@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import {
@@ -21,6 +21,7 @@ import { DayPicker } from "react-day-picker";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import "react-day-picker/dist/style.css";
+import { createPortal } from "react-dom";
 
 // ค่า URL ที่ใช้เชื่อมต่อกับ API
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -606,6 +607,23 @@ const ProjectEdit = () => {
     error = "",
   }) => {
     const [isOpen, setIsOpen] = useState(false);
+    const buttonRef = useRef(null);
+    const [dropdownPosition, setDropdownPosition] = useState({
+      top: 0,
+      left: 0,
+      width: 0,
+    });
+
+    useEffect(() => {
+      if (isOpen && buttonRef.current) {
+        const rect = buttonRef.current.getBoundingClientRect();
+        setDropdownPosition({
+          top: rect.bottom + window.scrollY,
+          left: rect.left + window.scrollX,
+          width: rect.width,
+        });
+      }
+    }, [isOpen]);
 
     const handleSelect = (optionValue) => {
       onChange({ target: { value: optionValue, name: "status" } });
@@ -623,6 +641,7 @@ const ProjectEdit = () => {
         <div className="relative">
           <button
             type="button"
+            ref={buttonRef}
             onClick={() => !disabled && setIsOpen(!isOpen)}
             className={`flex items-center justify-between w-full p-2 md:p-3 text-sm md:text-base rounded-lg border transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-200 ${
               error
@@ -663,45 +682,53 @@ const ProjectEdit = () => {
             </div>
           </button>
 
-          {isOpen && !disabled && (
-            <>
-              <div
-                className="fixed inset-0 z-10"
-                onClick={() => setIsOpen(false)}
-              ></div>
-              <div
-                className="absolute z-20 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
-                style={{ scrollbarWidth: "thin" }}
-                data-cy={`${dataCy}-dropdown`}
-              >
-                <ul role="listbox">
-                  {options.map((option) => (
-                    <li
-                      key={option.value}
-                      className={`py-2 px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center ${
-                        option.value === value
-                          ? "bg-blue-50 text-blue-700 font-medium"
-                          : "text-gray-800"
-                      }`}
-                      onClick={() => handleSelect(option.value)}
-                      data-cy={`${dataCy}-option-${option.value}`}
-                      role="option"
-                      aria-selected={option.value === value}
-                    >
-                      {option.value === value && (
-                        <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
-                      )}
-                      <span
-                        className={option.value === value ? "ml-0" : "ml-6"}
+          {isOpen &&
+            !disabled &&
+            createPortal(
+              <>
+                <div
+                  className="fixed inset-0 z-[999]"
+                  onClick={() => setIsOpen(false)}
+                ></div>
+                <div
+                  className="absolute z-[1000] bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
+                  style={{
+                    scrollbarWidth: "thin",
+                    top: `${dropdownPosition.top}px`,
+                    left: `${dropdownPosition.left}px`,
+                    width: `${dropdownPosition.width}px`,
+                  }}
+                  data-cy={`${dataCy}-dropdown`}
+                >
+                  <ul role="listbox">
+                    {options.map((option) => (
+                      <li
+                        key={option.value}
+                        className={`py-2 px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center ${
+                          option.value === value
+                            ? "bg-blue-50 text-blue-700 font-medium"
+                            : "text-gray-800"
+                        }`}
+                        onClick={() => handleSelect(option.value)}
+                        data-cy={`${dataCy}-option-${option.value}`}
+                        role="option"
+                        aria-selected={option.value === value}
                       >
-                        {option.label}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </>
-          )}
+                        {option.value === value && (
+                          <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
+                        )}
+                        <span
+                          className={option.value === value ? "ml-0" : "ml-6"}
+                        >
+                          {option.label}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </>,
+              document.body
+            )}
         </div>
         {error && (
           <p
@@ -894,6 +921,35 @@ const ProjectEdit = () => {
               />
             </div>
 
+            {/* ส่วนเลือกช่วงวันที่ */}
+            <div className="space-y-1 md:space-y-2">
+              <label className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700">
+                <Calendar className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
+                ระยะเวลาของโปรเจกต์ <span className="text-red-500">*</span>
+              </label>
+              <div className="relative">
+                <input
+                  type="text"
+                  readOnly
+                  value={displayDateRange()}
+                  onClick={() => setShowDatePicker(true)}
+                  className={`w-full p-2 md:p-3 text-sm md:text-base border ${
+                    errors.dateRange ? "border-red-500" : "border-gray-300"
+                  } rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer`}
+                  placeholder="Select project duration"
+                  data-cy="date-range-input"
+                />
+              </div>
+              {errors.dateRange && (
+                <p
+                  className="text-red-500 text-xs sm:text-sm mt-1"
+                  data-cy="date-error"
+                >
+                  {errors.dateRange}
+                </p>
+              )}
+            </div>
+
             {/* สถานะโปรเจกต์ */}
             <DropdownSelect
               label="สถานะ"
@@ -909,35 +965,6 @@ const ProjectEdit = () => {
               error={errors.status}
               dataCy="project-status"
             />
-          </div>
-
-          {/* ส่วนเลือกช่วงวันที่ */}
-          <div className="space-y-1 md:space-y-2">
-            <label className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700">
-              <Calendar className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
-              ระยะเวลาของโปรเจกต์ <span className="text-red-500">*</span>
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                readOnly
-                value={displayDateRange()}
-                onClick={() => setShowDatePicker(true)}
-                className={`w-full p-2 md:p-3 text-sm md:text-base border ${
-                  errors.dateRange ? "border-red-500" : "border-gray-300"
-                } rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer`}
-                placeholder="Select project duration"
-                data-cy="date-range-input"
-              />
-            </div>
-            {errors.dateRange && (
-              <p
-                className="text-red-500 text-xs sm:text-sm mt-1"
-                data-cy="date-error"
-              >
-                {errors.dateRange}
-              </p>
-            )}
           </div>
 
           {/* ปุ่มการทำงาน */}

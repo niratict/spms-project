@@ -255,7 +255,7 @@ const TestSuite = ({ suite, searchTerm, filterStatus, level = 0 }) => {
       )}
 
       {isExpanded && (
-        <div className="space-y-2 ml-3" data-cy="suite-content">
+        <div className="space-y-2" data-cy="suite-content">
           {/* แสดงกรณีทดสอบในชุดนี้ */}
           {filteredTests.map((test, index) => (
             <TestCase key={index} test={test} />

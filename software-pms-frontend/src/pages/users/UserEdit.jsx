@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
@@ -18,6 +18,7 @@ import {
   ChevronDown,
   CheckCircle2,
 } from "lucide-react";
+import { createPortal } from "react-dom";
 
 // ตั้งค่า URL ของ API จาก environment variables
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -248,6 +249,24 @@ const UserEdit = () => {
     { value: "Product Owner", label: "Product Owner" },
     { value: "Admin", label: "Admin" }
   ];
+
+  // ตำแหน่งของ dropdown
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  
+  // อ้างอิงถึง role selector button
+  const roleSelectorRef = useRef(null);
+
+  // คำนวณตำแหน่งของ dropdown เมื่อเปิด
+  useEffect(() => {
+    if (isRoleDropdownOpen && roleSelectorRef.current) {
+      const rect = roleSelectorRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+  }, [isRoleDropdownOpen]);
 
   // --------- EFFECTS ---------
   // ดึงข้อมูลผู้ใช้เมื่อโหลดคอมโพเนนต์
@@ -535,6 +554,7 @@ const UserEdit = () => {
                     <div className="relative">
                       <button
                         type="button"
+                        ref={roleSelectorRef}
                         onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                         className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all text-left flex items-center justify-between"
                         data-cy="role-select"
@@ -549,15 +569,20 @@ const UserEdit = () => {
                         />
                       </button>
                       
-                      {isRoleDropdownOpen && (
+                      {isRoleDropdownOpen && createPortal(
                         <>
                           <div 
-                            className="fixed inset-0 z-10" 
+                            className="fixed inset-0 z-[999]" 
                             onClick={() => setIsRoleDropdownOpen(false)}
                           ></div>
                           <div 
-                            className="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
-                            style={{ scrollbarWidth: 'thin' }}
+                            className="absolute z-[1000] bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
+                            style={{ 
+                              scrollbarWidth: 'thin',
+                              top: `${dropdownPosition.top}px`,
+                              left: `${dropdownPosition.left}px`,
+                              width: `${dropdownPosition.width}px`
+                            }}
                             data-cy="role-dropdown"
                           >
                             <ul role="listbox">
@@ -582,7 +607,8 @@ const UserEdit = () => {
                               ))}
                             </ul>
                           </div>
-                        </>
+                        </>,
+                        document.body
                       )}
                     </div>
                   </div>

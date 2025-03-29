@@ -14,6 +14,7 @@ import {
   ChevronDown,
   CheckCircle2,
 } from "lucide-react";
+import { createPortal } from "react-dom";
 
 // สร้างตัวแปรสำหรับ API จากไฟล์การตั้งค่า
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -112,6 +113,33 @@ const CreateUser = () => {
     setIsFormDirty(isAnyFieldFilled);
   }, [formData]);
 
+  // ฟังก์ชันเลือกบทบาทจาก dropdown
+  const handleRoleSelect = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      role: value
+    }));
+    setIsRoleDropdownOpen(false);
+  };
+
+  // ตำแหน่งของ dropdown
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
+  
+  // อ้างอิงถึง role selector button
+  const roleSelectorRef = React.useRef(null);
+
+  // คำนวณตำแหน่งของ dropdown เมื่อเปิด
+  useEffect(() => {
+    if (isRoleDropdownOpen && roleSelectorRef.current) {
+      const rect = roleSelectorRef.current.getBoundingClientRect();
+      setDropdownPosition({
+        top: rect.bottom + window.scrollY,
+        left: rect.left + window.scrollX,
+        width: rect.width
+      });
+    }
+  }, [isRoleDropdownOpen]);
+
   // -------------------- ฟังก์ชันจัดการข้อมูลและเหตุการณ์ --------------------
 
   // จัดการเปลี่ยนแปลงข้อมูลในฟอร์ม
@@ -121,15 +149,6 @@ const CreateUser = () => {
       ...prev,
       [name]: value,
     }));
-  };
-
-  // จัดการเลือกบทบาทจาก dropdown
-  const handleRoleSelect = (value) => {
-    setFormData((prev) => ({
-      ...prev,
-      role: value
-    }));
-    setIsRoleDropdownOpen(false);
   };
 
   // จัดการการส่งฟอร์ม
@@ -297,6 +316,7 @@ const CreateUser = () => {
                 
                 <button
                   type="button"
+                  ref={roleSelectorRef}
                   onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
                   className="w-full pl-9 sm:pl-10 p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-left flex items-center justify-between"
                   data-cy="select-role"
@@ -311,15 +331,20 @@ const CreateUser = () => {
                   />
                 </button>
                 
-                {isRoleDropdownOpen && (
+                {isRoleDropdownOpen && createPortal(
                   <>
                     <div 
-                      className="fixed inset-0 z-10" 
+                      className="fixed inset-0 z-[999]" 
                       onClick={() => setIsRoleDropdownOpen(false)}
                     ></div>
                     <div 
-                      className="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
-                      style={{ scrollbarWidth: 'thin' }}
+                      className="absolute z-[1000] bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
+                      style={{ 
+                        scrollbarWidth: 'thin',
+                        top: `${dropdownPosition.top}px`,
+                        left: `${dropdownPosition.left}px`,
+                        width: `${dropdownPosition.width}px`
+                      }}
                       data-cy="role-dropdown"
                     >
                       <ul role="listbox">
@@ -344,7 +369,8 @@ const CreateUser = () => {
                         ))}
                       </ul>
                     </div>
-                  </>
+                  </>,
+                  document.body
                 )}
               </div>
             </div>
