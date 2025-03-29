@@ -588,14 +588,14 @@ export default function TestDashboard() {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 text-gray-900 p-4 sm:p-8"
+      className="min-h-screen bg-gray-50 text-gray-900 p-0"
       data-cy="test-dashboard"
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* หัวข้อแดชบอร์ด */}
-        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg mb-4 sm:mb-8">
+      <div className="w-full mx-auto px-0 sm:px-4 md:px-8">
+        {/* หัวข้อแดชบอร์ด - คงความโค้มมนไว้ */}
+        <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg mb-2 sm:mb-8 mx-1 sm:mx-0">
           <h1
-            className="text-2xl sm:text-3xl md:text-4xl font-bold text-center text-white py-4 sm:py-6 px-2 sm:px-4"
+            className="text-xl sm:text-3xl md:text-4xl font-bold text-center text-white py-3 sm:py-6"
             data-cy="dashboard-title"
           >
             แดชบอร์ดแสดงผลการทดสอบ
@@ -603,7 +603,7 @@ export default function TestDashboard() {
         </div>
 
         {/* ตัวเลือกโปรเจกต์และ Sprint */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-2 sm:gap-5 mb-2 sm:mb-8 px-1 sm:px-0">
           <DropdownSelect 
             label="เลือกโปรเจกต์"
             value={selectedProject}
@@ -660,11 +660,11 @@ export default function TestDashboard() {
         </div>
 
         {testResults && (
-          <div className="space-y-4">
+          <div className="space-y-2 sm:space-y-4">
             {/* แสดงสถิติเมื่อเลือก Sprint เฉพาะ */}
             {selectedSprint !== "all" && (
               <div
-                className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                className="grid grid-cols-1 gap-2 sm:gap-4 lg:grid-cols-3 px-1 sm:px-0"
                 data-cy="sprint-statistics"
               >
                 {/* สรุปสถิติ */}
@@ -962,7 +962,7 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
             {/* แสดงแผนภูมิแบบซ้อนเมื่อดูทุก Sprint */}
             {selectedSprint === "all" && sprintResults && (
               <div
-                className="bg-white rounded-xl shadow-md p-6 mb-6"
+                className="bg-white sm:rounded-xl shadow-md p-2 sm:p-6 mb-2 sm:mb-6 mx-0"
                 data-cy="sprint-stacked-chart-container"
               >
                 <h2
@@ -995,18 +995,18 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
 
             {/* ส่วนค้นหาและกรองผลการทดสอบ */}
             <div
-              className="bg-white rounded-xl shadow-md p-4 sm:p-5 md:p-6"
+              className="bg-white sm:rounded-xl shadow-md p-2 sm:p-5 md:p-6"
               data-cy="search-filter-container"
             >
-              <div className="flex flex-col md:flex-row gap-3 sm:gap-4">
+              <div className="flex flex-col md:flex-row gap-2 sm:gap-4">
                 {/* ช่องค้นหาผลการทดสอบ */}
                 <div className="relative flex-grow md:w-3/4">
                   <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
+                    <Search className="absolute left-2 sm:left-3 top-1/2 -translate-y-1/2 h-4 w-4 sm:h-5 sm:w-5 text-gray-400" />
                     <input
                       type="text"
                       placeholder="ค้นหาไฟล์ทดสอบ..."
-                      className="w-full pl-9 sm:pl-10 p-3 sm:p-3.5 text-sm sm:text-base border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-300 hover:border-blue-300 transition duration-300 shadow-sm"
+                      className="w-full pl-8 sm:pl-10 p-2 sm:p-3.5 text-sm sm:text-base border border-gray-200 sm:rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-300 hover:border-blue-300 transition duration-300 shadow-sm"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       data-cy="search-input"
@@ -1033,23 +1033,23 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
 
             {/* แสดงรายการผลการทดสอบ */}
             <div
-              className="bg-white rounded-xl shadow-md p-4 sm:p-5 md:p-6 mt-4"
+              className="bg-white sm:rounded-xl shadow-md p-2 sm:p-5 md:p-6 mt-2 sm:mt-4"
               data-cy="test-results-container"
             >
               {/* แสดงจำนวนผลลัพธ์ที่พบ */}
               <div
-                className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4"
+                className="text-xs sm:text-sm text-gray-600 mb-2 sm:mb-4"
                 data-cy="results-summary"
               >
                 พบผลการทดสอบทั้งหมด {filteredTests.length} รายการ
               </div>
 
               {/* รายการผลการทดสอบ */}
-              <div className="space-y-3 sm:space-y-4">
+              <div className="space-y-2 sm:space-y-4">
                 {currentTests.length === 0 ? (
                   // แสดงเมื่อไม่พบข้อมูล
                   <div
-                    className="p-4 sm:p-6 text-center text-gray-500 text-sm sm:text-base"
+                    className="p-2 sm:p-6 text-center text-gray-500 text-sm sm:text-base"
                     data-cy="no-results-message"
                   >
                     ไม่พบผลการทดสอบ
@@ -1070,7 +1070,7 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
                     return (
                       <div
                         key={index}
-                        className={`border-l-4 p-3 sm:p-4 rounded-lg ${
+                        className={`border-l-4 p-2 sm:p-4 sm:rounded-lg ${
                           allPassed
                             ? "border-green-500 bg-green-50"
                             : "border-red-500 bg-red-50"
@@ -1078,7 +1078,7 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
                         data-cy={`test-result-item-${index}`}
                       >
                         {/* หัวข้อผลการทดสอบ */}
-                        <div className="flex flex-col sm:flex-row justify-between items-start gap-3 sm:gap-4 mb-3 sm:mb-4">
+                        <div className="flex flex-col sm:flex-row justify-between items-start gap-2 sm:gap-4 mb-2 sm:mb-4">
                           <div className="w-full sm:w-auto">
                             <h3
                               className="text-base sm:text-lg font-semibold text-gray-800 break-words"
@@ -1090,23 +1090,23 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
                               className="text-xs sm:text-sm text-gray-600 break-words"
                               data-cy={`test-result-filename-${index}`}
                             >
-                              ชื่อไฟล์ทดสอบ: {result.filename}
+                              {result.filename}
                             </p>
                           </div>
                           {/* แสดงสถิติการทดสอบ */}
-                          <div className="flex flex-wrap items-center gap-2 sm:gap-3 w-full sm:w-auto">
+                          <div className="flex flex-wrap items-center gap-1 sm:gap-3 w-full sm:w-auto">
                             <span
-                              className="text-xs sm:text-sm text-gray-700 flex items-center bg-white px-2 sm:px-3 py-1 rounded-full shadow-sm"
+                              className="text-xs text-gray-700 flex items-center bg-white px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-sm"
                               data-cy={`test-count-${index}`}
                             >
-                              <FileCode className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                              <FileCode className="mr-1 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                               <span className="whitespace-nowrap">
-                                {totalTests} กรณีทดสอบ
+                                {totalTests} กรณี
                               </span>
                             </span>
                             {/* แสดงสถานะการทดสอบ */}
                             <span
-                              className={`text-xs sm:text-sm flex items-center px-2 sm:px-3 py-1 rounded-full shadow-sm ${
+                              className={`text-xs flex items-center px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-sm ${
                                 allPassed
                                   ? "bg-green-100 text-green-800"
                                   : "bg-red-100 text-red-800"
@@ -1115,26 +1115,26 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
                             >
                               {allPassed ? (
                                 <>
-                                  <CheckCircle2 className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                  <CheckCircle2 className="mr-1 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                                   <span className="whitespace-nowrap">
-                                    ผ่านทั้งหมด
+                                    ผ่านหมด
                                   </span>
                                 </>
                               ) : (
                                 <>
-                                  <XCircle className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                                  <XCircle className="mr-1 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                                   <span className="whitespace-nowrap">
-                                    ผิดพลาด {failCount} กรณี
+                                    ผิดพลาด {failCount}
                                   </span>
                                 </>
                               )}
                             </span>
                             {/* แสดงเวลาที่ใช้ในการทดสอบ */}
                             <span
-                              className="text-xs sm:text-sm text-gray-700 flex items-center bg-white px-2 sm:px-3 py-1 rounded-full shadow-sm"
+                              className="text-xs text-gray-700 flex items-center bg-white px-1.5 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-sm"
                               data-cy={`test-duration-${index}`}
                             >
-                              <Clock className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+                              <Clock className="mr-1 h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
                               <span className="whitespace-nowrap">
                                 {(duration / 1000).toFixed(2)}s
                               </span>
@@ -1318,12 +1318,12 @@ ${failedTests} ผิดพลาด, ระยะเวลารวม ${(testD
                       >
                         <path
                           fillRule="evenodd"
-                          d="M6.707 4.293a1 1 0 0 1 1.414 0l7 6a1 1 0 0 1 0 1.414l-7 6a1 1 0 0 1-1.414-1.414L12.586 10 6.707 4.707a1 1 0 0 1 0-1.414z"
+                          d="M6.707 4.293a1 1 0 0 1 1.414 0l7 6a1 1 0 0 1 0 1.414l-7 6a1 1 0 0 1-1.414-1.414L12.586 10 6.707 4.293a1 1 0 0 1 0-1.414z"
                           clipRule="evenodd"
                         />
                         <path
                           fillRule="evenodd"
-                          d="M12.707 4.293a1 1 0 0 1 1.414 0l7 6a1 1 0 0 1 0 1.414l-7 6a1 1 0 0 1-1.414-1.414L18.586 10 12.707 4.707a1 1 0 0 1 0-1.414z"
+                          d="M12.707 4.293a1 1 0 0 1 1.414 0l7 6a1 1 0 0 1 0 1.414l-7 6a1 1 0 0 1-1.414-1.414L18.586 10 12.707 4.293a1 1 0 0 1 0-1.414z"
                           clipRule="evenodd"
                         />
                       </svg>

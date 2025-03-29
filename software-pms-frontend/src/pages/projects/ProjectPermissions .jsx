@@ -512,7 +512,6 @@ const ProjectPermissions = () => {
                       }))}
                       placeholder="-- เลือกผู้ใช้ --"
                       dataCy="user-select"
-                      icon={<User className="h-4 w-4" />}
                     />
                   </div>
                   {user.role === "Admin" && (
@@ -523,7 +522,6 @@ const ProjectPermissions = () => {
                         onChange={(e) => setSelectedRole(e.target.value)}
                         options={getAvailableRoles()}
                         dataCy="role-select"
-                        icon={<UserCheck className="h-4 w-4" />}
                       />
                     </div>
                   )}

@@ -9,15 +9,15 @@ import {
   User,
   Mail,
   Edit,
-  Trash2,
   CheckCircle,
   Save,
   Check,
   Eye,
   EyeOff,
   ShieldCheck,
+  ChevronDown,
+  CheckCircle2,
 } from "lucide-react";
-import DropdownSelect from "../../components/ui/DropdownSelect";
 
 // ตั้งค่า URL ของ API จาก environment variables
 const API_BASE_URL = import.meta.env.VITE_API_URL;
@@ -215,6 +215,7 @@ const UserEdit = () => {
   const [showPasswordModal, setShowPasswordModal] = useState(false);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [passwordError, setPasswordError] = useState(null);
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   // สถานะการแก้ไขข้อมูล
   const [isDataChanged, setIsDataChanged] = useState(false);
@@ -301,6 +302,16 @@ const UserEdit = () => {
       ...prev,
       [name]: value,
     }));
+    setError(null);
+  };
+
+  // จัดการเลือกบทบาทจาก dropdown
+  const handleRoleSelect = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      role: value
+    }));
+    setIsRoleDropdownOpen(false);
     setError(null);
   };
 
@@ -513,19 +524,67 @@ const UserEdit = () => {
                 </div>
               </div>
 
-              {/* ฟิลด์บทบาท (แสดงเฉพาะ Admin) */}
+              {/* ฟิลด์บทบาท (แสดงเฉพาะ Admin) - เปลี่ยนเป็น Custom Dropdown */}
               {user.role === "Admin" && (
                 <div className="flex flex-col md:flex-row md:items-center md:space-x-3">
-                  <Edit className="hidden md:inline w-5 h-5 text-gray-500 flex-shrink-0" />
+                  <ShieldCheck className="hidden md:inline w-5 h-5 text-gray-500 flex-shrink-0" />
                   <div className="flex-grow">
-                    <DropdownSelect
-                      label="บทบาท"
-                      value={formData.role}
-                      onChange={handleChange}
-                      options={roleOptions}
-                      dataCy="role-select"
-                      icon={<ShieldCheck className="h-4 w-4" />}
-                    />
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      บทบาท
+                    </label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                        className="w-full p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all text-left flex items-center justify-between"
+                        data-cy="role-select"
+                        aria-haspopup="listbox"
+                        aria-expanded={isRoleDropdownOpen}
+                      >
+                        <span className="block truncate">
+                          {roleOptions.find(opt => opt.value === formData.role)?.label || formData.role}
+                        </span>
+                        <ChevronDown 
+                          className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} 
+                        />
+                      </button>
+                      
+                      {isRoleDropdownOpen && (
+                        <>
+                          <div 
+                            className="fixed inset-0 z-10" 
+                            onClick={() => setIsRoleDropdownOpen(false)}
+                          ></div>
+                          <div 
+                            className="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
+                            style={{ scrollbarWidth: 'thin' }}
+                            data-cy="role-dropdown"
+                          >
+                            <ul role="listbox">
+                              {roleOptions.map((option) => (
+                                <li
+                                  key={option.value}
+                                  className={`py-2 px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center text-sm ${
+                                    option.value === formData.role ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-800"
+                                  }`}
+                                  onClick={() => handleRoleSelect(option.value)}
+                                  data-cy={`role-option-${option.value}`}
+                                  role="option"
+                                  aria-selected={option.value === formData.role}
+                                >
+                                  {option.value === formData.role && (
+                                    <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
+                                  )}
+                                  <span className={option.value === formData.role ? "ml-0" : "ml-6"}>
+                                    {option.label}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </>
+                      )}
+                    </div>
                   </div>
                 </div>
               )}

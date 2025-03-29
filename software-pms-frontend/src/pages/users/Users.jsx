@@ -7,33 +7,17 @@ import {
   UserPlus,
   Filter,
   RefreshCw,
-  ShieldCheck,
+  ChevronDown,
+  CheckCircle2,
 } from "lucide-react";
 import axios from "axios";
 import { useAuth } from "../../context/AuthContext";
 import { useNavigate, Navigate } from "react-router-dom";
-import DropdownSelect from "../../components/ui/DropdownSelect";
 
 // ค่าคงที่สำหรับการตั้งค่า
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 const USERS_PER_PAGE = 6;
 const DEFAULT_AVATAR = null;
-
-// กำหนดสีตามบทบาทผู้ใช้
-const ROLE_COLORS = {
-  Admin: "bg-red-100 text-red-800 border border-red-200",
-  Tester: "bg-green-100 text-green-800 border border-green-200",
-  Viewer: "bg-blue-100 text-blue-800 border border-blue-200",
-  "Product Owner": "bg-orange-100 text-orange-800 border border-orange-200",
-};
-
-// กำหนดไอคอนสำหรับแต่ละบทบาท
-const ROLE_ICONS = {
-  Admin: "⚙️",
-  Tester: "🧑‍💻",
-  Viewer: "👁️",
-  "Product Owner": "🧑‍💼",
-};
 
 const Users = () => {
   const { user, logout } = useAuth();
@@ -50,6 +34,7 @@ const Users = () => {
   const [roleFilter, setRoleFilter] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
   const [showFilters, setShowFilters] = useState(false);
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   // จัดการข้อผิดพลาดเกี่ยวกับการยืนยันตัวตน
   const handleAuthError = (err) => {
@@ -108,12 +93,29 @@ const Users = () => {
 
   // คำนวณจำนวนหน้าทั้งหมด
   const totalPages = Math.ceil(filteredUsers.length / USERS_PER_PAGE);
+  
+  // กำหนดสีตามบทบาทผู้ใช้
+  const ROLE_COLORS = {
+    Admin: "bg-red-100 text-red-800 border border-red-200",
+    Tester: "bg-green-100 text-green-800 border border-green-200",
+    Viewer: "bg-blue-100 text-blue-800 border border-blue-200",
+    "Product Owner": "bg-orange-100 text-orange-800 border border-orange-200",
+  };
+
   const roleOptions = [
-    { value: "Admin", label: `Admin ${ROLE_ICONS["Admin"]}` },
-    { value: "Product Owner", label: `Product Owner ${ROLE_ICONS["Product Owner"]}` },
-    { value: "Tester", label: `Tester ${ROLE_ICONS["Tester"]}` },
-    { value: "Viewer", label: `Viewer ${ROLE_ICONS["Viewer"]}` }
+    { value: "", label: "ทุกบทบาท" },
+    { value: "Admin", label: "Admin" },
+    { value: "Product Owner", label: "Product Owner" },
+    { value: "Tester", label: "Tester" },
+    { value: "Viewer", label: "Viewer" },
   ];
+
+  // ฟังก์ชันสำหรับจัดการการเลือกบทบาท
+  const handleRoleSelect = (value) => {
+    setRoleFilter(value);
+    setCurrentPage(1);
+    setIsRoleDropdownOpen(false);
+  };
 
   // ตรวจสอบสิทธิ์การเข้าถึง
   if (!user?.token) return <Navigate to="/login" />;
@@ -217,9 +219,9 @@ const Users = () => {
           className="bg-white shadow-md rounded-xl p-4 sm:p-6 mb-6"
           data-cy="search-filter-container"
         >
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
             ค้นหาและกรองข้อมูล
-          </h2>
+          </label>
           <div className="flex flex-col space-y-4">
             <div className="flex items-center gap-2">
               <div className="relative flex-grow">
@@ -232,9 +234,9 @@ const Users = () => {
                     setSearchTerm(e.target.value);
                     setCurrentPage(1);
                   }}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
                 />
-                <Search className="absolute left-3 top-3 text-gray-400" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
               </div>
 
               <button
@@ -251,20 +253,83 @@ const Users = () => {
             <div className={`${showFilters ? "block" : "hidden"} sm:block`}>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div>
-                  <DropdownSelect
-                    label="กรองตามบทบาท"
-                    value={roleFilter}
-                    onChange={(e) => {
-                      setRoleFilter(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    options={[
-                      { value: "", label: "ทุกบทบาท" },
-                      ...roleOptions
-                    ]}
-                    dataCy="role-filter"
-                    icon={<ShieldCheck className="h-4 w-4" />}
-                  />
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      กรองตามบทบาท
+                    </label>
+                    <div className="relative">
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setIsRoleDropdownOpen(!isRoleDropdownOpen)
+                        }
+                        className="flex items-center justify-between w-full rounded-md border border-gray-300 bg-white text-gray-800 cursor-pointer hover:border-blue-500 p-2 py-3 px-4 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
+                        data-cy="role-filter"
+                        aria-haspopup="listbox"
+                        aria-expanded={isRoleDropdownOpen}
+                      >
+                        <span className="block truncate text-left pr-8">
+                          {roleOptions.find((opt) => opt.value === roleFilter)
+                            ?.label || "ทุกบทบาท"}
+                        </span>
+                        <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                          <div className="rounded-lg p-1 transition-all duration-300 text-blue-600">
+                            <ChevronDown
+                              className={`h-4 w-4 transition-transform duration-200 ${
+                                isRoleDropdownOpen ? "rotate-180" : ""
+                              }`}
+                            />
+                          </div>
+                        </div>
+                      </button>
+
+                      {isRoleDropdownOpen && (
+                        <>
+                          <div
+                            className="fixed inset-0 z-10"
+                            onClick={() => setIsRoleDropdownOpen(false)}
+                          ></div>
+                          <div
+                            className="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
+                            style={{ scrollbarWidth: "thin" }}
+                            data-cy="role-filter-dropdown"
+                          >
+                            <ul role="listbox">
+                              {roleOptions.map((option) => (
+                                <li
+                                  key={option.value}
+                                  className={`py-2 px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center text-sm ${
+                                    option.value === roleFilter
+                                      ? "bg-blue-50 text-blue-700 font-medium"
+                                      : "text-gray-800"
+                                  }`}
+                                  onClick={() => handleRoleSelect(option.value)}
+                                  data-cy={`role-filter-option-${
+                                    option.value || "all"
+                                  }`}
+                                  role="option"
+                                  aria-selected={option.value === roleFilter}
+                                >
+                                  {option.value === roleFilter && (
+                                    <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
+                                  )}
+                                  <span
+                                    className={
+                                      option.value === roleFilter
+                                        ? "ml-0"
+                                        : "ml-6"
+                                    }
+                                  >
+                                    {option.label}
+                                  </span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </>
+                      )}
+                    </div>
+                  </div>
                 </div>
 
                 <div className="sm:col-span-2 flex items-end">
@@ -312,12 +377,10 @@ const Users = () => {
                     )}
                   </div>
                   <span
-                    className={`text-sm ${
-                      ROLE_COLORS[userData.role]
-                    } px-3 py-1 rounded-full h-fit mt-14`}
+                    className={`text-sm ${ROLE_COLORS[userData.role]} px-3 py-1 rounded-full h-fit mt-14`}
                     data-cy={`user-role-${userData.user_id}`}
                   >
-                    {ROLE_ICONS[userData.role]} {userData.role}
+                    {userData.role}
                   </span>
                 </div>
 
@@ -396,9 +459,11 @@ const Users = () => {
               data-cy="pagination-info"
             >
               รายการที่{" "}
-              {filteredUsers.length > 0 ? (currentPage - 1) * USERS_PER_PAGE + 1 : 0} ถึง{" "}
-              {Math.min(currentPage * USERS_PER_PAGE, filteredUsers.length)} จากทั้งหมด{" "}
-              {filteredUsers.length} รายการ
+              {filteredUsers.length > 0
+                ? (currentPage - 1) * USERS_PER_PAGE + 1
+                : 0}{" "}
+              ถึง {Math.min(currentPage * USERS_PER_PAGE, filteredUsers.length)}{" "}
+              จากทั้งหมด {filteredUsers.length} รายการ
             </div>
             <div className="flex items-center space-x-2 justify-center">
               {/* ปุ่มหน้าแรก */}
@@ -468,7 +533,8 @@ const Users = () => {
                   // เงื่อนไขการแสดงจุดไข่ปลา
                   const showLeftEllipsis = pageNumber === 2 && currentPage > 2;
                   const showRightEllipsis =
-                    pageNumber === totalPages - 1 && currentPage + 2 < totalPages;
+                    pageNumber === totalPages - 1 &&
+                    currentPage + 2 < totalPages;
 
                   // แสดงหน้าเมื่อเป็นไปตามเงื่อนไข
                   if (isFirstPage || isLastPage || isWithinRange) {
@@ -515,8 +581,12 @@ const Users = () => {
               {/* ปุ่มถัดไป */}
               <button
                 data-cy="next-page"
-                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                disabled={currentPage === totalPages || filteredUsers.length === 0}
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={
+                  currentPage === totalPages || filteredUsers.length === 0
+                }
                 className="px-3 sm:px-4 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs sm:text-sm flex items-center"
               >
                 ถัดไป
@@ -538,7 +608,9 @@ const Users = () => {
               <button
                 data-cy="last-page"
                 onClick={() => setCurrentPage(totalPages)}
-                disabled={currentPage === totalPages || filteredUsers.length === 0}
+                disabled={
+                  currentPage === totalPages || filteredUsers.length === 0
+                }
                 className="hidden sm:block px-2 py-2 border rounded-md bg-white text-gray-700 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-xs"
               >
                 <span className="sr-only">หน้าสุดท้าย</span>

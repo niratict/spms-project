@@ -11,6 +11,8 @@ import {
   CheckCircle,
   Save,
   AlertCircle,
+  ChevronDown,
+  CheckCircle2,
 } from "lucide-react";
 
 // สร้างตัวแปรสำหรับ API จากไฟล์การตั้งค่า
@@ -82,6 +84,7 @@ const CreateUser = () => {
   const [isFormDirty, setIsFormDirty] = useState(false);
   const [showCreateConfirm, setShowCreateConfirm] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [isRoleDropdownOpen, setIsRoleDropdownOpen] = useState(false);
 
   // ข้อมูลฟอร์มสำหรับการสร้างผู้ใช้
   const [formData, setFormData] = useState({
@@ -90,6 +93,14 @@ const CreateUser = () => {
     password: "",
     role: "Viewer",
   });
+
+  // ตัวเลือกสำหรับ dropdown บทบาท
+  const roleOptions = [
+    { value: "Viewer", label: "Viewer" },
+    { value: "Tester", label: "Tester" },
+    { value: "Product Owner", label: "Product Owner" },
+    { value: "Admin", label: "Admin" },
+  ];
 
   // ตรวจสอบว่าฟอร์มมีการเปลี่ยนแปลงหรือไม่
   useEffect(() => {
@@ -112,6 +123,15 @@ const CreateUser = () => {
     }));
   };
 
+  // จัดการเลือกบทบาทจาก dropdown
+  const handleRoleSelect = (value) => {
+    setFormData((prev) => ({
+      ...prev,
+      role: value
+    }));
+    setIsRoleDropdownOpen(false);
+  };
+
   // จัดการการส่งฟอร์ม
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -126,7 +146,7 @@ const CreateUser = () => {
 
     try {
       // ส่งข้อมูลไปยัง API เพื่อสร้างผู้ใช้ใหม่
-      const response = await axios.post(`${API_BASE_URL}/api/users`, formData, {
+      await axios.post(`${API_BASE_URL}/api/users`, formData, {
         headers: { Authorization: `Bearer ${user.token}` },
       });
 
@@ -265,7 +285,7 @@ const CreateUser = () => {
               </div>
             </div>
 
-            {/* ช่องเลือกบทบาทผู้ใช้ */}
+            {/* ช่องเลือกบทบาทผู้ใช้ - เปลี่ยนเป็น Custom Dropdown */}
             <div className="space-y-1 sm:space-y-2">
               <label className="block text-xs sm:text-sm font-medium text-gray-700">
                 บทบาทผู้ใช้
@@ -274,20 +294,58 @@ const CreateUser = () => {
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <ShieldCheck className="w-4 h-4 sm:w-5 sm:h-5 text-gray-400" />
                 </div>
-                <select
-                  id="role"
-                  name="role"
-                  required
-                  value={formData.role}
-                  onChange={handleChange}
-                  className="w-full pl-9 sm:pl-10 p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+                
+                <button
+                  type="button"
+                  onClick={() => setIsRoleDropdownOpen(!isRoleDropdownOpen)}
+                  className="w-full pl-9 sm:pl-10 p-2 sm:p-3 text-sm sm:text-base border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all text-left flex items-center justify-between"
                   data-cy="select-role"
+                  aria-haspopup="listbox"
+                  aria-expanded={isRoleDropdownOpen}
                 >
-                  <option value="Viewer">Viewer</option>
-                  <option value="Tester">Tester</option>
-                  <option value="Product Owner">Product Owner</option>
-                  <option value="Admin">Admin</option>
-                </select>
+                  <span className="block truncate">
+                    {roleOptions.find(opt => opt.value === formData.role)?.label || "Viewer"}
+                  </span>
+                  <ChevronDown 
+                    className={`w-4 h-4 sm:w-5 sm:h-5 text-gray-400 transition-transform duration-200 ${isRoleDropdownOpen ? 'rotate-180' : ''}`} 
+                  />
+                </button>
+                
+                {isRoleDropdownOpen && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-10" 
+                      onClick={() => setIsRoleDropdownOpen(false)}
+                    ></div>
+                    <div 
+                      className="absolute z-50 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
+                      style={{ scrollbarWidth: 'thin' }}
+                      data-cy="role-dropdown"
+                    >
+                      <ul role="listbox">
+                        {roleOptions.map((option) => (
+                          <li
+                            key={option.value}
+                            className={`py-2 px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center text-sm ${
+                              option.value === formData.role ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-800"
+                            }`}
+                            onClick={() => handleRoleSelect(option.value)}
+                            data-cy={`role-option-${option.value}`}
+                            role="option"
+                            aria-selected={option.value === formData.role}
+                          >
+                            {option.value === formData.role && (
+                              <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
+                            )}
+                            <span className={option.value === formData.role ? "ml-0" : "ml-6"}>
+                              {option.label}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           </div>

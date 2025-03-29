@@ -30,11 +30,11 @@ const DropdownSelect = ({
         <button
           type="button"
           onClick={() => !disabled && setIsOpen(!isOpen)}
-          className={`flex items-center justify-between w-full rounded-md border ${
+          className={`flex items-center justify-between w-full p-2 border ${
             disabled
               ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200"
-              : "bg-white text-gray-800 cursor-pointer border-gray-300 hover:border-blue-500"
-          } p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200`}
+              : "bg-white text-gray-800 cursor-pointer border-gray-300 hover:border-gray-300"
+          } rounded-md text-sm focus:ring-2 focus:ring-blue-200 transition-all`}
           data-cy={dataCy}
           aria-haspopup="listbox"
           aria-expanded={isOpen}

@@ -606,9 +606,9 @@ const ProjectEdit = () => {
     error = "",
   }) => {
     const [isOpen, setIsOpen] = useState(false);
-    
+
     const handleSelect = (optionValue) => {
-      onChange({ target: { value: optionValue, name: 'status' } });
+      onChange({ target: { value: optionValue, name: "status" } });
       setIsOpen(false);
     };
 
@@ -625,18 +625,20 @@ const ProjectEdit = () => {
             type="button"
             onClick={() => !disabled && setIsOpen(!isOpen)}
             className={`flex items-center justify-between w-full p-2 md:p-3 text-sm md:text-base rounded-lg border transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-200 ${
-              error 
-                ? "border-red-500" 
+              error
+                ? "border-red-500"
                 : disabled
-                  ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200"
-                  : "bg-white text-gray-800 cursor-pointer border-gray-300 hover:border-blue-300"
+                ? "bg-gray-50 text-gray-400 cursor-not-allowed border-gray-200"
+                : "bg-white text-gray-800 cursor-pointer border-gray-300 hover:border-blue-300"
             }`}
             data-cy={dataCy}
             aria-haspopup="listbox"
             aria-expanded={isOpen}
           >
             <span className="block truncate text-left pr-8">
-              {options.find(opt => opt.value === value)?.label || placeholder || "-- เลือกสถานะ --"}
+              {options.find((opt) => opt.value === value)?.label ||
+                placeholder ||
+                "-- เลือกสถานะ --"}
             </span>
             <div
               className={`absolute inset-y-0 right-0 flex items-center px-3 pointer-events-none`}
@@ -648,20 +650,28 @@ const ProjectEdit = () => {
                     : "bg-blue-50 text-blue-600 hover:bg-blue-100"
                 }`}
               >
-                {icon ? icon : <ChevronDown className={`h-5 w-5 transition-transform duration-200 ${isOpen ? 'rotate-180' : ''}`} />}
+                {icon ? (
+                  icon
+                ) : (
+                  <ChevronDown
+                    className={`h-5 w-5 transition-transform duration-200 ${
+                      isOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                )}
               </div>
             </div>
           </button>
-          
+
           {isOpen && !disabled && (
             <>
-              <div 
-                className="fixed inset-0 z-10" 
+              <div
+                className="fixed inset-0 z-10"
                 onClick={() => setIsOpen(false)}
               ></div>
-              <div 
+              <div
                 className="absolute z-20 mt-1 w-full bg-white rounded-lg shadow-lg border border-gray-200 py-1 max-h-60 overflow-auto"
-                style={{ scrollbarWidth: 'thin' }}
+                style={{ scrollbarWidth: "thin" }}
                 data-cy={`${dataCy}-dropdown`}
               >
                 <ul role="listbox">
@@ -669,7 +679,9 @@ const ProjectEdit = () => {
                     <li
                       key={option.value}
                       className={`py-2 px-4 hover:bg-blue-50 cursor-pointer transition-colors duration-150 flex items-center ${
-                        option.value === value ? "bg-blue-50 text-blue-700 font-medium" : "text-gray-800"
+                        option.value === value
+                          ? "bg-blue-50 text-blue-700 font-medium"
+                          : "text-gray-800"
                       }`}
                       onClick={() => handleSelect(option.value)}
                       data-cy={`${dataCy}-option-${option.value}`}
@@ -679,7 +691,9 @@ const ProjectEdit = () => {
                       {option.value === value && (
                         <CheckCircle2 className="h-4 w-4 mr-2 text-blue-600" />
                       )}
-                      <span className={option.value === value ? "ml-0" : "ml-6"}>
+                      <span
+                        className={option.value === value ? "ml-0" : "ml-6"}
+                      >
                         {option.label}
                       </span>
                     </li>
@@ -880,35 +894,6 @@ const ProjectEdit = () => {
               />
             </div>
 
-            {/* ส่วนเลือกช่วงวันที่ */}
-            <div className="space-y-1 md:space-y-2">
-              <label className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700">
-                <Calendar className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
-                ระยะเวลาของโปรเจกต์ <span className="text-red-500">*</span>
-              </label>
-              <div className="relative">
-                <input
-                  type="text"
-                  readOnly
-                  value={displayDateRange()}
-                  onClick={() => setShowDatePicker(true)}
-                  className={`w-full p-2 md:p-3 text-sm md:text-base border ${
-                    errors.dateRange ? "border-red-500" : "border-gray-300"
-                  } rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer`}
-                  placeholder="Select project duration"
-                  data-cy="date-range-input"
-                />
-              </div>
-              {errors.dateRange && (
-                <p
-                  className="text-red-500 text-xs sm:text-sm mt-1"
-                  data-cy="date-error"
-                >
-                  {errors.dateRange}
-                </p>
-              )}
-            </div>
-
             {/* สถานะโปรเจกต์ */}
             <DropdownSelect
               label="สถานะ"
@@ -917,14 +902,42 @@ const ProjectEdit = () => {
               options={[
                 { value: "Active", label: "กำลังดำเนินการ" },
                 { value: "Completed", label: "เสร็จสิ้น" },
-                { value: "On Hold", label: "ระงับชั่วคราว" }
+                { value: "On Hold", label: "ระงับชั่วคราว" },
               ]}
               placeholder="-- เลือกสถานะ --"
-              icon={<Activity className="w-4 h-4 md:w-5 md:h-5 text-indigo-500" />}
               required={true}
               error={errors.status}
               dataCy="project-status"
             />
+          </div>
+
+          {/* ส่วนเลือกช่วงวันที่ */}
+          <div className="space-y-1 md:space-y-2">
+            <label className="flex items-center gap-1.5 md:gap-2 text-sm md:text-base font-medium text-gray-700">
+              <Calendar className="w-4 h-4 md:w-5 md:h-5 text-purple-500" />
+              ระยะเวลาของโปรเจกต์ <span className="text-red-500">*</span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                readOnly
+                value={displayDateRange()}
+                onClick={() => setShowDatePicker(true)}
+                className={`w-full p-2 md:p-3 text-sm md:text-base border ${
+                  errors.dateRange ? "border-red-500" : "border-gray-300"
+                } rounded-lg focus:ring-2 focus:ring-blue-200 transition-all cursor-pointer`}
+                placeholder="Select project duration"
+                data-cy="date-range-input"
+              />
+            </div>
+            {errors.dateRange && (
+              <p
+                className="text-red-500 text-xs sm:text-sm mt-1"
+                data-cy="date-error"
+              >
+                {errors.dateRange}
+              </p>
+            )}
           </div>
 
           {/* ปุ่มการทำงาน */}

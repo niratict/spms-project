@@ -730,16 +730,20 @@ const ActionLogs = () => {
                 <button
                   type="button"
                   onClick={() => setIsDatePickerOpen(!isDatePickerOpen)}
-                  className="w-full flex items-center justify-between px-3 py-2 border border-gray-300 bg-white rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 h-10 text-sm"
+                  className="flex items-center justify-between w-full rounded-md border bg-white text-gray-800 cursor-pointer border-gray-300 hover:border-blue-500 p-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all duration-200"
                   data-cy="date-range-picker"
                 >
-                  <span className="text-gray-700 truncate">
+                  <span className="block truncate text-left pr-8">
                     {formatDateRange()}
                   </span>
-                  <div 
-                    className={`rounded-lg p-1 transition-all duration-300 text-blue-600`}
+                  <div
+                    className={`absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none`}
                   >
-                    <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isDatePickerOpen ? 'rotate-180' : ''}`} />
+                    <div
+                      className={`rounded-lg p-1 transition-all duration-300 text-blue-600`}
+                    >
+                      <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${isDatePickerOpen ? 'rotate-180' : ''}`} />
+                    </div>
                   </div>
                 </button>
 

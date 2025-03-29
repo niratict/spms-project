@@ -201,7 +201,12 @@ const SprintDetail = () => {
   // คำนวณวันที่ผ่านไปและวันที่เหลือของสปรินต์
   const calculateSprintProgress = () => {
     const start = new Date(sprint.start_date).getTime();
-    const end = new Date(sprint.end_date).getTime();
+    
+    // สร้างวันที่สิ้นสุดที่เวลา 23:59:59 ของวันนั้น
+    const endDate = new Date(sprint.end_date);
+    endDate.setHours(23, 59, 59, 999);
+    const end = endDate.getTime();
+    
     const today = new Date().getTime();
 
     // คำนวณเปอร์เซ็นต์ความคืบหน้า
@@ -221,6 +226,15 @@ const SprintDetail = () => {
     if (today <= end) {
       daysRemaining = Math.ceil((end - today) / (1000 * 60 * 60 * 24));
     }
+    
+    // คำนวณเวลาที่เหลือในวันสุดท้ายเป็นชั่วโมงและนาที
+    let hoursRemaining = 0;
+    let minutesRemaining = 0;
+    if (daysRemaining === 1) { // ถ้าเหลือวันสุดท้าย
+      const msRemaining = end - today;
+      hoursRemaining = Math.floor(msRemaining / (1000 * 60 * 60));
+      minutesRemaining = Math.floor((msRemaining % (1000 * 60 * 60)) / (1000 * 60));
+    }
 
     // คำนวณวันก่อนเริ่มสปรินต์
     let daysUntilStart = 0;
@@ -228,10 +242,17 @@ const SprintDetail = () => {
       daysUntilStart = Math.ceil((start - today) / (1000 * 60 * 60 * 24));
     }
 
-    // คำนวณระยะเวลาทั้งหมดของสปรินต์เป็นวันแบบรวมวันเริ่มและวันสิ้นสุด
-    const totalDays = Math.ceil((end - start) / (1000 * 60 * 60 * 24)) + 1;
+    // คำนวณระยะเวลาทั้งหมดของสปรินต์เป็นวันแบบไม่รวมวันสิ้นสุด (เพื่อให้นับถูกต้อง)
+    const startDateObj = new Date(sprint.start_date);
+    const endDateObj = new Date(sprint.end_date);
+    // ปรับให้เป็นวันที่เดียวกันที่เวลา 00:00:00 เพื่อคำนวณจำนวนวันที่ถูกต้อง
+    const startDateFormatted = new Date(startDateObj.getFullYear(), startDateObj.getMonth(), startDateObj.getDate());
+    const endDateFormatted = new Date(endDateObj.getFullYear(), endDateObj.getMonth(), endDateObj.getDate());
+    // คำนวณจำนวนวันโดยหารด้วยมิลลิวินาทีในหนึ่งวัน และบวก 1 เพื่อรวมวันเริ่มและวันสิ้นสุด
+    const totalDays = (endDateFormatted - startDateFormatted) / (1000 * 60 * 60 * 24) + 1;
 
     // สถานะของสปรินต์ (ยังไม่เริ่ม, กำลังดำเนินการ, เสร็จสิ้น)
+    // สถานะจะเป็น "completed" ก็ต่อเมื่อผ่านวันสิ้นสุดไปแล้ว (เที่ยงคืนของวันสิ้นสุด)
     let status = "in_progress";
     if (today < start) {
       status = "not_started";
@@ -239,10 +260,22 @@ const SprintDetail = () => {
       status = "completed";
     }
 
-    return { progress, daysRemaining, daysUntilStart, totalDays, status };
+    // เช็คว่าวันนี้เป็นวันสุดท้ายของสปรินต์หรือไม่
+    const isLastDay = status === "in_progress" && daysRemaining === 1;
+
+    return { 
+      progress, 
+      daysRemaining, 
+      daysUntilStart, 
+      totalDays, 
+      status, 
+      isLastDay,
+      hoursRemaining,
+      minutesRemaining
+    };
   };
 
-  const { progress, daysRemaining, daysUntilStart, totalDays, status } =
+  const { progress, daysRemaining, daysUntilStart, totalDays, status, isLastDay, hoursRemaining, minutesRemaining } =
     calculateSprintProgress();
 
   // รูปแบบการแสดงวันที่
@@ -298,6 +331,19 @@ const SprintDetail = () => {
     if (status === "not_started") {
       return `${daysUntilStart} วัน`;
     } else if (status === "in_progress") {
+      // หากเป็นวันสุดท้าย แสดงเวลาเป็นชั่วโมงและนาที
+      if (calculateSprintProgress().isLastDay) {
+        const { hoursRemaining, minutesRemaining } = calculateSprintProgress();
+        if (hoursRemaining > 0) {
+          if (minutesRemaining > 0) {
+            return `${hoursRemaining} ชั่วโมง ${minutesRemaining} นาที`;
+          } else {
+            return `${hoursRemaining} ชั่วโมง`;
+          }
+        } else {
+          return `${minutesRemaining} นาที`;
+        }
+      }
       return `${daysRemaining} วัน`;
     } else {
       // คำนวณว่าสปรินต์จบไปแล้วกี่วัน
