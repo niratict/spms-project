@@ -925,7 +925,7 @@ export default function TestDashboard() {
                             {barChartData.map((entry, index) => {
                               const color =
                                 entry.name === "Passed"
-                                  ? "#4ADE80"
+                                  ? "#34D399"
                                   : entry.name === "Failed"
                                   ? "#F87171"
                                   : entry.name === "Total Tests"
