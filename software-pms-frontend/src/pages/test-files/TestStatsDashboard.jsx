@@ -1,16 +1,8 @@
 import React from "react";
 import {
-  CheckCircle,
-  XCircle,
-  Beaker,
-  FileText,
-  BarChart2,
   ChevronDown,
   ChevronUp,
   Target,
-  Check,
-  X,
-  Percent,
 } from "lucide-react";
 
 // คอมโพเนนต์สำหรับแสดงสถิติการทดสอบจากไฟล์ JSON ที่มีการปรับแต่ง UI ให้สวยงามและ responsive
@@ -96,25 +88,25 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
     dataCy,
   }) => (
     <div
-      className={`bg-gradient-to-br ${bgColor} p-3 md:p-4 rounded-xl shadow border ${borderColor} transition-all duration-300 hover:shadow-md flex flex-col h-full`}
+      className={`bg-gradient-to-br ${bgColor} p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl shadow-sm border ${borderColor} transition-all duration-300 hover:shadow-md flex flex-col h-full`}
       data-cy={dataCy}
     >
-      <div className="flex items-start justify-between mb-1">
-        <div className={`text-xs sm:text-sm ${textColor} font-medium truncate`}>
+      <div className="flex items-start justify-between mb-0.5 sm:mb-1">
+        <div className={`text-xs ${textColor} font-medium truncate`}>
           {title}
         </div>
         <div
           className={`${bgColor
             .replace("from-", "")
-            .replace("to-", "")} rounded-full p-1`}
+            .replace("to-", "")} rounded-full p-0.5 sm:p-1`}
         >
           {React.cloneElement(icon, {
-            className: `w-4 h-4 sm:w-5 sm:h-5 ${icon.props.className}`,
+            className: `w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 ${icon.props.className}`,
           })}
         </div>
       </div>
       <div
-        className={`text-xl sm:text-2xl md:text-3xl font-bold ${textColor.replace(
+        className={`text-lg sm:text-xl md:text-2xl lg:text-3xl font-bold ${textColor.replace(
           "-700",
           "-800"
         )} mt-auto`}
@@ -122,7 +114,7 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
       >
         {value}
         {subValue !== undefined && (
-          <span className="text-xs sm:text-sm font-normal ml-1">
+          <span className="text-xs font-normal ml-1">
             {subValue}
           </span>
         )}
@@ -132,7 +124,7 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
 
   return (
     <section
-      className="bg-white shadow rounded-xl p-4 sm:p-5 mb-5 transition-all hover:shadow-md"
+      className="bg-white shadow rounded-xl p-3 sm:p-4 md:p-5 mb-3 md:mb-4 transition-all hover:shadow-md"
       data-cy="test-stats-dashboard"
     >
       <div
@@ -140,38 +132,38 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
         onClick={onToggle}
         data-cy="toggle-dashboard"
       >
-        <h2 className="text-lg sm:text-xl font-bold text-gray-800 flex items-center">
-          <Target className="w-4 h-4 sm:w-5 sm:h-5 mr-2 text-blue-500 flex-shrink-0" />
+        <h2 className="text-base md:text-xl font-bold text-gray-800 flex items-center">
+          <Target className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2 text-blue-500 flex-shrink-0" />
           <span className="truncate">สถิติไฟล์ทดสอบของ Sprint</span>
         </h2>
-        <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+        <div className="flex items-center gap-1 sm:gap-2 ml-1 sm:ml-2 flex-shrink-0">
           {/* เพิ่มตัวเลือกสำหรับแสดงสถานะให้สอดคล้องกับ Sprint Section */}
           {isVisible && (
-            <span className="hidden md:inline text-sm text-blue-600 font-medium">
+            <span className="hidden md:inline text-xs sm:text-sm text-blue-600 font-medium">
               แสดงสถิติ
             </span>
           )}
           {isVisible ? (
-            <ChevronUp className="w-5 h-5 text-blue-500" />
+            <ChevronUp className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
           ) : (
-            <ChevronDown className="w-5 h-5 text-blue-500" />
+            <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
           )}
         </div>
       </div>
 
       <div
         className={`transition-all duration-300 overflow-hidden ${
-          isVisible ? "max-h-screen opacity-100 mt-4" : "max-h-0 opacity-0 mt-0"
+          isVisible ? "max-h-screen opacity-100 mt-2 sm:mt-4" : "max-h-0 opacity-0 mt-0"
         }`}
         data-cy="stats-content"
       >
         <div>
           {/* Progress bar แสดงภาพรวม */}
-          <div className="mb-4 md:mb-6" data-cy="progress-bar">
-            <div className="text-xs sm:text-sm text-gray-700 mb-1 font-medium">
+          <div className="mb-3 md:mb-4" data-cy="progress-bar">
+            <div className="text-xs text-gray-700 mb-1 font-medium">
               ภาพรวมการทดสอบ
             </div>
-            <div className="h-3 sm:h-4 w-full bg-gray-200 rounded-full overflow-hidden">
+            <div className="h-2 sm:h-3 w-full bg-gray-200 rounded-full overflow-hidden">
               <div
                 className="h-full bg-green-500 float-left transition-all duration-500 ease-in-out"
                 style={{ width: `${stats.passPercentage || 0}%` }}
@@ -191,30 +183,34 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
 
             {/* คำอธิบายสี */}
             <div
-              className="flex flex-wrap gap-4 text-xs mt-2 justify-center sm:justify-start"
+              className="flex flex-wrap gap-2 sm:gap-4 text-xs mt-1 sm:mt-2 justify-start"
               data-cy="color-legend"
             >
               <div className="flex items-center">
-                <div className="w-2.5 h-2.5 bg-green-500 rounded-full mr-1.5"></div>
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-green-500 rounded-full mr-1 sm:mr-1.5"></div>
                 <span>ผ่าน</span>
               </div>
               <div className="flex items-center">
-                <div className="w-2.5 h-2.5 bg-red-500 rounded-full mr-1.5"></div>
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-red-500 rounded-full mr-1 sm:mr-1.5"></div>
                 <span>ไม่ผ่าน</span>
+              </div>
+              <div className="flex items-center">
+                <div className="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-yellow-500 rounded-full mr-1 sm:mr-1.5"></div>
+                <span>รอดำเนินการ</span>
               </div>
             </div>
           </div>
 
           {/* แสดงสถิติแบบกริด */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-3 md:mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3 mb-2 md:mb-3">
             {/* ไฟล์ทั้งหมด */}
             <div className="col-span-1">
-              <div className="bg-blue-50 rounded-xl p-3 shadow-sm border border-blue-100">
-                <div className="text-xs text-blue-700 font-medium mb-1">
+              <div className="bg-blue-50 rounded-lg p-2.5 sm:p-3 shadow-sm border border-blue-100 h-full">
+                <div className="text-xs text-blue-700 font-medium mb-0.5 sm:mb-1">
                   ไฟล์ทั้งหมด
                 </div>
                 <div
-                  className="text-2xl font-bold text-blue-800"
+                  className="text-lg sm:text-xl md:text-2xl font-bold text-blue-800"
                   data-cy="stat-file-count"
                 >
                   {stats.totalFiles || 0}
@@ -224,12 +220,12 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
 
             {/* ชุดทดสอบ */}
             <div className="col-span-1">
-              <div className="bg-purple-50 rounded-xl p-3 shadow-sm border border-purple-100">
-                <div className="text-xs text-purple-700 font-medium mb-1">
+              <div className="bg-purple-50 rounded-lg p-2.5 sm:p-3 shadow-sm border border-purple-100 h-full">
+                <div className="text-xs text-purple-700 font-medium mb-0.5 sm:mb-1">
                   ชุดทดสอบ
                 </div>
                 <div
-                  className="text-2xl font-bold text-purple-800"
+                  className="text-lg sm:text-xl md:text-2xl font-bold text-purple-800"
                   data-cy="stat-test-suites"
                 >
                   {aggregateStats.totalSuites || 0}
@@ -239,12 +235,12 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
 
             {/* การทดสอบทั้งหมด */}
             <div className="col-span-2">
-              <div className="bg-cyan-50 rounded-xl p-3 shadow-sm border border-cyan-100">
-                <div className="text-xs text-cyan-700 font-medium mb-1">
+              <div className="bg-cyan-50 rounded-lg p-2.5 sm:p-3 shadow-sm border border-cyan-100 h-full">
+                <div className="text-xs text-cyan-700 font-medium mb-0.5 sm:mb-1">
                   การทดสอบทั้งหมด
                 </div>
                 <div
-                  className="text-2xl font-bold text-cyan-800"
+                  className="text-lg sm:text-xl md:text-2xl font-bold text-cyan-800"
                   data-cy="stat-tests-total"
                 >
                   {aggregateStats.totalTests || 0}
@@ -254,15 +250,15 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
           </div>
 
           {/* แถวสุดท้ายของการ์ด - ผ่าน/ไม่ผ่าน/อัตราความสำเร็จ */}
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 md:gap-3">
             {/* ผ่านการทดสอบ */}
             <div className="col-span-1">
-              <div className="bg-green-50 rounded-xl p-3 shadow-sm border border-green-100">
-                <div className="text-xs text-green-700 font-medium mb-1">
+              <div className="bg-green-50 rounded-lg p-2.5 sm:p-3 shadow-sm border border-green-100 h-full">
+                <div className="text-xs text-green-700 font-medium mb-0.5 sm:mb-1">
                   ผ่านการทดสอบ
                 </div>
                 <div
-                  className="text-2xl font-bold text-green-800 flex items-end"
+                  className="text-lg sm:text-xl md:text-2xl font-bold text-green-800 flex items-end"
                   data-cy="stat-tests-passed"
                 >
                   {stats.passCount || 0}
@@ -275,12 +271,12 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
 
             {/* ไม่ผ่านการทดสอบ */}
             <div className="col-span-1">
-              <div className="bg-red-50 rounded-xl p-3 shadow-sm border border-red-100">
-                <div className="text-xs text-red-700 font-medium mb-1">
+              <div className="bg-red-50 rounded-lg p-2.5 sm:p-3 shadow-sm border border-red-100 h-full">
+                <div className="text-xs text-red-700 font-medium mb-0.5 sm:mb-1">
                   ไม่ผ่านการทดสอบ
                 </div>
                 <div
-                  className="text-2xl font-bold text-red-800 flex items-end"
+                  className="text-lg sm:text-xl md:text-2xl font-bold text-red-800 flex items-end flex-wrap"
                   data-cy="stat-tests-failed"
                 >
                   {stats.failCount || 0}
@@ -293,12 +289,12 @@ const TestStatsDashboard = ({ testFiles, isVisible = true, onToggle }) => {
 
             {/* อัตราความสำเร็จ */}
             <div className="col-span-2">
-              <div className="bg-emerald-50 rounded-xl p-3 shadow-sm border border-emerald-100">
-                <div className="text-xs text-emerald-700 font-medium mb-1">
+              <div className="bg-emerald-50 rounded-lg p-2.5 sm:p-3 shadow-sm border border-emerald-100 h-full">
+                <div className="text-xs text-emerald-700 font-medium mb-0.5 sm:mb-1">
                   อัตราความสำเร็จ
                 </div>
                 <div
-                  className="text-2xl font-bold text-emerald-800"
+                  className="text-lg sm:text-xl md:text-2xl font-bold text-emerald-800"
                   data-cy="stat-success-rate"
                 >
                   {stats.successRate || 0}%

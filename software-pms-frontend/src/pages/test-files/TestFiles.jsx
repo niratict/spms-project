@@ -352,14 +352,14 @@ const TestFiles = () => {
 
   return (
     <div
-      className="min-h-screen bg-gray-50 p-4 sm:p-6 md:p-8"
+      className="min-h-screen bg-gray-50 p-2 sm:p-4 md:p-6 lg:p-8"
       data-cy="test-files-page"
     >
       <div className="container mx-auto max-w-7xl">
         {/* Page header */}
-        <header className="mb-6">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 flex items-center">
-            <FileText className="w-8 h-8 md:w-9 md:h-9 mr-3 text-blue-600" />
+        <header className="mb-3 md:mb-6">
+          <h1 className="text-lg md:text-2xl lg:text-3xl font-bold text-gray-900 flex items-center">
+            <FileText className="w-5 h-5 md:w-8 md:h-8 mr-2 md:mr-3 text-blue-600" />
             <span className="bg-black bg-clip-text text-transparent">
               การจัดการไฟล์ทดสอบ
             </span>
@@ -369,20 +369,20 @@ const TestFiles = () => {
         {/* Error message */}
         {error && (
           <div
-            className="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-lg shadow flex items-center"
+            className="mb-3 md:mb-5 bg-red-50 border-l-4 border-red-500 p-2.5 md:p-4 rounded-lg shadow flex items-center"
             data-cy="error-message"
           >
-            <AlertCircle className="text-red-500 mr-3 w-5 h-5 flex-shrink-0" />
+            <AlertCircle className="text-red-500 mr-2 md:mr-3 w-5 h-5 flex-shrink-0" />
             <div>
-              <p className="text-red-700 font-medium">เกิดข้อผิดพลาด</p>
-              <p className="text-red-600 text-sm">{error}</p>
+              <p className="text-red-700 font-medium text-sm md:text-base">เกิดข้อผิดพลาด</p>
+              <p className="text-red-600 text-xs md:text-sm">{error}</p>
             </div>
           </div>
         )}
 
         {/* Project selection */}
         <section
-          className="bg-white shadow rounded-xl p-5 mb-5 transition-all hover:shadow-md"
+          className="bg-white shadow rounded-xl p-3 sm:p-4 md:p-5 mb-3 md:mb-4 transition-all hover:shadow-md"
           data-cy="project-selection-section"
         >
           <div
@@ -391,8 +391,8 @@ const TestFiles = () => {
               setIsProjectSectionCollapsed(!isProjectSectionCollapsed)
             }
           >
-            <h2 className="text-xl font-bold text-gray-800 flex items-center">
-              <FolderKanban className="w-5 h-5 mr-2 text-blue-500" />
+            <h2 className="text-base md:text-xl font-bold text-gray-800 flex items-center">
+              <FolderKanban className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2 text-blue-500" />
               <span>เลือกโปรเจกต์</span>
             </h2>
             <div className="flex items-center gap-2">
@@ -402,9 +402,9 @@ const TestFiles = () => {
                 </span>
               )}
               {isProjectSectionCollapsed ? (
-                <ChevronDown className="w-5 h-5 text-blue-500" />
+                <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
               ) : (
-                <ChevronUp className="w-5 h-5 text-blue-500" />
+                <ChevronUp className="w-4 h-4 md:w-5 md:h-5 text-blue-500" />
               )}
             </div>
           </div>
@@ -487,7 +487,7 @@ const TestFiles = () => {
         {/* Sprint selection */}
         {selectedProject && (
           <section
-            className="bg-white shadow rounded-xl p-5 mb-5 transition-all hover:shadow-md"
+            className="bg-white shadow rounded-xl p-3 sm:p-4 md:p-5 mb-3 md:mb-4 transition-all hover:shadow-md"
             data-cy="sprints-section"
           >
             <div
@@ -496,9 +496,9 @@ const TestFiles = () => {
                 setIsSprintSectionCollapsed(!isSprintSectionCollapsed)
               }
             >
-              <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                <Timer className="w-5 h-5 mr-2 text-green-500" />
-                <span>เลือกสปรินต์ในโปรเจกต์ {selectedProject.name}</span>
+              <h2 className="text-base md:text-xl font-bold text-gray-800 flex items-center">
+                <Timer className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2 text-green-500" />
+                <span className="truncate">เลือกสปรินต์ในโปรเจกต์ {selectedProject.name}</span>
               </h2>
               <div className="flex items-center gap-2">
                 {selectedSprint && (
@@ -507,9 +507,9 @@ const TestFiles = () => {
                   </span>
                 )}
                 {isSprintSectionCollapsed ? (
-                  <ChevronDown className="w-5 h-5 text-green-500" />
+                  <ChevronDown className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
                 ) : (
-                  <ChevronUp className="w-5 h-5 text-green-500" />
+                  <ChevronUp className="w-4 h-4 md:w-5 md:h-5 text-green-500" />
                 )}
               </div>
             </div>
@@ -544,7 +544,7 @@ const TestFiles = () => {
                       data-cy={`sprint-item-${sprint.sprint_id}`}
                       className={`
                 cursor-pointer relative
-                border-2 rounded-lg p-4
+                border-2 rounded-lg p-2 sm:p-4
                 transition-all duration-200
                 hover:shadow-md hover:scale-[1.01] hover:z-20
                 ${
@@ -610,7 +610,7 @@ const TestFiles = () => {
 
         {/* Test files section */}
         {selectedSprint && (
-          <div className="space-y-5">
+          <div className="space-y-3 md:space-y-5">
             {/* Dashboard */}
             <TestStatsDashboard
               testFiles={testFiles}
@@ -621,233 +621,451 @@ const TestFiles = () => {
 
             {/* Test files search and filters */}
             <section
-              className="bg-white shadow rounded-xl p-5 transition-all hover:shadow-md"
+              className="bg-white shadow rounded-xl p-3 sm:p-4 md:p-5 transition-all hover:shadow-md"
               data-cy="test-files-filter-section"
               ref={fileSectionRef}
             >
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl font-bold text-gray-800 flex items-center">
-                  <FileText className="w-5 h-5 mr-2 text-blue-600" />
-                  <span className="truncate">
+              <div className="flex items-center justify-between mb-2 md:mb-4">
+                <h2 className="text-base md:text-xl font-bold text-gray-800 flex items-center">
+                  <FileText className="w-4 h-4 md:w-5 md:h-5 mr-1.5 md:mr-2 text-blue-600" />
+                  <span className="truncate text-sm md:text-base">
                     ไฟล์ทดสอบของ {selectedSprint.name}
                   </span>
                 </h2>
               </div>
 
-              <div className="flex flex-col md:flex-row gap-3 mb-3">
-                {/* Search input */}
-                <div className="relative flex-grow">
-                  <input
-                    type="text"
-                    placeholder="ค้นหาไฟล์ทดสอบ..."
-                    value={searchTerm}
-                    onChange={handleSearch}
-                    data-cy="search-test-files"
-                    className="w-full pl-9 pr-3 py-2 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 transition-shadow"
-                  />
-                  <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
-                </div>
-
-                {/* Action buttons */}
-                <div className="flex flex-wrap gap-2">
-                  <div className="relative z-30">
-                    <button
-                      className="flex items-center justify-between bg-gray-100 text-gray-700 px-3 py-1.5 rounded-lg hover:bg-gray-200 transition-colors text-sm h-9 min-w-[100px]"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        const dropdown =
-                          document.getElementById("statusDropdown");
-                        dropdown.classList.toggle("hidden");
-
-                        const closeDropdown = () => {
-                          dropdown.classList.add("hidden");
-                          document.removeEventListener("click", closeDropdown);
-                        };
-
-                        setTimeout(() => {
-                          document.addEventListener("click", closeDropdown);
-                        }, 0);
-                      }}
-                      data-cy="status-filter-button"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Filter className="w-3.5 h-3.5" />
-                        <span>
-                          {statusFilter === "all"
-                            ? "ทั้งหมด"
-                            : statusFilter === "pass"
-                            ? "ผ่าน"
-                            : statusFilter === "fail"
-                            ? "ไม่ผ่าน"
-                            : "รอดำเนินการ"}
-                        </span>
-                      </div>
-                      <ChevronDown className="w-3.5 h-3.5" />
-                    </button>
-                    <div
-                      id="statusDropdown"
-                      className="hidden absolute z-50 mt-1 w-36 bg-white border rounded-lg shadow-lg py-1 right-0"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      <button
-                        onClick={() => {
-                          handleStatusFilter("all");
-                          document
-                            .getElementById("statusDropdown")
-                            .classList.add("hidden");
-                        }}
-                        className={`block w-full text-left px-3 py-1.5 text-sm ${
-                          statusFilter === "all"
-                            ? "bg-blue-50 text-blue-600"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
-                        data-cy="filter-all"
-                      >
-                        ทั้งหมด
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleStatusFilter("pass");
-                          document
-                            .getElementById("statusDropdown")
-                            .classList.add("hidden");
-                        }}
-                        className={`block w-full text-left px-3 py-1.5 text-sm ${
-                          statusFilter === "pass"
-                            ? "bg-blue-50 text-blue-600"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
-                        data-cy="filter-pass"
-                      >
-                        ผ่าน
-                      </button>
-                      <button
-                        onClick={() => {
-                          handleStatusFilter("fail");
-                          document
-                            .getElementById("statusDropdown")
-                            .classList.add("hidden");
-                        }}
-                        className={`block w-full text-left px-3 py-1.5 text-sm ${
-                          statusFilter === "fail"
-                            ? "bg-blue-50 text-blue-600"
-                            : "text-gray-700 hover:bg-gray-100"
-                        }`}
-                        data-cy="filter-fail"
-                      >
-                        ไม่ผ่าน
-                      </button>
-                    </div>
+              {/* Search and filter section */}
+              <div className="mb-3">
+                {/* Desktop Layout - แสดงเฉพาะบนจอขนาดกลางขึ้นไป */}
+                <div className="hidden md:flex md:flex-row md:items-center md:space-x-2">
+                  {/* Search input */}
+                  <div className="relative w-full md:mb-0 md:flex-1">
+                    <input
+                      type="text"
+                      placeholder="ค้นหาไฟล์ทดสอบ..."
+                      value={searchTerm}
+                      onChange={handleSearch}
+                      data-cy="search-test-files"
+                      className="w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 transition-shadow"
+                    />
+                    <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
                   </div>
 
-                  {/* Sort order */}
-                  <div className="relative">
-                    <button
-                      className="flex items-center justify-between bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm min-w-[100px]"
-                      onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
-                      data-cy="sort-order-button"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <ArrowUpRight className="w-3.5 h-3.5" />
-                        <span>
-                          {sortOrder === "newest"
-                            ? "ล่าสุด"
-                            : sortOrder === "oldest"
-                            ? "เก่าสุด"
-                            : sortOrder === "name-asc"
-                            ? "A-Z"
-                            : "Z-A"}
-                        </span>
+                  {/* Filter Controls on desktop: horizontal layout */}
+                  <div className="flex items-center space-x-2">
+                    {/* Status Filter Dropdown */}
+                    <div className="relative z-30">
+                      <button
+                        className="flex items-center justify-between bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm h-10 min-w-[110px]"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const dropdown = document.getElementById("statusDropdown");
+                          dropdown.classList.toggle("hidden");
+
+                          const closeDropdown = () => {
+                            dropdown.classList.add("hidden");
+                            document.removeEventListener("click", closeDropdown);
+                          };
+
+                          setTimeout(() => {
+                            document.addEventListener("click", closeDropdown);
+                          }, 0);
+                        }}
+                        data-cy="status-filter-button"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Filter className="w-4 h-4" />
+                          <span>
+                            {statusFilter === "all"
+                              ? "ทั้งหมด"
+                              : statusFilter === "pass"
+                              ? "ผ่าน"
+                              : statusFilter === "fail"
+                              ? "ไม่ผ่าน"
+                              : "รอดำเนินการ"}
+                          </span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                      </button>
+                      <div
+                        id="statusDropdown"
+                        className="hidden absolute z-50 mt-1 w-40 bg-white border rounded-lg shadow-lg py-1 left-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          onClick={() => {
+                            handleStatusFilter("all");
+                            document
+                              .getElementById("statusDropdown")
+                              .classList.add("hidden");
+                          }}
+                          className={`block w-full text-left px-3 py-2 text-sm ${
+                            statusFilter === "all"
+                              ? "bg-blue-50 text-blue-600"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                          data-cy="filter-all"
+                        >
+                          ทั้งหมด
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleStatusFilter("pass");
+                            document
+                              .getElementById("statusDropdown")
+                              .classList.add("hidden");
+                          }}
+                          className={`block w-full text-left px-3 py-2 text-sm ${
+                            statusFilter === "pass"
+                              ? "bg-blue-50 text-blue-600"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                          data-cy="filter-pass"
+                        >
+                          ผ่าน
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleStatusFilter("fail");
+                            document
+                              .getElementById("statusDropdown")
+                              .classList.add("hidden");
+                          }}
+                          className={`block w-full text-left px-3 py-2 text-sm ${
+                            statusFilter === "fail"
+                              ? "bg-blue-50 text-blue-600"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                          data-cy="filter-fail"
+                        >
+                          ไม่ผ่าน
+                        </button>
                       </div>
-                      <ChevronDown className="w-4 h-4 ml-1" />
+                    </div>
+
+                    {/* Sort order */}
+                    <div className="relative">
+                      <button
+                        className="flex items-center justify-between bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm h-10 min-w-[110px]"
+                        onClick={() => setIsSortDropdownOpen(!isSortDropdownOpen)}
+                        data-cy="sort-order-button"
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <ArrowUpRight className="w-4 h-4" />
+                          <span>
+                            {sortOrder === "newest"
+                              ? "ล่าสุด"
+                              : sortOrder === "oldest"
+                              ? "เก่าสุด"
+                              : sortOrder === "name-asc"
+                              ? "A-Z"
+                              : "Z-A"}
+                          </span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                      </button>
+
+                      {isSortDropdownOpen && (
+                        <div className="absolute z-10 mt-1 w-44 bg-white border rounded-lg shadow-lg py-1 left-0">
+                          <button
+                            onClick={() => handleSortOrder("newest")}
+                            className={`block w-full text-left px-3 py-2 text-sm ${
+                              sortOrder === "newest"
+                                ? "bg-blue-50 text-blue-600"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                            data-cy="sort-newest"
+                          >
+                            ล่าสุด
+                          </button>
+                          <button
+                            onClick={() => handleSortOrder("oldest")}
+                            className={`block w-full text-left px-3 py-2 text-sm ${
+                              sortOrder === "oldest"
+                                ? "bg-blue-50 text-blue-600"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                            data-cy="sort-oldest"
+                          >
+                            เก่าสุด
+                          </button>
+                          <button
+                            onClick={() => handleSortOrder("name-asc")}
+                            className={`block w-full text-left px-3 py-2 text-sm ${
+                              sortOrder === "name-asc"
+                                ? "bg-blue-50 text-blue-600"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                            data-cy="sort-name-asc"
+                          >
+                            ชื่อ A-Z
+                          </button>
+                          <button
+                            onClick={() => handleSortOrder("name-desc")}
+                            className={`block w-full text-left px-3 py-2 text-sm ${
+                              sortOrder === "name-desc"
+                                ? "bg-blue-50 text-blue-600"
+                                : "text-gray-700 hover:bg-gray-100"
+                            }`}
+                            data-cy="sort-name-desc"
+                          >
+                            ชื่อ Z-A
+                          </button>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Refresh button */}
+                    <button
+                      onClick={handleRefresh}
+                      className="bg-blue-100 text-blue-700 p-2 rounded-lg hover:bg-blue-200 transition-colors h-10 w-10 flex items-center justify-center"
+                      data-cy="refresh-test-files"
+                      title="รีเฟรชข้อมูล"
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 ${
+                          isRefreshing ? "animate-spin" : ""
+                        }`}
+                      />
                     </button>
 
-                    {isSortDropdownOpen && (
-                      <div className="absolute z-10 mt-1 w-full bg-white border rounded-lg shadow-lg py-1">
+                    {/* Upload button */}
+                    <button
+                      onClick={handleCreateTestFile}
+                      data-cy="create-test-file-button"
+                      className="flex items-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-2 rounded-lg hover:shadow-md transition-all text-sm h-10"
+                    >
+                      <Upload className="w-4 h-4" />
+                      อัปโหลดไฟล์ทดสอบ
+                    </button>
+                  </div>
+                </div>
+
+                {/* Mobile Layout - only show on mobile screens */}
+                <div className="block md:hidden">
+                  {/* Search input */}
+                  <div className="relative w-full mb-2.5">
+                    <input
+                      type="text"
+                      placeholder="ค้นหาไฟล์ทดสอบ..."
+                      value={searchTerm}
+                      onChange={handleSearch}
+                      className="w-full pl-9 pr-3 py-2.5 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 transition-shadow"
+                    />
+                    <Search className="absolute left-3 top-2.5 text-gray-400 w-4 h-4" />
+                  </div>
+
+                  <div className="flex mt-2.5 flex-wrap gap-2">
+                    {/* Status Filter Dropdown */}
+                    <div className="relative z-30 flex-1">
+                      <button
+                        className="flex w-full items-center justify-between bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm h-10"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const dropdown = document.getElementById("statusDropdownMobile");
+                          dropdown.classList.toggle("hidden");
+
+                          const closeDropdown = () => {
+                            dropdown.classList.add("hidden");
+                            document.removeEventListener("click", closeDropdown);
+                          };
+
+                          setTimeout(() => {
+                            document.addEventListener("click", closeDropdown);
+                          }, 0);
+                        }}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <Filter className="w-4 h-4" />
+                          <span>
+                            {statusFilter === "all"
+                              ? "ทั้งหมด"
+                              : statusFilter === "pass"
+                              ? "ผ่าน"
+                              : statusFilter === "fail"
+                              ? "ไม่ผ่าน"
+                              : "รอดำเนินการ"}
+                          </span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                      </button>
+                      <div
+                        id="statusDropdownMobile"
+                        className="hidden absolute z-50 mt-1 w-full bg-white border rounded-lg shadow-lg py-1 left-0"
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <button
-                          onClick={() => handleSortOrder("newest")}
-                          className={`block w-full text-left px-3 py-1.5 text-sm ${
+                          onClick={() => {
+                            handleStatusFilter("all");
+                            document
+                              .getElementById("statusDropdownMobile")
+                              .classList.add("hidden");
+                          }}
+                          className={`block w-full text-left px-3 py-2 text-sm ${
+                            statusFilter === "all"
+                              ? "bg-blue-50 text-blue-600"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          ทั้งหมด
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleStatusFilter("pass");
+                            document
+                              .getElementById("statusDropdownMobile")
+                              .classList.add("hidden");
+                          }}
+                          className={`block w-full text-left px-3 py-2 text-sm ${
+                            statusFilter === "pass"
+                              ? "bg-blue-50 text-blue-600"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          ผ่าน
+                        </button>
+                        <button
+                          onClick={() => {
+                            handleStatusFilter("fail");
+                            document
+                              .getElementById("statusDropdownMobile")
+                              .classList.add("hidden");
+                          }}
+                          className={`block w-full text-left px-3 py-2 text-sm ${
+                            statusFilter === "fail"
+                              ? "bg-blue-50 text-blue-600"
+                              : "text-gray-700 hover:bg-gray-100"
+                          }`}
+                        >
+                          ไม่ผ่าน
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* Sort order - Mobile */}
+                    <div className="relative flex-1">
+                      <button
+                        className="flex w-full items-center justify-between bg-gray-100 text-gray-700 px-3 py-2 rounded-lg hover:bg-gray-200 transition-colors text-sm h-10"
+                        onClick={() => {
+                          const dropdown = document.getElementById("sortDropdownMobile");
+                          dropdown.classList.toggle("hidden");
+
+                          const closeDropdown = () => {
+                            dropdown.classList.add("hidden");
+                            document.removeEventListener("click", closeDropdown);
+                          };
+
+                          setTimeout(() => {
+                            document.addEventListener("click", closeDropdown);
+                          }, 0);
+                        }}
+                      >
+                        <div className="flex items-center gap-1.5">
+                          <ArrowUpRight className="w-4 h-4" />
+                          <span>
+                            {sortOrder === "newest"
+                              ? "ล่าสุด"
+                              : sortOrder === "oldest"
+                              ? "เก่าสุด"
+                              : sortOrder === "name-asc"
+                              ? "A-Z"
+                              : "Z-A"}
+                          </span>
+                        </div>
+                        <ChevronDown className="w-3.5 h-3.5 ml-1" />
+                      </button>
+                      <div
+                        id="sortDropdownMobile"
+                        className="hidden absolute z-10 mt-1 w-full bg-white border rounded-lg shadow-lg py-1 left-0"
+                      >
+                        <button
+                          onClick={() => {
+                            handleSortOrder("newest");
+                            document
+                              .getElementById("sortDropdownMobile")
+                              .classList.add("hidden");
+                          }}
+                          className={`block w-full text-left px-3 py-2 text-sm ${
                             sortOrder === "newest"
                               ? "bg-blue-50 text-blue-600"
                               : "text-gray-700 hover:bg-gray-100"
                           }`}
-                          data-cy="sort-newest"
                         >
                           ล่าสุด
                         </button>
                         <button
-                          onClick={() => handleSortOrder("oldest")}
-                          className={`block w-full text-left px-3 py-1.5 text-sm ${
+                          onClick={() => {
+                            handleSortOrder("oldest");
+                            document
+                              .getElementById("sortDropdownMobile")
+                              .classList.add("hidden");
+                          }}
+                          className={`block w-full text-left px-3 py-2 text-sm ${
                             sortOrder === "oldest"
                               ? "bg-blue-50 text-blue-600"
                               : "text-gray-700 hover:bg-gray-100"
                           }`}
-                          data-cy="sort-oldest"
                         >
                           เก่าสุด
                         </button>
                         <button
-                          onClick={() => handleSortOrder("name-asc")}
-                          className={`block w-full text-left px-3 py-1.5 text-sm ${
+                          onClick={() => {
+                            handleSortOrder("name-asc");
+                            document
+                              .getElementById("sortDropdownMobile")
+                              .classList.add("hidden");
+                          }}
+                          className={`block w-full text-left px-3 py-2 text-sm ${
                             sortOrder === "name-asc"
                               ? "bg-blue-50 text-blue-600"
                               : "text-gray-700 hover:bg-gray-100"
                           }`}
-                          data-cy="sort-name-asc"
                         >
                           ชื่อ A-Z
                         </button>
                         <button
-                          onClick={() => handleSortOrder("name-desc")}
-                          className={`block w-full text-left px-3 py-1.5 text-sm ${
+                          onClick={() => {
+                            handleSortOrder("name-desc");
+                            document
+                              .getElementById("sortDropdownMobile")
+                              .classList.add("hidden");
+                          }}
+                          className={`block w-full text-left px-3 py-2 text-sm ${
                             sortOrder === "name-desc"
                               ? "bg-blue-50 text-blue-600"
                               : "text-gray-700 hover:bg-gray-100"
                           }`}
-                          data-cy="sort-name-desc"
                         >
                           ชื่อ Z-A
                         </button>
                       </div>
-                    )}
+                    </div>
                   </div>
 
-                  {/* Refresh button */}
-                  <button
-                    onClick={handleRefresh}
-                    className="bg-blue-100 text-blue-700 p-2 rounded-lg hover:bg-blue-200 transition-colors"
-                    data-cy="refresh-test-files"
-                    title="รีเฟรชข้อมูล"
-                  >
-                    <RefreshCw
-                      className={`w-4 h-4 ${
-                        isRefreshing ? "animate-spin" : ""
-                      }`}
-                    />
-                  </button>
+                  <div className="flex justify-between items-center gap-2 mt-2.5">
+                    {/* Refresh button - Mobile */}
+                    <button
+                      onClick={handleRefresh}
+                      className="bg-blue-100 text-blue-700 p-2 rounded-lg hover:bg-blue-200 transition-colors h-10 w-10 flex items-center justify-center"
+                      title="รีเฟรชข้อมูล"
+                    >
+                      <RefreshCw
+                        className={`w-4 h-4 ${
+                          isRefreshing ? "animate-spin" : ""
+                        }`}
+                      />
+                    </button>
 
-                  {/* Upload button for desktop */}
-                  <button
-                    onClick={handleCreateTestFile}
-                    data-cy="create-test-file-button"
-                    className="hidden sm:flex items-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:shadow-md transition-all"
-                  >
-                    <Upload className="w-4 h-4" />
-                    อัปโหลดไฟล์
-                  </button>
+                    {/* Upload button - Mobile */}
+                    <button
+                      onClick={handleCreateTestFile}
+                      className="flex-1 flex items-center justify-center gap-1.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-3 py-2 rounded-lg hover:shadow-md transition-all text-sm h-10"
+                    >
+                      <Upload className="w-4 h-4" />
+                      อัปโหลดไฟล์ทดสอบ
+                    </button>
+                  </div>
                 </div>
-              </div>
-
-              {/* Upload button for mobile */}
-              <div className="sm:hidden mb-3">
-                <button
-                  onClick={handleCreateTestFile}
-                  data-cy="create-test-file-button-mobile"
-                  className="flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-4 py-2 rounded-lg hover:shadow-md transition w-full"
-                >
-                  <Upload className="w-4 h-4" />
-                  อัปโหลดไฟล์ทดสอบ
-                </button>
               </div>
 
               {/* Filter results count */}
@@ -861,37 +1079,37 @@ const TestFiles = () => {
 
             {/* Test files list */}
             <section
-              className="bg-white shadow rounded-xl p-5 transition-all hover:shadow-md"
+              className="bg-white shadow rounded-xl p-3 sm:p-4 md:p-5 transition-all hover:shadow-md"
               data-cy="test-files-list-section"
             >
               {loading ? (
-                <div className="flex flex-col items-center justify-center p-8">
-                  <RefreshCw className="w-12 h-12 text-blue-500 animate-spin mb-4" />
-                  <p className="text-center text-gray-600">
+                <div className="flex flex-col items-center justify-center p-6 md:p-8">
+                  <RefreshCw className="w-10 h-10 md:w-12 md:h-12 text-blue-500 animate-spin mb-3 md:mb-4" />
+                  <p className="text-center text-gray-600 text-sm md:text-base">
                     กำลังโหลดไฟล์ทดสอบ...
                   </p>
                 </div>
               ) : testFiles.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-5">
-                  <FolderX className="w-12 h-12 text-gray-400 mb-3" />
-                  <p className="text-lg text-gray-600 mb-4 text-center">
+                <div className="flex flex-col items-center justify-center p-4 md:p-5">
+                  <FolderX className="w-10 h-10 md:w-12 md:h-12 text-gray-400 mb-2 md:mb-3" />
+                  <p className="text-base md:text-lg text-gray-600 mb-3 md:mb-4 text-center">
                     ไม่พบไฟล์ทดสอบในสปรินต์นี้
                   </p>
                   <button
                     onClick={handleCreateTestFile}
                     data-cy="upload-first-test-file-button"
-                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-5 py-2 text-sm rounded-lg hover:shadow-md transition-all duration-200"
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white px-4 md:px-5 py-1.5 md:py-2 text-xs md:text-sm rounded-lg hover:shadow-md transition-all duration-200"
                   >
                     อัปโหลดไฟล์ทดสอบไฟล์แรก
                   </button>
                 </div>
               ) : filteredTestFiles.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-5" data-cy="no-matching-files">
-                  <Search className="w-12 h-12 text-gray-400 mb-3" />
-                  <p className="text-lg text-gray-600 mb-2 text-center">
+                <div className="flex flex-col items-center justify-center p-4 md:p-5" data-cy="no-matching-files">
+                  <Search className="w-10 h-10 md:w-12 md:h-12 text-gray-400 mb-2 md:mb-3" />
+                  <p className="text-base md:text-lg text-gray-600 mb-2 text-center">
                     ไม่พบไฟล์ทดสอบที่ตรงกับเงื่อนไข
                   </p>
-                  <p className="text-sm text-gray-500 mb-4 text-center">
+                  <p className="text-xs md:text-sm text-gray-500 mb-3 md:mb-4 text-center">
                     ลองเปลี่ยนการค้นหาหรือตัวกรองของคุณ
                   </p>
                   <button
@@ -900,33 +1118,33 @@ const TestFiles = () => {
                       setStatusFilter("all");
                     }}
                     data-cy="reset-filters-button"
-                    className="bg-gray-200 text-gray-800 px-5 py-2 text-sm rounded-lg hover:bg-gray-300 transition-all duration-200"
+                    className="bg-gray-200 text-gray-800 px-4 md:px-5 py-1.5 md:py-2 text-xs md:text-sm rounded-lg hover:bg-gray-300 transition-all duration-200"
                   >
                     ล้างตัวกรองทั้งหมด
                   </button>
                 </div>
               ) : (
                 <div
-                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"
+                  className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4"
                   data-cy="test-files-grid"
                 >
                   {filteredTestFiles.map((file) => (
                     <div
                       key={file.file_id}
                       data-cy={`test-file-${file.file_id}`}
-                      className="border rounded-xl overflow-hidden relative hover:shadow-lg transition-all transform hover:translate-y-[-2px]"
+                      className="border rounded-lg sm:rounded-xl overflow-hidden relative hover:shadow-lg transition-all transform hover:translate-y-[-2px]"
                     >
                       <div
                         className={`h-1 w-full ${getStatusColor(file.status)}`}
                       ></div>
-                      <div className="p-4">
-                        <div className="flex justify-between items-start mb-3">
-                          <h3 className="text-base font-semibold text-gray-800 break-words pr-2">
+                      <div className="p-2.5 sm:p-4">
+                        <div className="flex justify-between items-start mb-2 sm:mb-3">
+                          <h3 className="text-sm sm:text-base font-semibold text-gray-800 break-words pr-2 line-clamp-2">
                             {file.filename}
                           </h3>
                           <div
                             data-cy={`test-status-${file.status.toLowerCase()}`}
-                            className={`flex-shrink-0 p-1.5 rounded-full ${
+                            className={`flex-shrink-0 p-1 sm:p-1.5 rounded-full ${
                               file.status === "Pass"
                                 ? "bg-green-100"
                                 : file.status === "Fail"
@@ -938,14 +1156,14 @@ const TestFiles = () => {
                           </div>
                         </div>
 
-                        <div className="space-y-2 text-sm text-gray-600">
-                          <div className="flex items-center gap-2">
-                            <FileText className="w-4 h-4" />
+                        <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm text-gray-600">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <FileText className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
                             <span>{formatFileSize(file.file_size)}</span>
                           </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="w-4 h-4" />
-                            <span className="text-sm flex items-center">
+                          <div className="flex items-center gap-1 sm:gap-2">
+                            <Calendar className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                            <span className="text-xs sm:text-sm flex flex-wrap items-center">
                               <span>{getRelativeTime(file.upload_date)}</span>
                               <span className="mx-1">•</span>
                               <span className="text-gray-500 text-xs">
@@ -970,7 +1188,7 @@ const TestFiles = () => {
                             navigate(`/test-files/${file.file_id}`)
                           }
                           data-cy={`view-detail-button-${file.file_id}`}
-                          className="mt-4 w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 text-sm rounded-lg hover:shadow-lg transform transition hover:scale-[1.02]"
+                          className="mt-2 sm:mt-4 w-full bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-2 text-xs sm:text-sm rounded-lg hover:shadow-lg transform transition hover:scale-[1.02]"
                         >
                           ดูรายละเอียดเพิ่มเติม
                         </button>
